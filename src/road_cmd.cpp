@@ -2177,7 +2177,7 @@ static VehicleEnterTileStatus VehicleEnter_Road(Vehicle *v, TileIndex tile, int 
 				if (rv->Next() == nullptr) VehicleEnterDepot(rv->First());
 				rv->tile = tile;
 
-				InvalidateWindowData(WC_VEHICLE_DEPOT, rv->tile);
+				InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(rv->tile));
 				return VETSB_ENTERED_WORMHOLE;
 			}
 			break;
@@ -2457,8 +2457,8 @@ CommandCost CmdConvertRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 
 				if (IsRoadDepotTile(tile)) {
 					/* Update build vehicle window related to this depot */
-					InvalidateWindowData(WC_VEHICLE_DEPOT, tile);
-					InvalidateWindowData(WC_BUILD_VEHICLE, tile);
+					InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(tile));
+					InvalidateWindowData(WC_BUILD_VEHICLE, GetDepotIndex(tile));
 				}
 			}
 		} else {

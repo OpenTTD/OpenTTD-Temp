@@ -121,7 +121,7 @@ static void UpdateConsists(int32 new_value)
 		/* Update the consist of all trains so the maximum speed is set correctly. */
 		if (t->IsFrontEngine() || t->IsFreeWagon()) t->ConsistChanged(CCF_TRACK);
 	}
-	InvalidateWindowClassesData(WC_BUILD_VEHICLE, 0);
+	InvalidateWindowClassesData(WC_BUILD_VEHICLE, INVALID_DEPOT - VEH_TRAIN);
 }
 
 /* Check service intervals of vehicles, newvalue is value of % or day based servicing */
@@ -200,7 +200,7 @@ static void TrainAccelerationModelChanged(int32 new_value)
 
 	/* These windows show acceleration values only when realistic acceleration is on. They must be redrawn after a setting change. */
 	SetWindowClassesDirty(WC_ENGINE_PREVIEW);
-	InvalidateWindowClassesData(WC_BUILD_VEHICLE, 0);
+	InvalidateWindowClassesData(WC_BUILD_VEHICLE, INVALID_DEPOT - VEH_TRAIN);
 	SetWindowClassesDirty(WC_VEHICLE_DETAILS);
 }
 
@@ -231,7 +231,7 @@ static void RoadVehAccelerationModelChanged(int32 new_value)
 
 	/* These windows show acceleration values only when realistic acceleration is on. They must be redrawn after a setting change. */
 	SetWindowClassesDirty(WC_ENGINE_PREVIEW);
-	InvalidateWindowClassesData(WC_BUILD_VEHICLE, 0);
+	InvalidateWindowClassesData(WC_BUILD_VEHICLE, INVALID_DEPOT - VEH_ROAD);
 	SetWindowClassesDirty(WC_VEHICLE_DETAILS);
 }
 

@@ -1855,7 +1855,7 @@ public:
 			}
 
 			case WID_VL_AVAILABLE_VEHICLES:
-				ShowBuildVehicleWindow(INVALID_TILE, this->vli.vtype);
+				ShowBuildVehicleWindow(INVALID_DEPOT, this->vli.vtype);
 				break;
 
 			case WID_VL_MANAGE_VEHICLES_DROPDOWN: {
@@ -1992,16 +1992,9 @@ void ShowVehicleListWindow(CompanyID company, VehicleType vehicle_type, StationI
 	ShowVehicleListWindowLocal(company, VL_STATION_LIST, vehicle_type, station);
 }
 
-void ShowVehicleListWindow(CompanyID company, VehicleType vehicle_type, TileIndex depot_tile)
+void ShowVehicleListWindowDepot(CompanyID company, VehicleType vehicle_type, DepotID depot_id)
 {
-	uint16 depot_airport_index;
-
-	if (vehicle_type == VEH_AIRCRAFT) {
-		depot_airport_index = GetStationIndex(depot_tile);
-	} else {
-		depot_airport_index = GetDepotIndex(depot_tile);
-	}
-	ShowVehicleListWindowLocal(company, VL_DEPOT_LIST, vehicle_type, depot_airport_index);
+	ShowVehicleListWindowLocal(company, VL_DEPOT_LIST, vehicle_type, depot_id);
 }
 
 

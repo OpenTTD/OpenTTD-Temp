@@ -781,7 +781,7 @@ public:
 				break;
 
 			case WID_GL_AVAILABLE_VEHICLES:
-				ShowBuildVehicleWindow(INVALID_TILE, this->vli.vtype);
+				ShowBuildVehicleWindow(INVALID_DEPOT, this->vli.vtype);
 				break;
 
 			case WID_GL_MANAGE_VEHICLES_DROPDOWN: {

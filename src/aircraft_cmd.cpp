@@ -1471,7 +1471,7 @@ void AircraftLeaveHangar(Aircraft *v, Direction exit_dir)
 
 	VehicleServiceInDepot(v);
 	SetAircraftPosition(v, v->x_pos, v->y_pos, v->z_pos);
-	InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
+	InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
 	SetWindowClassesDirty(WC_AIRCRAFT_LIST);
 }
 

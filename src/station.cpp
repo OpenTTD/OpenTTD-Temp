@@ -684,6 +684,11 @@ void Airport::SetHangar(bool create)
 	}
 }
 
+DepotID GetHangarIndex(TileIndex t) {
+	assert(IsAirportTile(t));
+	return Station::GetByTile(t)->airport.depot_id;
+}
+
 bool StationCompare::operator() (const Station *lhs, const Station *rhs) const
 {
 	return lhs->index < rhs->index;

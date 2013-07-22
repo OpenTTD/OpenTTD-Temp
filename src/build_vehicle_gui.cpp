@@ -30,6 +30,7 @@
 #include "cargotype.h"
 #include "core/geometry_func.hpp"
 #include "autoreplace_func.h"
+#include "depot_base.h"
 
 #include "widgets/build_vehicle_widget.h"
 
@@ -1075,11 +1076,13 @@ struct BuildVehicleWindow : Window {
 		}
 	}
 
-	BuildVehicleWindow(WindowDesc *desc, TileIndex tile, VehicleType type) : Window(desc)
+	BuildVehicleWindow(WindowDesc *desc, DepotID depot_id, VehicleType type) : Window(desc)
 	{
 		this->vehicle_type = type;
-		this->listview_mode = tile == INVALID_TILE;
-		this->window_number = this->listview_mode ? (int)type : tile;
+
+		this->listview_mode = (depot_id == INVALID_DEPOT);
+		if (this->listview_mode) depot_id -= type;
+		this->window_number = depot_id;
 
 		this->sel_engine = INVALID_ENGINE;
 
@@ -1117,9 +1120,10 @@ struct BuildVehicleWindow : Window {
 
 		this->details_height = ((this->vehicle_type == VEH_TRAIN) ? 10 : 9);
 
-		this->FinishInitNested(tile == INVALID_TILE ? (int)type : tile);
+		this->FinishInitNested(depot_id);
 
-		this->owner = (tile != INVALID_TILE) ? GetTileOwner(tile) : _local_company;
+		Depot *depot = Depot::GetIfValid(depot_id);
+		this->owner = (depot != nullptr) ? GetTileOwner(depot->xy) : _local_company;
 
 		this->eng_list.ForceRebuild();
 		this->GenerateBuildList(); // generate the list, since we need it in the next line
@@ -1229,7 +1233,7 @@ struct BuildVehicleWindow : Window {
 
 		if (!this->listview_mode) {
 			/* Query for cost and refitted capacity */
-			CommandCost ret = DoCommand(this->window_number, this->sel_engine | (cargo << 24), 0, DC_QUERY_COST, GetCmdBuildVeh(this->vehicle_type));
+			CommandCost ret = DoCommand(Depot::Get(this->window_number)->xy, this->sel_engine | (cargo << 24), 0, DC_QUERY_COST, GetCmdBuildVeh(this->vehicle_type));
 			if (ret.Succeeded()) {
 				this->te.cost          = ret.GetCost() - e->GetCost();
 				this->te.capacity      = _returned_refit_capacity;
@@ -1472,7 +1476,10 @@ struct BuildVehicleWindow : Window {
 					CommandCallback *callback = (this->vehicle_type == VEH_TRAIN && RailVehInfo(sel_eng)->railveh_type == RAILVEH_WAGON) ? CcBuildWagon : CcBuildPrimaryVehicle;
 					CargoID cargo = this->cargo_filter[this->cargo_filter_criteria];
 					if (cargo == CF_ANY || cargo == CF_ENGINES) cargo = CF_NONE;
-					DoCommandP(this->window_number, sel_eng | (cargo << 24), 0, GetCmdBuildVeh(this->vehicle_type), callback);
+					assert(Depot::IsValidID(this->window_number));
+					Depot *depot = Depot::Get(this->window_number);
+					assert(depot != nullptr);
+					DoCommandP(depot->xy, sel_eng | (cargo << 24), 0, GetCmdBuildVeh(this->vehicle_type), callback);
 				}
 				break;
 			}
@@ -1675,17 +1682,11 @@ static WindowDesc _build_vehicle_desc(
 	_nested_build_vehicle_widgets, lengthof(_nested_build_vehicle_widgets)
 );
 
-void ShowBuildVehicleWindow(TileIndex tile, VehicleType type)
+void ShowBuildVehicleWindow(DepotID depot_id, VehicleType type)
 {
-	/* We want to be able to open both Available Train as Available Ships,
-	 *  so if tile == INVALID_TILE (Available XXX Window), use 'type' as unique number.
-	 *  As it always is a low value, it won't collide with any real tile
-	 *  number. */
-	uint num = (tile == INVALID_TILE) ? (int)type : tile;
-
 	assert(IsCompanyBuildableVehicleType(type));
 
-	CloseWindowById(WC_BUILD_VEHICLE, num);
+	CloseWindowById(WC_BUILD_VEHICLE, depot_id);
 
-	new BuildVehicleWindow(&_build_vehicle_desc, tile, type);
+	new BuildVehicleWindow(&_build_vehicle_desc, depot_id, type);
 }
