@@ -618,6 +618,7 @@ public:
 		    SLE_VAR(Vehicle, progress,              SLE_UINT8),
 
 		    SLE_VAR(Vehicle, vehstatus,             SLE_UINT8),
+		SLE_CONDVAR(Vehicle, wait_counter,          SLE_UINT16,             SLV_MULTITILE_DEPOTS, SL_MAX_VERSION),
 		SLE_CONDVAR(Vehicle, last_station_visited,  SLE_FILE_U8  | SLE_VAR_U16,   SL_MIN_VERSION,   SLV_5),
 		SLE_CONDVAR(Vehicle, last_station_visited,  SLE_UINT16,                   SLV_5, SL_MAX_VERSION),
 		SLE_CONDVAR(Vehicle, last_loading_station,  SLE_UINT16,                 SLV_182, SL_MAX_VERSION),
@@ -740,7 +741,7 @@ public:
 
 		 SLE_CONDVAR(Train, flags,               SLE_FILE_U8  | SLE_VAR_U16,   SLV_2,  SLV_100),
 		 SLE_CONDVAR(Train, flags,               SLE_UINT16,                 SLV_100, SL_MAX_VERSION),
-		 SLE_CONDVAR(Train, wait_counter,        SLE_UINT16,                 SLV_136, SL_MAX_VERSION),
+		 SLE_CONDVAR(Train, wait_counter,        SLE_UINT16,                 SLV_136, SLV_MULTITILE_DEPOTS),
 		 SLE_CONDVAR(Train, gv_flags,            SLE_UINT16,                 SLV_139, SL_MAX_VERSION),
 	};
 	inline const static SaveLoadCompatTable compat_description = _vehicle_train_sl_compat;
@@ -1031,6 +1032,7 @@ struct VEHSChunkHandler : ChunkHandler {
 				default: SlErrorCorrupt("Invalid vehicle type");
 			}
 
+			if (IsSavegameVersionBefore(SLV_MULTITILE_DEPOTS)) assert(v->type == VEH_TRAIN || v->wait_counter == 0);
 			SlObject(v, slt);
 
 			if (_cargo_count != 0 && IsCompanyBuildableVehicleType(v) && CargoPacket::CanAllocateItem()) {
