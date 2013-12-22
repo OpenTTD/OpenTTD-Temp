@@ -15,8 +15,11 @@
 #include "core/pool_func.hpp"
 #include "vehicle_gui.h"
 #include "vehiclelist.h"
+#include "command_func.h"
 
 #include "safeguards.h"
+
+#include "table/strings.h"
 
 /** All our depots tucked away in a pool. */
 DepotPool _depot_pool("Depot");
@@ -39,6 +42,82 @@ Depot::~Depot()
 	CloseWindowById(WC_VEHICLE_DEPOT, this->index);
 
 	/* Delete the depot list */
-	VehicleType vt = GetDepotVehicleType(this->xy);
-	CloseWindowById(GetWindowClassForVehicleType(vt), VehicleListIdentifier(VL_DEPOT_LIST, vt, GetTileOwner(this->xy), this->index).Pack());
+	CloseWindowById(GetWindowClassForVehicleType(this->veh_type),
+			VehicleListIdentifier(VL_DEPOT_LIST,
+			this->veh_type, this->company, this->index).Pack());
+}
+
+/* Check we can add some tiles to this depot. */
+CommandCost Depot::BeforeAddTiles(TileArea ta)
+{
+	assert(ta.tile != INVALID_TILE);
+
+	if (this->ta.tile != INVALID_TILE) {
+		/* Important when the old rect is completely inside the new rect, resp. the old one was empty. */
+		ta.Add(this->ta.tile);
+		ta.Add(TILE_ADDXY(this->ta.tile, this->ta.w - 1, this->ta.h - 1));
+	}
+
+	if ((ta.w > _settings_game.station.station_spread) || (ta.h > _settings_game.station.station_spread)) {
+		return_cmd_error(STR_ERROR_DEPOT_TOO_SPREAD_OUT);
+	}
+	return CommandCost();
+}
+
+/* Add some tiles to this depot and rescan area for depot_tiles. */
+void Depot::AfterAddRemove(TileArea ta, bool adding)
+{
+	assert(ta.tile != INVALID_TILE);
+
+	if (adding) {
+		if (this->ta.tile != INVALID_TILE) {
+			ta.Add(this->ta.tile);
+			ta.Add(TILE_ADDXY(this->ta.tile, this->ta.w - 1, this->ta.h - 1));
+		}
+	} else {
+		ta = this->ta;
+	}
+
+	this->ta.Clear();
+
+	for (TileIndex tile : ta) {
+		if (!IsDepotTile(tile)) continue;
+		if (GetDepotIndex(tile) != this->index) continue;
+		this->ta.Add(tile);
+	}
+
+	if (this->ta.tile != INVALID_TILE) {
+		this->RescanDepotTiles();
+		assert(this->depot_tiles.size() > 0);
+		this->xy = this->depot_tiles[0];
+		assert(IsDepotTile(this->xy));
+	} else {
+		delete this;
+	}
+}
+
+/* Rescan depot_tiles. Done after AfterAddRemove and SaveLoad. */
+void Depot::RescanDepotTiles()
+{
+	this->depot_tiles.clear();
+	RailTypes old_rail_types = this->r_types.rail_types;
+	this->r_types.rail_types = RAILTYPES_NONE;
+
+	for (TileIndex tile : this->ta) {
+		if (!IsDepotTile(tile)) continue;
+		if (GetDepotIndex(tile) != this->index) continue;
+		this->depot_tiles.push_back(tile);
+		switch (veh_type) {
+			case VEH_ROAD:
+				this->r_types.road_types |= GetPresentRoadTypes(tile);
+				break;
+			case VEH_TRAIN:
+				this->r_types.rail_types |= (RailTypes)(1 << GetRailType(tile));
+			default: break;
+		}
+	}
+
+	if (old_rail_types != this->r_types.rail_types) {
+		InvalidateWindowData(WC_BUILD_VEHICLE, this->index, 0, true);
+	}
 }

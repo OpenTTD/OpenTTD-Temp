@@ -678,6 +678,14 @@ void Airport::SetHangar(bool create)
 		this->depot_id = dep->index;
 		dep->build_date = st->build_date;
 		dep->town = st->town;
+		dep->company = GetTileOwner(dep->xy);
+		dep->veh_type = VEH_AIRCRAFT;
+		dep->ta.tile = st->airport.tile;
+		dep->ta.w = st->airport.w;
+		dep->ta.h = st->airport.h;
+		for (uint i = 0; i < this->GetNumHangars(); i++) {
+			dep->depot_tiles.push_back(this->GetHangarTile(i));
+		}
 	} else {
 		delete Depot::GetIfValid(this->depot_id);
 		this->depot_id = INVALID_DEPOT;

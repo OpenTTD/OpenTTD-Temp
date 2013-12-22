@@ -242,6 +242,19 @@ static inline bool HasPowerOnRoad(RoadType enginetype, RoadType tiletype)
 }
 
 /**
+ * Checks if an engine of the given RoadType got power on a set of tiles
+ * with a given RoadTypes. This would normally just be an equality check,
+ * but for electrified roads (which also support non-electric vehicles).
+ * @return Whether the engine got power on this tile.
+ * @param  enginetype The RoadType of the engine we are considering.
+ * @param  railtypes  The RoadTypes of the tiles we are considering.
+ */
+static inline bool HasPowerOnRoads(RoadType enginetype, RoadTypes road_types)
+{
+	return (GetRoadTypeInfo(enginetype)->powered_roadtypes & road_types) != 0;
+}
+
+/**
  * Returns the cost of building the specified roadtype.
  * @param roadtype The roadtype being built.
  * @return The cost multiplier.

@@ -267,8 +267,7 @@ struct DepotWindow : Window {
 	{
 		assert(IsCompanyBuildableVehicleType(type)); // ensure that we make the call with a valid type
 		Depot *depot = Depot::Get(depot_id);
-		TileIndex tile = depot->xy;
-		assert(type == GetDepotVehicleType(tile));
+		assert(type == depot->veh_type);
 
 		this->sel = INVALID_VEHICLE;
 		this->vehicle_over = INVALID_VEHICLE;
@@ -290,7 +289,7 @@ struct DepotWindow : Window {
 		this->SetupWidgetData(type);
 		this->FinishInitNested(depot_id);
 
-		this->owner = GetTileOwner(tile);
+		this->owner = depot->company;
 		OrderBackup::Reset();
 	}
 
