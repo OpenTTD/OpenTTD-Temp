@@ -251,11 +251,12 @@ Trackdir Ship::GetVehicleTrackdir() const
 	if (this->vehstatus & VS_CRASHED) return INVALID_TRACKDIR;
 
 	if (this->IsInDepot()) {
-		/* We'll assume the ship is facing outwards */
-		return DiagDirToDiagTrackdir(GetShipDepotDirection(this->tile));
+		/* Only old depots need it. */
+		/* We'll assume the ship is facing outwards. */
+		if (this->state == TRACK_BIT_DEPOT) return DiagDirToDiagTrackdir(GetShipDepotDirection(this->tile));
 	}
 
-	if (this->state == TRACK_BIT_WORMHOLE) {
+	if (this->state == TRACK_BIT_WORMHOLE || this->IsInDepot()) {
 		/* ship on aqueduct, so just use its direction and assume a diagonal track */
 		return DiagDirToDiagTrackdir(DirToDiagDir(this->direction));
 	}
