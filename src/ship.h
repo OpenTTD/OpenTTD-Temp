@@ -45,7 +45,7 @@ struct Ship FINAL : public SpecializedVehicle<Ship, VEH_SHIP> {
 	int GetDisplayMaxSpeed() const { return this->vcache.cached_max_speed / 2; }
 	int GetCurrentMaxSpeed() const { return std::min<int>(this->vcache.cached_max_speed, this->current_order.GetMaxSpeed() * 2); }
 	Money GetRunningCost() const;
-	bool IsInDepot() const { return this->state == TRACK_BIT_DEPOT; }
+	bool IsInDepot() const { return HasBit((byte)this->state, TRACK_DEPOT); }
 	bool Tick();
 	void OnNewDay();
 	Trackdir GetVehicleTrackdir() const;
