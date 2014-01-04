@@ -2573,19 +2573,10 @@ static void DrawTile_Track(TileInfo *ti)
 
 				switch (GetRailDepotDirection(ti->tile)) {
 					case DIAGDIR_NE:
-						if (!IsInvisibilitySet(TO_BUILDINGS)) break;
-						FALLTHROUGH;
-					case DIAGDIR_SW:
-						DrawGroundSprite(overlay + RTO_X, PALETTE_CRASH);
-						break;
+					case DIAGDIR_SW: DrawGroundSprite(overlay + RTO_X, PALETTE_CRASH); break;
 					case DIAGDIR_NW:
-						if (!IsInvisibilitySet(TO_BUILDINGS)) break;
-						FALLTHROUGH;
-					case DIAGDIR_SE:
-						DrawGroundSprite(overlay + RTO_Y, PALETTE_CRASH);
-						break;
-					default:
-						break;
+					case DIAGDIR_SE: DrawGroundSprite(overlay + RTO_Y, PALETTE_CRASH); break;
+					default: break;
 				}
 			}
 		} else {
@@ -2593,19 +2584,10 @@ static void DrawTile_Track(TileInfo *ti)
 			if (_game_mode != GM_MENU && _settings_client.gui.show_track_reservation && HasDepotReservation(ti->tile)) {
 				switch (GetRailDepotDirection(ti->tile)) {
 					case DIAGDIR_NE:
-						if (!IsInvisibilitySet(TO_BUILDINGS)) break;
-						FALLTHROUGH;
-					case DIAGDIR_SW:
-						DrawGroundSprite(rti->base_sprites.single_x, PALETTE_CRASH);
-						break;
+					case DIAGDIR_SW: DrawGroundSprite(rti->base_sprites.single_x, PALETTE_CRASH); break;
 					case DIAGDIR_NW:
-						if (!IsInvisibilitySet(TO_BUILDINGS)) break;
-						FALLTHROUGH;
-					case DIAGDIR_SE:
-						DrawGroundSprite(rti->base_sprites.single_y, PALETTE_CRASH);
-						break;
-					default:
-						break;
+					case DIAGDIR_SE: DrawGroundSprite(rti->base_sprites.single_y, PALETTE_CRASH); break;
+					default: break;
 				}
 			}
 		}
