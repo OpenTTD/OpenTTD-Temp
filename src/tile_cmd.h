@@ -18,9 +18,10 @@
 
 /** The returned bits of VehicleEnterTile. */
 enum VehicleEnterTileStatus {
-	VETS_ENTERED_STATION  = 1, ///< The vehicle entered a station
-	VETS_ENTERED_WORMHOLE = 2, ///< The vehicle either entered a bridge, tunnel or depot tile (this includes the last tile of the bridge/tunnel)
-	VETS_CANNOT_ENTER     = 3, ///< The vehicle cannot enter the tile
+	VETS_ENTERED_STATION  = 1,       ///< The vehicle entered a station.
+	VETS_ENTERED_WORMHOLE = 2,       ///< The vehicle either entered a bridge, tunnel or depot tile (this includes the last tile of the bridge/tunnel).
+	VETS_CANNOT_ENTER     = 3,       ///< The vehicle cannot enter the tile.
+	VETS_ENTERED_DEPOT_PLATFORM = 4, ///< The vehicle entered a depot platform.
 
 	/**
 	 * Shift the VehicleEnterTileStatus this many bits
@@ -31,10 +32,11 @@ enum VehicleEnterTileStatus {
 	VETS_STATION_MASK      = 0xFFFF << VETS_STATION_ID_OFFSET,
 
 	/** Bit sets of the above specified bits */
-	VETSB_CONTINUE         = 0,                          ///< The vehicle can continue normally
-	VETSB_ENTERED_STATION  = 1 << VETS_ENTERED_STATION,  ///< The vehicle entered a station
-	VETSB_ENTERED_WORMHOLE = 1 << VETS_ENTERED_WORMHOLE, ///< The vehicle either entered a bridge, tunnel or depot tile (this includes the last tile of the bridge/tunnel)
-	VETSB_CANNOT_ENTER     = 1 << VETS_CANNOT_ENTER,     ///< The vehicle cannot enter the tile
+	VETSB_CONTINUE         = 0,                                      ///< The vehicle can continue normally.
+	VETSB_ENTERED_STATION  = 1 << VETS_ENTERED_STATION,              ///< The vehicle entered a station.
+	VETSB_ENTERED_WORMHOLE = 1 << VETS_ENTERED_WORMHOLE,             ///< The vehicle either entered a bridge, tunnel or depot tile (this includes the last tile of the bridge/tunnel).
+	VETSB_CANNOT_ENTER     = 1 << VETS_CANNOT_ENTER,                 ///< The vehicle cannot enter the tile.
+	VETSB_ENTERED_DEPOT_PLATFORM = 1 << VETS_ENTERED_DEPOT_PLATFORM, ///< The vehicle entered a depot platform.
 };
 DECLARE_ENUM_AS_BIT_SET(VehicleEnterTileStatus)
 
