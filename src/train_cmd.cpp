@@ -2072,7 +2072,7 @@ static void CheckNextTrainTile(Train *v)
 	switch (v->current_order.GetType()) {
 		/* Exit if we reached our destination depot. */
 		case OT_GOTO_DEPOT:
-			if (v->tile == v->dest_tile) return;
+			if (IsRailDepotTile(v->tile) && v->current_order.ShouldStopAtDepot(GetDepotIndex(v->tile))) return;
 			break;
 
 		case OT_GOTO_WAYPOINT:

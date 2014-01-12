@@ -2233,6 +2233,17 @@ bool Order::ShouldStopAtStation(const Vehicle *v, StationID station) const
 			!(this->GetNonStopType() & (is_dest_station ? ONSF_NO_STOP_AT_DESTINATION_STATION : ONSF_NO_STOP_AT_INTERMEDIATE_STATIONS));
 }
 
+/**
+ * Check whether the given vehicle should stop at the given depot.
+ * @param v     the vehicle that might be stopping.
+ * @param depot the depot to stop at.
+ * @return true if the vehicle should stop.
+ */
+bool Order::ShouldStopAtDepot(DepotID depot) const
+{
+	return this->IsType(OT_GOTO_DEPOT) && this->dest == depot;
+}
+
 bool Order::CanLoadOrUnload() const
 {
 	return (this->IsType(OT_GOTO_STATION) || this->IsType(OT_IMPLICIT)) &&
