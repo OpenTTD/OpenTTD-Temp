@@ -1141,3 +1141,62 @@ CommandCost CmdChangeServiceInt(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 
 	return CommandCost();
 }
+
+/**
+ * A vehicle that entered a big depot, starts servicing.
+ */
+void Vehicle::StartService()
+{
+	assert(IsDepotTile(this->tile));
+
+	switch (this->type) {
+		case VEH_AIRCRAFT:
+		case VEH_ROAD:
+		case VEH_SHIP: {
+			this->wait_counter = 1 << 7;
+			break;
+		}
+
+		case VEH_TRAIN: {
+			this->wait_counter = 1 << 8;
+			break;
+		}
+
+		default: NOT_REACHED();
+	}
+
+	this->cur_speed = 0;
+	this->subspeed = 0;
+
+	SetBit(this->vehicle_flags, VF_IS_SERVICING);
+	SetWindowWidgetDirty(WC_VEHICLE_VIEW, this->index, WID_VV_START_STOP);
+	assert(this->fill_percent_te_id == INVALID_TE_ID);
+	this->fill_percent_te_id = ShowFillingPercent(this->x_pos, this->y_pos, this->z_pos + 20, 0, STR_SERVICING_INDICATOR);
+}
+
+/**
+ * Check if vehicle is servicing.
+ * If it is servicing, decrease time till finishing the servicing.
+ * It services the vehicle when servicing time ends.
+ * @return true if the vehicle is still servicing, false if it is not servicing.
+ */
+bool Vehicle::ContinueServicing()
+{
+	if (!HasBit(this->vehicle_flags, VF_IS_SERVICING)) return false;
+
+	if (this->wait_counter--) return true;
+
+	VehicleServiceInBigDepot(this);
+	this->StopServicing();
+	return true;
+}
+
+void Vehicle::StopServicing()
+{
+	this->wait_counter = 0;
+
+	/* End servicing. */
+	ClrBit(this->vehicle_flags, VF_IS_SERVICING);
+	HideFillingPercent(&this->fill_percent_te_id);
+	InvalidateWindowData(WC_VEHICLE_VIEW, this->index);
+}
