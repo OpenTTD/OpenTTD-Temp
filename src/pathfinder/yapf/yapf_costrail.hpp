@@ -151,13 +151,24 @@ public:
 		return false;
 	}
 
+	/** Check for a reserved depot platform. */
+	inline bool IsAnyDepotTileReserved(TileIndex tile, Trackdir trackdir, int skipped)
+	{
+		TileIndexDiff diff = TileOffsByDiagDir(TrackdirToExitdir(ReverseTrackdir(trackdir)));
+		for (; skipped >= 0; skipped--, tile += diff) {
+			if (HasDepotReservation(tile)) return true;
+		}
+		return false;
+	}
+
 	/** The cost for reserved tiles, including skipped ones. */
 	inline int ReservationCost(Node &n, TileIndex tile, Trackdir trackdir, int skipped)
 	{
 		if (n.m_num_signals_passed >= m_sig_look_ahead_costs.size() / 2) return 0;
 		if (!IsPbsSignal(n.m_last_signal_type)) return 0;
 
-		if (IsRailStationTile(tile) && IsAnyStationTileReserved(tile, trackdir, skipped)) {
+		if ((IsRailStationTile(tile) && IsAnyStationTileReserved(tile, trackdir, skipped)) ||
+				(IsBigRailDepotTile(tile) && IsAnyDepotTileReserved(tile, trackdir, skipped))) {
 			return Yapf().PfGetSettings().rail_pbs_station_penalty * (skipped + 1);
 		} else if (TrackOverlapsTracks(GetReservedTrackbits(tile), TrackdirToTrack(trackdir))) {
 			int cost = Yapf().PfGetSettings().rail_pbs_cross_penalty;
