@@ -118,6 +118,7 @@ protected:
 	TileIndex    m_destTile;
 	TrackdirBits m_destTrackdirs;
 	StationID    m_dest_station_id;
+	DepotID      m_dest_depot_id;
 
 	/** to access inherited path finder */
 	Tpf& Yapf()
@@ -146,9 +147,18 @@ public:
 				m_destTrackdirs = INVALID_TRACKDIR_BIT;
 				break;
 
+			case OT_GOTO_DEPOT:
+				m_dest_station_id = INVALID_STATION;
+				m_dest_depot_id = v->current_order.GetDestination();
+				assert(Depot::IsValidID(m_dest_depot_id));
+				m_destTile = CalcClosestDepotTile(m_dest_depot_id, v->tile);
+				m_destTrackdirs = INVALID_TRACKDIR_BIT;
+				break;
+
 			default:
 				m_destTile = v->dest_tile;
 				m_dest_station_id = INVALID_STATION;
+				m_dest_depot_id = INVALID_DEPOT;
 				m_destTrackdirs = TrackStatusToTrackdirBits(GetTileTrackStatus(v->dest_tile, TRANSPORT_RAIL, 0));
 				break;
 		}
@@ -168,6 +178,10 @@ public:
 			return HasStationTileRail(tile)
 				&& (GetStationIndex(tile) == m_dest_station_id)
 				&& (GetRailStationTrack(tile) == TrackdirToTrack(td));
+		} else if (m_dest_depot_id != INVALID_DEPOT) {
+			return IsRailDepotTile(tile)
+				&& (GetDepotIndex(tile) == m_dest_depot_id)
+				&& (GetRailDepotTrack(tile) == TrackdirToTrack(td));
 		}
 
 		return (tile == m_destTile) && HasTrackdir(m_destTrackdirs, td);
