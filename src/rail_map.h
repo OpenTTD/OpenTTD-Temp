@@ -108,6 +108,50 @@ static inline bool IsRailDepotTile(TileIndex t)
 }
 
 /**
+ * Is this rail depot tile a big depot?
+ * @param t the tile to get the information from
+ * @pre IsRailDepotTile(t)
+ * @return true if and only if the tile is a big rail depot
+ */
+static inline bool IsBigRailDepot(TileIndex t)
+{
+	assert(IsRailDepotTile(t));
+	return HasBit(_m[t].m5, 5);
+}
+
+/**
+ * Is this rail tile a small rail depot?
+ * @param t the tile to get the information from
+ * @pre IsTileType(t, MP_RAILWAY)
+ * @return true if and only if the tile is a small rail depot
+ */
+static inline bool IsSmallRailDepot(TileIndex t)
+{
+	assert(IsTileType(t, MP_RAILWAY));
+	return IsRailDepot(t) && !IsBigRailDepot(t);
+}
+
+/**
+ * Is this tile rail tile and a smalll rail depot?
+ * @param t the tile to get the information from
+ * @return true if and only if the tile is a small rail depot
+ */
+static inline bool IsSmallRailDepotTile(TileIndex t)
+{
+	return IsTileType(t, MP_RAILWAY) && IsSmallRailDepot(t);
+}
+
+/**
+ * Is this tile rail tile and a big rail depot?
+ * @param t the tile to get the information from
+ * @return true if and only if the tile is a big rail depot
+ */
+static inline bool IsBigRailDepotTile(TileIndex t)
+{
+	return IsTileType(t, MP_RAILWAY) && IsRailDepotTile(t) && IsBigRailDepot(t);
+}
+
+/**
  * Gets the rail type of the given tile
  * @param t the tile to get the rail type from
  * @return the rail type of the tile

@@ -549,7 +549,7 @@ static int32 NPFRailPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 	 *      curves should be taken into account, as this affects the speed limit. */
 
 	/* Check for reverse in depot */
-	if (IsRailDepotTile(tile) && as->EndNodeCheck(as, &new_node) != AYSTAR_FOUND_END_NODE) {
+	if (IsSmallRailDepotTile(tile) && as->EndNodeCheck(as, &new_node) != AYSTAR_FOUND_END_NODE) {
 		/* Penalise any depot tile that is not the last tile in the path. This
 		 * _should_ penalise every occurrence of reversing in a depot (and only
 		 * that) */
@@ -791,7 +791,7 @@ static DiagDirection GetSingleTramBit(TileIndex tile)
  */
 static DiagDirection GetTileSingleEntry(TileIndex tile, TransportType type, uint subtype)
 {
-	if (type != TRANSPORT_WATER && IsDepotTypeTile(tile, type)) return GetDepotDirection(tile, type);
+	if (type != TRANSPORT_WATER && IsDepotTypeTile(tile, type) && !IsBigRailDepotTile(tile)) return GetDepotDirection(tile, type);
 
 	if (type == TRANSPORT_ROAD) {
 		if (IsStandardRoadStopTile(tile)) return GetRoadStopDir(tile);

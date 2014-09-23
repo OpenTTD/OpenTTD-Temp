@@ -2025,7 +2025,7 @@ void ReverseTrainDirection(Train *v)
 			!IsPbsSignal(GetSignalType(v->tile, FindFirstTrack(v->track))));
 
 		/* If we are on a depot tile facing outwards, do not treat the current tile as safe. */
-		if (IsRailDepotTile(v->tile) && TrackdirToExitdir(v->GetVehicleTrackdir()) == GetRailDepotDirection(v->tile)) first_tile_okay = false;
+		if (IsSmallRailDepotTile(v->tile) && TrackdirToExitdir(v->GetVehicleTrackdir()) == GetRailDepotDirection(v->tile)) first_tile_okay = false;
 
 		if (IsPlatformTile(v->tile)) SetPlatformReservation(v->tile, TrackdirToExitdir(v->GetVehicleTrackdir()), true);
 		if (TryPathReserve(v, false, first_tile_okay)) {
@@ -2403,7 +2403,7 @@ void FreeTrainTrackReservation(const Train *v)
 	StationID station_id = IsRailStationTile(v->tile) ? GetStationIndex(v->tile) : INVALID_STATION;
 
 	/* Can't be holding a reservation if we enter a depot. */
-	if (IsRailDepotTile(tile) && TrackdirToExitdir(td) != GetRailDepotDirection(tile)) return;
+	if (IsSmallRailDepotTile(tile) && TrackdirToExitdir(td) != GetRailDepotDirection(tile)) return;
 	if (v->track == TRACK_BIT_DEPOT) {
 		/* Front engine is in a depot. We enter if some part is not in the depot. */
 		for (const Train *u = v; u != nullptr; u = u->Next()) {
@@ -2843,6 +2843,7 @@ bool TryPathReserve(Train *v, bool mark_as_stuck, bool first_tile_okay)
 			if (mark_as_stuck) MarkTrainAsStuck(v);
 			return false;
 		} else {
+			assert(IsSmallRailDepotTile(v->tile));
 			/* Depot not reserved, but the next tile might be. */
 			TileIndex next_tile = TileAddByDiagDir(v->tile, GetRailDepotDirection(v->tile));
 			if (HasReservedTracks(next_tile, DiagdirReachesTracks(GetRailDepotDirection(v->tile)))) return false;
@@ -3645,7 +3646,7 @@ static void DeleteLastWagon(Train *v)
 	if (IsLevelCrossingTile(tile)) UpdateLevelCrossing(tile);
 
 	/* Update signals */
-	if (IsTileType(tile, MP_TUNNELBRIDGE) || IsRailDepotTile(tile)) {
+	if (IsTileType(tile, MP_TUNNELBRIDGE) || IsSmallRailDepotTile(tile)) {
 		UpdateSignalsOnSegment(tile, INVALID_DIAGDIR, owner);
 	} else {
 		SetSignalsOnBothDir(tile, track, owner);
@@ -3796,8 +3797,13 @@ static bool TrainCanLeaveTile(const Train *v)
 
 	/* entering a depot? */
 	if (IsRailDepotTile(tile)) {
-		DiagDirection dir = ReverseDiagDir(GetRailDepotDirection(tile));
-		if (DiagDirToDir(dir) == v->direction) return false;
+		if (IsBigRailDepot(tile)) {
+			Direction dir = DiagDirToDir(GetRailDepotDirection(tile));
+			if (dir == v->direction || ReverseDir(dir) == v->direction) return false;
+		} else {
+			DiagDirection dir = ReverseDiagDir(GetRailDepotDirection(tile));
+			if (DiagDirToDir(dir) == v->direction) return false;
+		}
 	}
 
 	return true;
