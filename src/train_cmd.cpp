@@ -850,6 +850,10 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		}
 
 		CheckConsistencyOfArticulatedVehicle(v);
+
+		TrainPlacement train_placement;
+		train_placement.LiftTrain(v, flags);
+		train_placement.PlaceTrain(v, flags);
 	}
 
 	return CommandCost();
@@ -1019,83 +1023,6 @@ static CommandCost CheckNewTrain(Train *original_dst, Train *dst, Train *origina
 }
 
 /**
- * Check if a train can be placed in a depot tile.
- * @param train The train.
- * @param tile The tile to check whether it is possible to place the train.
- * @return whether it found a depot tile to place the train.
- */
-bool CheckPlacement(const Train *train, TileIndex tile)
-{
-	assert(train != nullptr);
-	assert(IsRailDepotTile(tile));
-
-	RailType rt = GetRailType(tile);
-	for (const Train *t = train; t != nullptr; t = t->Next()) {
-		RailType rail_type = Engine::Get(t->engine_type)->u.rail.railtype;
-		if (!IsCompatibleRail(rail_type, rt)) return false;
-	}
-
-	return true;
-}
-
-/**
- * Before placing a train in the rails of a depot, a valid depot tile must
- * be found. This function finds a tile for placing the train.
- * @param t The train to place in a rail depot tile.
- * @return a compatible tile, if any, preferabily the one the first vehicle is or INVALID_TILE if none found.
- */
-TileIndex LookForTileInDepot(const Train *train)
-{
-	assert(train != nullptr);
-	assert(IsRailDepotTile(train->tile));
-	TileIndex best_tile = INVALID_TILE;
-
-	/* First candidate is the original position of the train. */
-	if (CheckPlacement(train, train->tile)) {
-		if (HasPowerOnRail(train->railtype, GetRailType(train->tile))) return train->tile;
-		best_tile = train->tile;
-	}
-
-	/* Check all depot tiles. */
-	Depot *depot = Depot::GetByTile(train->tile);
-	for (std::vector<TileIndex>::iterator it = depot->depot_tiles.begin(); it != depot->depot_tiles.end(); ++it) {
-		if (CheckPlacement(train, *it)) {
-			if (HasPowerOnRail(train->railtype, GetRailType(*it))) return *it;
-			if (best_tile == INVALID_TILE) best_tile = *it;
-		}
-	}
-
-	return best_tile;
-}
-
-/**
- * Find an appropriate depot tile for a train and place
- * all the vehicle chain in the same depot tile.
- * @param train The train to place.
- */
-void PlaceOnRailDepot(Train *train)
-{
-	assert(train->First() == train);
-	TileIndex depot_tile = LookForTileInDepot(train);
-
-	if (depot_tile == INVALID_TILE) NOT_REACHED();
-
-	DiagDirection diag_dir = GetRailDepotDirection(depot_tile);
-	int x = TileX(depot_tile) * TILE_SIZE + _vehicle_initial_x_fract[diag_dir];
-	int y = TileY(depot_tile) * TILE_SIZE + _vehicle_initial_y_fract[diag_dir];
-	for (Train *t = train; t != nullptr; t = t->Next()) {
-		t->tile = depot_tile;
-		t->direction = DiagDirToDir(diag_dir);
-		t->vehstatus |= VS_HIDDEN;
-		t->track = TRACK_BIT_DEPOT;
-		t->x_pos = x;
-		t->y_pos = y;
-		t->z_pos = GetSlopePixelZ(x, y);
-		t->UpdatePosition();
-	}
-}
-
-/**
  * Check whether the train parts can be attached.
  * @param t the train to check
  * @return possible error of this command.
@@ -1104,8 +1031,6 @@ static CommandCost CheckTrainAttachment(Train *t)
 {
 	/* No multi-part train, no need to check. */
 	if (t == nullptr || t->Next() == nullptr) return CommandCost();
-
-	if (LookForTileInDepot(t) == INVALID_TILE) return_cmd_error(STR_ERROR_INCOMPATIBLE_RAILTYPES_WITH_DEPOT);
 
 	/* The maximum length for a train. For each part we decrease this by one
 	 * and if the result is negative the train is simply too long. */
@@ -1390,6 +1315,13 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 	bool original_src_head_front_engine = original_src_head->IsFrontEngine();
 	bool original_dst_head_front_engine = original_dst_head != nullptr && original_dst_head->IsFrontEngine();
 
+	TrainPlacement train_placement_src;
+	TrainPlacement train_placement_dst;
+	train_placement_src.LiftTrain(src_head, flags);
+	train_placement_dst.LiftTrain(dst_head, flags);
+
+	assert(src_head != nullptr);
+
 	/* (Re)arrange the trains in the wanted arrangement. */
 	ArrangeTrains(&dst_head, dst, &src_head, src, move_chain);
 
@@ -1402,6 +1334,8 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 			/* Restore the train we had. */
 			RestoreTrainBackup(original_src);
 			RestoreTrainBackup(original_dst);
+			train_placement_src.PlaceTrain(original_src_head, flags & ~DC_EXEC);
+			if (src_head != dst_head) train_placement_dst.PlaceTrain(original_dst_head, flags & ~DC_EXEC);
 			return ret;
 		}
 	}
@@ -1473,15 +1407,14 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 			CheckCargoCapacity(dst_head);
 		}
 
-		if (src_head != nullptr) {
-			PlaceOnRailDepot(src_head->First());
-			src_head->First()->MarkDirty();
-		}
+		if (src_head != nullptr) src_head->First()->MarkDirty();
+		if (dst_head != nullptr) dst_head->First()->MarkDirty();
 
-		if (dst_head != nullptr) {
-			PlaceOnRailDepot(dst_head->First());
-			dst_head->First()->MarkDirty();
-		}
+		bool reverse_emplacement_order = !train_placement_src.placed && train_placement_dst.placed;
+
+		if (!reverse_emplacement_order) train_placement_src.PlaceTrain(src_head, flags);
+		if (src_head != dst_head) train_placement_dst.PlaceTrain(dst_head, flags);
+		if (reverse_emplacement_order) train_placement_src.PlaceTrain(src_head, flags);
 
 		/* We are undoubtedly changing something in the depot and train list. */
 		InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(src->tile));
@@ -1490,6 +1423,8 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 		/* We don't want to execute what we're just tried. */
 		RestoreTrainBackup(original_src);
 		RestoreTrainBackup(original_dst);
+		train_placement_src.PlaceTrain(original_src_head, flags);
+		if (src_head != dst_head) train_placement_dst.PlaceTrain(original_dst_head, flags);
 	}
 
 	return CommandCost();
@@ -1516,6 +1451,9 @@ CommandCost CmdSellRailWagon(DoCommandFlag flags, Vehicle *t, uint16 data, uint3
 
 	if (v->IsRearDualheaded()) return_cmd_error(STR_ERROR_REAR_ENGINE_FOLLOW_FRONT);
 
+	TrainPlacement train_placement;
+	train_placement.LiftTrain(first, flags);
+
 	/* First make a backup of the order of the train. That way we can do
 	 * whatever we want with the order and later on easily revert. */
 	TrainList original;
@@ -1533,12 +1471,14 @@ CommandCost CmdSellRailWagon(DoCommandFlag flags, Vehicle *t, uint16 data, uint3
 	if (ret.Failed()) {
 		/* Restore the train we had. */
 		RestoreTrainBackup(original);
+		train_placement.PlaceTrain(first, flags);
 		return ret;
 	}
 
 	if (first->orders.list == nullptr && !OrderList::CanAllocateItem()) {
 		/* Restore the train we had. */
 		RestoreTrainBackup(original);
+		train_placement.PlaceTrain(first, flags);
 		return_cmd_error(STR_ERROR_NO_MORE_SPACE_FOR_ORDERS);
 	}
 
@@ -1566,6 +1506,7 @@ CommandCost CmdSellRailWagon(DoCommandFlag flags, Vehicle *t, uint16 data, uint3
 
 		/* We need to update the information about the train. */
 		NormaliseTrainHead(new_head);
+		train_placement.PlaceTrain(new_head, flags);
 
 		/* We are undoubtedly changing something in the depot and train list. */
 		InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
@@ -1574,8 +1515,9 @@ CommandCost CmdSellRailWagon(DoCommandFlag flags, Vehicle *t, uint16 data, uint3
 		/* Actually delete the sold 'goods' */
 		delete sell_head;
 	} else {
-		/* We don't want to execute what we're just tried. */
+		/* We don't want to execute what we have just tried. */
 		RestoreTrainBackup(original);
+		train_placement.PlaceTrain(first, flags);
 	}
 
 	return cost;
@@ -1961,6 +1903,7 @@ void ReverseTrainDirection(Train *v)
 {
 	if (IsRailDepotTile(v->tile)) {
 		InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
+		if (IsBigDepot(v->tile) && (v->track & TRACK_BIT_DEPOT) != 0 && (v->track & ~TRACK_BIT_DEPOT) != 0) return;
 	}
 
 	/* Clear path reservation in front if train is not stuck. */
@@ -2076,7 +2019,14 @@ CommandCost CmdReverseTrainDirection(TileIndex tile, DoCommandFlag flags, uint32
 			ToggleBit(v->flags, VRF_REVERSE_DIRECTION);
 
 			front->ConsistChanged(CCF_ARRANGE);
-			if (IsRailDepotTile(front->tile)) SetWindowDirty(WC_VEHICLE_DEPOT, GetDepotIndex(front->tile));
+			if (IsRailDepotTile(front->tile)) {
+				if (IsBigDepot(front->tile)) {
+					TrainPlacement tp;
+					tp.LiftTrain(front, flags);
+					tp.PlaceTrain(front, flags & ~DC_EXEC);
+				}
+				SetWindowDirty(WC_VEHICLE_DEPOT, GetDepotIndex(front->tile));
+			}
 			SetWindowDirty(WC_VEHICLE_DETAILS, front->index);
 			SetWindowDirty(WC_VEHICLE_VIEW, front->index);
 			SetWindowClassesDirty(WC_TRAINS_LIST);
@@ -2084,6 +2034,9 @@ CommandCost CmdReverseTrainDirection(TileIndex tile, DoCommandFlag flags, uint32
 	} else {
 		/* turn the whole train around */
 		if ((v->vehstatus & VS_CRASHED) || v->breakdown_ctr != 0) return CMD_ERROR;
+
+		/* Do not reverse while servicing. */
+		if (IsBigRailDepotTile(v->tile) && (v->track & TRACK_BIT_DEPOT) != 0 && (v->track & ~TRACK_BIT_DEPOT) != 0) return CMD_ERROR;
 
 		if (flags & DC_EXEC) {
 			/* Properly leave the station if we are loading and won't be loading anymore */
@@ -2353,7 +2306,7 @@ static bool CheckTrainStayInDepot(Train *v)
 
 			TrainPlacement train_placement;
 			train_placement.LiftTrain(v, DC_EXEC);
-			train_placement.LookForPlaceInDepot(v);
+			train_placement.LookForPlaceInDepot(v, true);
 			if (train_placement.info < PI_FAILED_END) {
 				if (send_message) {
 					ClrBit(v->flags, VRF_TRAIN_STUCK);

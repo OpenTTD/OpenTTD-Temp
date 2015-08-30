@@ -817,7 +817,7 @@ struct DepotWindow : Window {
 			case WID_D_STOP_ALL:
 			case WID_D_START_ALL: {
 				VehicleListIdentifier vli(VL_DEPOT_LIST, this->type, this->owner);
-				DoCommandP(tile, (widget == WID_D_START_ALL ? (1 << 0) : 0), vli.Pack(), CMD_MASS_START_STOP);
+				DoCommandP(tile, (widget == WID_D_START_ALL ? (1 << 0) : 0), vli.Pack(), CMD_MASS_START_STOP | CMD_MSG(STR_ERROR_CAN_T_START_STOP_VEHICLES));
 				break;
 			}
 
