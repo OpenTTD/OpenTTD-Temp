@@ -840,7 +840,7 @@ struct DepotWindow : Window {
 				break;
 
 			case WID_D_AUTOREPLACE:
-				DoCommandP(tile, this->type, 0, CMD_DEPOT_MASS_AUTOREPLACE);
+				DoCommandP(tile, this->type, 0, CMD_DEPOT_MASS_AUTOREPLACE | CMD_MSG(STR_ERROR_CAN_T_REPLACE_VEHICLES));
 				break;
 
 		}

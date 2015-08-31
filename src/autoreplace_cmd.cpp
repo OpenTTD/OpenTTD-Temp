@@ -24,6 +24,8 @@
 #include "news_func.h"
 #include "strings_func.h"
 #include "depot_map.h"
+#include "train_placement.h"
+#include "news_func.h"
 
 #include "table/strings.h"
 
@@ -797,8 +799,14 @@ CommandCost CmdAutoreplaceVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1
 	if (cost.Failed()) return cost;
 
 	assert(free_wagon || v->IsStoppedInDepot());
+	if (flags & DC_EXEC) v->StopServicing();
 
-	if (IsBigDepotTile(v->tile)) SetBigDepotReservation(v, false);
+	TrainPlacement train_placement;
+	if (v->type == VEH_TRAIN) {
+		train_placement.LiftTrain(Train::From(v), flags);
+	} else if (IsBigDepotTile(v->tile)) {
+		UpdateExtendedDepotReservation(v, false);
+	}
 
 	/* Start autoreplacing the vehicle. */
 	flags |= DC_AUTOREPLACE;
@@ -826,10 +834,30 @@ CommandCost CmdAutoreplaceVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1
 		assert(ret.GetCost() == cost.GetCost());
 	}
 
-	if (IsBigDepotTile(v->tile)) SetBigDepotReservation(v, true);
+	/* Check whether the train can be placed on tracks. */
+	bool platform_error = false;
+
+	/* Autoreplacing is done. */
+	flags &= ~DC_AUTOREPLACE;
+
+	if (v->type == VEH_TRAIN) {
+		if (cost.Succeeded() && (flags & DC_EXEC) != 0) {
+			train_placement.LookForPlaceInDepot(Train::From(v), false);
+			if (train_placement.info < PI_WONT_LEAVE) {
+				platform_error = true;
+				if (v->owner == _local_company && v->IsFrontEngine()) {
+					SetDParam(0, v->index);
+					AddVehicleAdviceNewsItem(STR_ADVICE_PLATFORM_TYPE + train_placement.info - PI_ERROR_BEGIN, v->index);
+				}
+			}
+		}
+		train_placement.PlaceTrain(Train::From(v), flags);
+	} else if (IsBigDepotTile(v->tile)) {
+		UpdateExtendedDepotReservation(v, true);
+	}
 
 	/* Restart the vehicle */
-	if (!was_stopped) cost.AddCost(CmdStartStopVehicle(v, false));
+	if (!platform_error && !was_stopped) cost.AddCost(CmdStartStopVehicle(v, false));
 
 	assert(cost.Failed() || !nothing_to_do);
 	return cost;
