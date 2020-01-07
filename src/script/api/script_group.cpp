@@ -168,7 +168,16 @@
 {
 	if (!IsValidGroup(group_id)) return -1;
 
-	return ::Group::Get(group_id)->statistics.profit_last_year;
+	Money profit = 0;
+
+	for (const Vehicle *v : Vehicle::Iterate()) {
+		if (v->group_id != group_id) continue;
+		if (!v->IsPrimaryVehicle()) continue;
+
+		profit += v->GetDisplayProfitLastYear();
+	}
+
+	return profit;
 }
 
 /* static */ uint32 ScriptGroup::GetCurrentUsage(GroupID group_id)
