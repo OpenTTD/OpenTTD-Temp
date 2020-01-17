@@ -3145,6 +3145,11 @@ bool AfterLoadGame()
 		}
 	}
 
+	if (IsSavegameVersionBefore(SLV_PERMANENT_RIVERS)) {
+		/* When loading an older savegame version, treat 'dynamite river' as enabled. */
+		_settings_game.construction.dynamite_river = true;
+	}
+
 	/* Compute station catchment areas. This is needed here in case UpdateStationAcceptance is called below. */
 	Station::RecomputeCatchmentForAll();
 

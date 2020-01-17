@@ -53,6 +53,12 @@ enum WaterClass {
 /** Helper information for extract tool. */
 template <> struct EnumPropsT<WaterClass> : MakeEnumPropsT<WaterClass, byte, WATER_CLASS_SEA, WATER_CLASS_INVALID, WATER_CLASS_INVALID, 2> {};
 
+/** Bases of a canal (for #WATER_CLASS_CANAL class of water). */
+enum CanalBase {
+	WCC_WITHOUT_RIVER = 0, ///< Without a river under it
+	WCC_WITH_RIVER    = 1, ///< With a river under it
+};
+
 /** Sections of the water depot. */
 enum DepotPart {
 	DEPOT_PART_NORTH = 0, ///< Northern part of a depot.
@@ -119,6 +125,40 @@ static inline void SetWaterClass(TileIndex t, WaterClass wc)
 {
 	assert(HasTileWaterClass(t));
 	SB(_m[t].m1, 5, 2, wc);
+}
+
+/**
+ * Get the base of the canal at a tile.
+ * @param t Water tile to query.
+ * @pre GetWaterClass(t) == WATER_CLASS_CANAL
+ * @return Base of the canal at the tile.
+ */
+static inline CanalBase GetCanalBase(TileIndex t)
+{
+	assert(GetWaterClass(t) == WATER_CLASS_CANAL);
+	return (CanalBase)HasBit(_me[t].m8, 15) ? WCC_WITH_RIVER : WCC_WITHOUT_RIVER;
+}
+
+/**
+ * Set the base of the canal to indicate there is a river under a tile.
+ * @param t Water tile of water class canal to query.
+ * @pre GetWaterClass(t) == WATER_CLASS_CANAL
+ */
+static inline void SetCanalOnRiver(TileIndex t)
+{
+	assert(GetWaterClass(t) == WATER_CLASS_CANAL);
+	SB(_me[t].m8, 15, 1, WCC_WITH_RIVER);
+}
+
+/**
+ * Checks whether the canal at a tile has a river under it.
+ * @param t Water tile of water class canal to query.
+ * @pre GetWaterClass(t) == WATER_CLASS_CANAL
+ * @return true if the canal has a river under it.
+ */
+static inline bool HasTileCanalOnRiver(TileIndex t)
+{
+	return HasTileWaterClass(t) && GetWaterClass(t) == WATER_CLASS_CANAL && GetCanalBase(t) == WCC_WITH_RIVER;
 }
 
 /**

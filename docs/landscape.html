@@ -998,6 +998,7 @@
      <li>m7: animation frame (railway stations/waypoints, airports)</li>
      <li>m8 bits 11..6: <a href="#TramType">Tramtype</a></li>
      <li>m8 bits 5..0: <a href="#TrackType">track type</a> for railway stations/waypoints</li>
+     <li>m8 bit 15: set if a river was originally present under water based station tiles when current water class is canal (dock, buoy, oilrig)</li>
     </ul>
    </td>
   </tr>
@@ -1108,6 +1109,7 @@
        </tr>
       </table>
      </li>
+     <li>m8 bit 15: set if a river was originally present at the tile when current water class is canal (canal, ship depot, lock)</li>
     </ul>
    </td>
   </tr>
@@ -1450,6 +1452,7 @@
      <li>m6 bits 5..3: random triggers (NewGRF)</li>
      <li>m6 bit 2: bit 8 of type (see m5)</li>
      <li>m7: animation frame</li>
+     <li>m8 bit 15: set if a river was originally present at the tile when current water class is canal (oilrig)
     </ul>
    </td>
   </tr>
@@ -1622,6 +1625,7 @@
      <li>m3: random bits</li>
      <li>m5: index into the array of objects, bits 16 to 23 (lower bits in m2)</li>
      <li>m7: animation counter</li>
+     <li>m8 bit 15: set if a river was originally present at the tile when current water class is canal</li>
     </ul>
    </td>
   </tr>

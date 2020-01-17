@@ -2549,6 +2549,7 @@ CommandCost CmdBuildDock(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 
 	/* Get the water class of the water tile before it is cleared.*/
 	WaterClass wc = GetWaterClass(tile_cur);
+	bool river = HasTileCanalOnRiver(tile_cur);
 
 	ret = DoCommand(tile_cur, 0, 0, flags, CMD_LANDSCAPE_CLEAR);
 	if (ret.Failed()) return ret;
@@ -2587,6 +2588,7 @@ CommandCost CmdBuildDock(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 		Company::Get(st->owner)->infrastructure.station += 2;
 
 		MakeDock(tile, st->owner, st->index, direction, wc);
+		if (river) SetCanalOnRiver(tile + TileOffsByDiagDir(direction));
 		UpdateStationDockingTiles(st);
 
 		st->AfterStationTileSetChange(true, STATION_DOCK);
