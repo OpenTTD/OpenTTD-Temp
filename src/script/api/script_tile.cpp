@@ -58,6 +58,20 @@
 	return true;
 }
 
+/* static */ bool ScriptTile::IsSeaTile(TileIndex tile)
+{
+	if (!::IsValidTile(tile)) return false;
+
+	return ::IsTileType(tile, MP_WATER) && ::IsSea(tile);
+}
+
+/* static */ bool ScriptTile::IsRiverTile(TileIndex tile)
+{
+	if (!::IsValidTile(tile)) return false;
+
+	return ::IsTileType(tile, MP_WATER) && ::IsRiver(tile);
+}
+
 /* static */ bool ScriptTile::IsWaterTile(TileIndex tile)
 {
 	if (!::IsValidTile(tile)) return false;
@@ -320,6 +334,7 @@
 		case BT_CLEAR_ROCKY:  return ::GetPrice(PR_CLEAR_ROCKS, 1, nullptr);
 		case BT_CLEAR_FIELDS: return ::GetPrice(PR_CLEAR_FIELDS, 1, nullptr);
 		case BT_CLEAR_HOUSE:  return ::GetPrice(PR_CLEAR_HOUSE, 1, nullptr);
+		case BT_CLEAR_WATER:  return ::GetPrice(PR_CLEAR_WATER, 1, nullptr);
 		default: return -1;
 	}
 }

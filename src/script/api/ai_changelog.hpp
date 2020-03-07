@@ -15,6 +15,13 @@
  *
  * \b 1.12.0
  *
+ * API additions:
+ * \li AIMarine::BT_LOCK
+ * \li AIMarine::BT_CANAL
+ * \li AITile::IsSeaTile
+ * \li AITile::IsRiverTile
+ * \li AITile::BT_CLEAR_WATER
+ *
  * This version is not yet released. The following changes are not set in stone yet.
  *
  * \b 1.11.0
