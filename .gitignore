@@ -47,6 +47,12 @@ projects/*.VC.opendb
 src/rev.cpp
 src/os/windows/ottdres.rc
 
+tests/regression/*
+!tests/regression/*.sav
+!tests/regression/default.cfg
+!tests/regression/run.*
+!tests/regression/savegames.txt
+
 /Makefile*
 !/Makefile.msvc
 /config.*

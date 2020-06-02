@@ -68,5 +68,5 @@ jobs:
   - template: azure-pipelines/templates/osx-dependencies.yml
   - template: azure-pipelines/templates/ci-opengfx.yml
   - template: azure-pipelines/templates/osx-build.yml
-  - script: 'make regression'
+  - script: 'make -j1 test'
     displayName: 'Test'

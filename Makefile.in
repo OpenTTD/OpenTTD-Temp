@@ -168,7 +168,11 @@ run-prof: all
 
 regression: all
 	$(Q)cd !!BIN_DIR!! && sh ai/regression/run.sh
-test: regression
+
+savegame_test: all
+	$(Q)sh tests/regression/run.sh
+
+test: regression savegame_test
 
 %.o:
 	@for dir in $(SRC_DIRS); do \

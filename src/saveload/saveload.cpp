@@ -1886,7 +1886,7 @@ static void SlFixPointers()
 {
 	_sl.action = SLA_PTRS;
 
-	DEBUG(sl, 1, "Fixing pointers");
+	DEBUG(sl, 2, "Fixing pointers");
 
 	FOR_ALL_CHUNK_HANDLERS(ch) {
 		if (ch->ptrs_proc != nullptr) {
@@ -1895,7 +1895,7 @@ static void SlFixPointers()
 		}
 	}
 
-	DEBUG(sl, 1, "All pointers fixed");
+	DEBUG(sl, 2, "All pointers fixed");
 
 	assert(_sl.action == SLA_PTRS);
 }
