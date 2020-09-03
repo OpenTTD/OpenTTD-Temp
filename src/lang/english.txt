@@ -1313,6 +1313,8 @@ STR_CONFIG_SETTING_GRAPH_LINE_THICKNESS                         :Thickness of li
 STR_CONFIG_SETTING_GRAPH_LINE_THICKNESS_HELPTEXT                :Width of the line in the graphs. A thin line is more precisely readable, a thicker line is easier to see and colours are easier to distinguish
 STR_CONFIG_SETTING_SHOW_NEWGRF_NAME                             :Show the NewGRF's name in the build vehicle window: {STRING2}
 STR_CONFIG_SETTING_SHOW_NEWGRF_NAME_HELPTEXT                    :Add a line to the build vehicle window, showing which NewGRF the selected vehicle comes from.
+STR_CONFIG_SETTING_SHOW_CARGO_IN_LISTS                          :Show the cargoes the vehicles can carry in the list windows {STRING2}
+STR_CONFIG_SETTING_SHOW_CARGO_IN_LISTS_HELPTEXT                 :If enabled, the vehicle’s transportable load will appear above it in the vehicle lists
 
 STR_CONFIG_SETTING_LANDSCAPE                                    :Landscape: {STRING2}
 STR_CONFIG_SETTING_LANDSCAPE_HELPTEXT                           :Landscapes define basic gameplay scenarios with different cargos and town growth requirements. NewGRF and Game Scripts allow finer control though
@@ -3437,6 +3439,8 @@ STR_VEHICLE_LIST_SHIP_TOOLTIP                                   :{BLACK}Ships - 
 STR_VEHICLE_LIST_AIRCRAFT_TOOLTIP                               :{BLACK}Aircraft - click on aircraft for information
 
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Profit this year: {CURRENCY_LONG} (last year: {CURRENCY_LONG})
+
+STR_VEHICLE_LIST_NAME_AND_CARGO                                 :{TINY_FONT}{BLACK}{STRING1} [{CARGO_LIST}]
 
 STR_VEHICLE_LIST_AVAILABLE_TRAINS                               :Available Trains
 STR_VEHICLE_LIST_AVAILABLE_ROAD_VEHICLES                        :Available Vehicles

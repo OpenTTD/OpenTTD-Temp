@@ -1395,7 +1395,36 @@ void BaseVehicleListWindow::DrawVehicleListItems(VehicleID selected_vehicle, int
 		DrawVehicleImage(v, image_left, image_right, y + FONT_HEIGHT_SMALL - 1, selected_vehicle, EIT_IN_LIST, 0);
 		DrawString(text_left, text_right, y + line_height - FONT_HEIGHT_SMALL - WD_FRAMERECT_BOTTOM - 1, STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR);
 
-		if (!v->name.empty()) {
+		if (_settings_client.gui.show_cargo_in_vehicle_lists) {
+			/* Get the cargoes the vehicle can carry */
+			CargoTypes vehicle_cargoes = 0;
+
+			for (auto u = v; u != nullptr; u = u->Next()) {
+				if (u->cargo_cap == 0) continue;
+
+				SetBit(vehicle_cargoes, u->cargo_type);
+			}
+
+			if (!v->name.empty()) {
+				/* The vehicle got a name so we will print it and the cargoes */
+				SetDParam(0, STR_TINY_BLACK_VEHICLE);
+				SetDParam(1, v->index);
+				SetDParam(2, vehicle_cargoes);
+				DrawString(text_left, text_right, y, STR_VEHICLE_LIST_NAME_AND_CARGO);
+			} else if (v->group_id != DEFAULT_GROUP) {
+				/* The vehicle has no name, but is member of a group, so print group name and the cargoes */
+				SetDParam(0, STR_TINY_GROUP);
+				SetDParam(1, v->group_id);
+				SetDParam(2, vehicle_cargoes);
+				DrawString(text_left, text_right, y, STR_VEHICLE_LIST_NAME_AND_CARGO);
+			} else {
+				/* The vehicle has no name, and is not a member of a group, so just print the cargoes */
+				SetDParam(0, STR_JUST_STRING);
+				SetDParam(1, STR_EMPTY);
+				SetDParam(2, vehicle_cargoes);
+				DrawString(text_left, text_right, y, STR_VEHICLE_LIST_NAME_AND_CARGO);
+			}
+		} else if (!v->name.empty()) {
 			/* The vehicle got a name so we will print it */
 			SetDParam(0, v->index);
 			DrawString(text_left, text_right, y, STR_TINY_BLACK_VEHICLE);
