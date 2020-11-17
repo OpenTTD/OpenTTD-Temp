@@ -3991,6 +3991,9 @@ STR_ORDERS_DELETE_ALL_TOOLTIP                                   :{BLACK}Delete a
 STR_ORDERS_STOP_SHARING_BUTTON                                  :{BLACK}Stop sharing
 STR_ORDERS_STOP_SHARING_TOOLTIP                                 :{BLACK}Stop sharing the order list. Ctrl+Click additionally deletes all orders for this vehicle
 
+STR_ORDERS_AUTOMATIC_SEPARATION                                 :{BLACK}Automatic separation
+STR_ORDERS_AUTOMATIC_SEPARATION_TOOLTIP                         :{BLACK}Automatically separate all vehicles sharing this order
+
 STR_ORDERS_GO_TO_BUTTON                                         :{BLACK}Go To
 STR_ORDER_GO_TO_NEAREST_DEPOT                                   :Go to nearest depot
 STR_ORDER_GO_TO_NEAREST_HANGAR                                  :Go to nearest hangar

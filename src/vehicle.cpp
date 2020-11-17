@@ -1486,6 +1486,7 @@ void VehicleEnterDepot(Vehicle *v)
 
 	v->vehstatus |= VS_HIDDEN;
 	v->cur_speed = 0;
+	v->ResetAutomaticSeparation();
 
 	VehicleServiceInDepot(v);
 
@@ -2249,6 +2250,10 @@ void Vehicle::HandleLoading(bool mode)
 			/* Not the first call for this tick, or still loading */
 			if (mode || !HasBit(this->vehicle_flags, VF_LOADING_FINISHED) || this->current_order_time < wait_time) return;
 
+			this->UpdateAutomaticSeparation();
+
+			if (this->IsWaitingForAutomaticSeparation()) return;
+
 			this->PlayLeaveStationSound();
 
 			this->LeaveStation();
@@ -2269,6 +2274,87 @@ void Vehicle::HandleLoading(bool mode)
 	}
 
 	this->IncrementImplicitOrderIndex();
+}
+
+/**
+ * Checks whether a vehicle is waiting for automatic separation (if not,
+ * it is ready to depart)
+ */
+bool Vehicle::IsWaitingForAutomaticSeparation() const {
+	Ticks now = _date * DAY_TICKS + _date_fract;
+	return this->AutomaticSeparationIsEnabled() && this->first_order_last_departure > now;
+};
+
+/**
+ * If enabled, calculates the departure time for this vehicle based on the
+ * automatic separation feature.
+ */
+void Vehicle::UpdateAutomaticSeparation()
+{
+	/* Check this feature is enabled on the vehicle's orders */
+	if (!this->AutomaticSeparationIsEnabled()) return;
+
+	/* Only perform the separation at the first manual order (saves on storage) */
+	VehicleOrderID first_manual_order = 0;
+	for (Order *o = this->GetFirstOrder(); o != nullptr && o->IsType(OT_IMPLICIT); o = o->next) {
+		++first_manual_order;
+	}
+	if (this->cur_implicit_order_index != first_manual_order) return;
+
+	/* A "last departure" >= now means we've already calculated the separation */
+	Ticks now = _date * DAY_TICKS + _date_fract;
+	if (this->first_order_last_departure >= now) return;
+
+	/* Calculate round trip time from last departure and now - automatic separation waiting time is not included */
+	if (this->first_order_last_departure > 0) {
+		this->first_order_round_trip_time = max(0, now - this->first_order_last_departure);
+	}
+
+	/* To work out the automatic separation waiting time we need to know:
+	 *   - When the last vehicle departed or will depart
+	 *   - Average time to perform the order list (as sum/count)
+	 *   - How many vehicles are currently operating the order list
+	 *   - How many vehicles are currently queuing for the first manual order
+	 */
+	Date last_departure = 0;
+	uint round_trip_sum = 0;
+	uint round_trip_count = 0;
+	uint vehicles_operating = 0;
+	uint vehicles_queuing = 0;
+	Vehicle *v = this->FirstShared();
+	while (v != nullptr) {
+		last_departure = max(last_departure, v->first_order_last_departure);
+		if (v->first_order_round_trip_time > 0) {
+			round_trip_sum += v->first_order_round_trip_time;
+			round_trip_count++;
+		}
+		/* A stopped vehicle is not included; it might be stopped by player or parked in a depot */
+		if (!(v->vehstatus & VS_STOPPED)) {
+			vehicles_operating++;
+			/* Count vehicles queing for the first manual order but not currently in the station */
+			if (v != this && v->cur_speed == 0 && v->cur_implicit_order_index == first_manual_order && !v->current_order.IsType(OT_LOADING)) {
+				vehicles_queuing++;
+			}
+		}
+		v = v->NextShared();
+	}
+
+	/* Calculate the mean round trip time and separation; round trip time is scaled down based on number of queuing
+	 * vehicles, so that the extra time queuing does not have an adverse effect on separation */
+	int round_trip_time = round_trip_count > 0 ? round_trip_sum / round_trip_count : 0;
+	int vehicles = vehicles_operating + vehicles_queuing;
+	int separation = max(1, vehicles > 0 ? (int)(round_trip_time * ((float)vehicles_operating / vehicles) / (int)vehicles) : 1);
+
+	/* Finally we can calculate when this vehicle should depart; if that's in the past, it'll depart right now */
+	this->first_order_last_departure = max(last_departure + separation, now);
+
+	/* Debug logging can be quite spammy as it prints a line every time a vehicle departs the first manual order */
+	if (_debug_misc_level >= 4) {
+		char buffer[128];
+		SetDParam(0, this->index);
+		GetString(buffer, STR_VEHICLE_NAME, lastof(buffer));
+		DEBUG(misc, 4, "Orders %p RTT = %d [%.2f days] [%d veh], gap = %d [%.2f days] [%d veh + %d q] / %s gap = %d [%.2f days], wait = %d [%.2f days]", this->orders, round_trip_time, (float)round_trip_time / DAY_TICKS, round_trip_count, separation, (float)separation / DAY_TICKS, vehicles_operating, vehicles_queuing, buffer, now - last_departure, (float)(now - last_departure) / DAY_TICKS, this->first_order_last_departure - now, (float)(this->first_order_last_departure - now) / DAY_TICKS);
+	}
 }
 
 /**

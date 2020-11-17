@@ -94,6 +94,8 @@ CommandProc CmdModifyOrder;
 CommandProc CmdSkipToOrder;
 CommandProc CmdDeleteOrder;
 CommandProc CmdInsertOrder;
+CommandProc CmdOrderAutomaticSeparation;
+
 CommandProc CmdChangeServiceInt;
 
 CommandProc CmdBuildIndustry;
@@ -262,6 +264,7 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdSkipToOrder,                                    0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SKIP_TO_ORDER
 	DEF_CMD(CmdDeleteOrder,                                    0, CMDT_ROUTE_MANAGEMENT      ), // CMD_DELETE_ORDER
 	DEF_CMD(CmdInsertOrder,                                    0, CMDT_ROUTE_MANAGEMENT      ), // CMD_INSERT_ORDER
+	DEF_CMD(CmdOrderAutomaticSeparation,                       0, CMDT_ROUTE_MANAGEMENT      ), // CMD_ORDER_AUTOMATIC_SEPARATION
 
 	DEF_CMD(CmdChangeServiceInt,                               0, CMDT_VEHICLE_MANAGEMENT    ), // CMD_CHANGE_SERVICE_INT
 

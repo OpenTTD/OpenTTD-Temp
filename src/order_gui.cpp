@@ -470,9 +470,9 @@ enum {
  * \section bottom-row Bottom row
  * The second row (the bottom row) is for manipulating the list of orders:
  * \verbatim
- * +-----------------+-----------------+-----------------+
- * |      SKIP       |     DELETE      |      GOTO       |
- * +-----------------+-----------------+-----------------+
+ * +-----------------+-----------------+-----------------+-----------------+
+ * |      SKIP       |     DELETE      | AUTO SEPARATION |      GOTO       |
+ * +-----------------+-----------------+-----------------+-----------------+
  * \endverbatim
  *
  * For vehicles of other companies, both button rows are not displayed.
@@ -553,6 +553,16 @@ private:
 		sel += this->vscroll->GetPosition();
 
 		return (sel <= vehicle->GetNumOrders() && sel >= 0) ? sel : INVALID_VEH_ORDER_ID;
+	}
+
+	/**
+	 * Handle the click on the automatic separation button
+	 */
+	void OrderClick_AutomaticSeparation()
+	{
+		if (DoCommandP(this->vehicle->tile, this->vehicle->index, !this->vehicle->AutomaticSeparationIsEnabled(), CMD_ORDER_AUTOMATIC_SEPARATION | CMD_MSG(STR_ERROR_CAN_T_DELETE_THIS_ORDER))) {
+			this->UpdateButtonState();
+		}
 	}
 
 	/**
@@ -944,6 +954,10 @@ public:
 			}
 		}
 
+		/* automatic separation */
+		this->SetWidgetDisabledState(WID_O_AUTOMATIC_SEPARATION, this->vehicle->GetNumOrders() == 0);
+		this->SetWidgetLoweredState(WID_O_AUTOMATIC_SEPARATION, this->vehicle->AutomaticSeparationIsEnabled());
+
 		/* First row. */
 		this->RaiseWidget(WID_O_FULL_LOAD);
 		this->RaiseWidget(WID_O_UNLOAD);
@@ -1236,6 +1250,10 @@ public:
 					ShowDropDownMenu(this, _order_non_stop_drowdown, o->GetNonStopType(), WID_O_NON_STOP, 0,
 													o->IsType(OT_GOTO_STATION) ? 0 : (o->IsType(OT_GOTO_WAYPOINT) ? 3 : 12));
 				}
+				break;
+
+			case WID_O_AUTOMATIC_SEPARATION:
+				this->OrderClick_AutomaticSeparation();
 				break;
 
 			case WID_O_GOTO:
@@ -1599,6 +1617,8 @@ static const NWidgetPart _nested_orders_train_widgets[] = {
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_O_STOP_SHARING), SetMinimalSize(124, 12), SetFill(1, 0),
 														SetDataTip(STR_ORDERS_STOP_SHARING_BUTTON, STR_ORDERS_STOP_SHARING_TOOLTIP), SetResize(1, 0),
 			EndContainer(),
+			NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_O_AUTOMATIC_SEPARATION), SetMinimalSize(124, 12), SetFill(1, 0),
+													SetDataTip(STR_ORDERS_AUTOMATIC_SEPARATION, STR_ORDERS_AUTOMATIC_SEPARATION_TOOLTIP), SetResize(1, 0),
 			NWidget(NWID_BUTTON_DROPDOWN, COLOUR_GREY, WID_O_GOTO), SetMinimalSize(124, 12), SetFill(1, 0),
 													SetDataTip(STR_ORDERS_GO_TO_BUTTON, STR_ORDERS_GO_TO_TOOLTIP), SetResize(1, 0),
 		EndContainer(),
@@ -1673,6 +1693,8 @@ static const NWidgetPart _nested_orders_widgets[] = {
 			NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_O_STOP_SHARING), SetMinimalSize(124, 12), SetFill(1, 0),
 													SetDataTip(STR_ORDERS_STOP_SHARING_BUTTON, STR_ORDERS_STOP_SHARING_TOOLTIP), SetResize(1, 0),
 		EndContainer(),
+		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_O_AUTOMATIC_SEPARATION), SetMinimalSize(124, 12), SetFill(1, 0),
+											SetDataTip(STR_ORDERS_AUTOMATIC_SEPARATION, STR_ORDERS_AUTOMATIC_SEPARATION_TOOLTIP), SetResize(1, 0),
 		NWidget(NWID_BUTTON_DROPDOWN, COLOUR_GREY, WID_O_GOTO), SetMinimalSize(124, 12), SetFill(1, 0),
 											SetDataTip(STR_ORDERS_GO_TO_BUTTON, STR_ORDERS_GO_TO_TOOLTIP), SetResize(1, 0),
 		NWidget(WWT_RESIZEBOX, COLOUR_GREY),

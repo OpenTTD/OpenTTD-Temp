@@ -263,6 +263,8 @@ private:
 	Ticks timetable_duration;         ///< NOSAVE: Total timetabled duration of the order list.
 	Ticks total_duration;             ///< NOSAVE: Total (timetabled or not) duration of the order list.
 
+	bool automatic_separation;        ///< Is automatic separation enabled?
+
 public:
 	/** Default constructor producing an invalid order list. */
 	OrderList(VehicleOrderID num_orders = INVALID_VEH_ORDER_ID)
@@ -386,6 +388,18 @@ public:
 	 * @param delta By how many ticks has the total duration changed
 	 */
 	void UpdateTotalDuration(Ticks delta) { this->total_duration += delta; }
+
+	/**
+	 * Is this order list using automatic separation?
+	 * @return whether automatic separation is enabled
+	 */
+	inline bool AutomaticSeparationIsEnabled() const { return this->automatic_separation; }
+
+	/**
+	 * Enables or disables automatic separation for this order list
+	 * @param enabled whether to enable (true) or disable (false) automatic separation
+	 */
+	void SetAutomaticSeparationIsEnabled(bool enabled) { this->automatic_separation = enabled; }
 
 	void FreeChain(bool keep_orderlist = false);
 
