@@ -2353,7 +2353,7 @@ void Vehicle::UpdateAutomaticSeparation()
 		char buffer[128];
 		SetDParam(0, this->index);
 		GetString(buffer, STR_VEHICLE_NAME, lastof(buffer));
-		DEBUG(misc, 4, "Orders %p RTT = %d [%.2f days] [%d veh], gap = %d [%.2f days] [%d veh + %d q] / %s gap = %d [%.2f days], wait = %d [%.2f days]", this->orders, round_trip_time, (float)round_trip_time / DAY_TICKS, round_trip_count, separation, (float)separation / DAY_TICKS, vehicles_operating, vehicles_queuing, buffer, now - last_departure, (float)(now - last_departure) / DAY_TICKS, this->first_order_last_departure - now, (float)(this->first_order_last_departure - now) / DAY_TICKS);
+		DEBUG(misc, 4, "Orders for %s: RTT = %d [%.2f days] [%d veh], gap = %d [%.2f days] [%d veh + %d q] / gap = %d [%.2f days], wait = %d [%.2f days]", buffer, round_trip_time, (float)round_trip_time / DAY_TICKS, round_trip_count, separation, (float)separation / DAY_TICKS, vehicles_operating, vehicles_queuing, now - last_departure, (float)(now - last_departure) / DAY_TICKS, this->first_order_last_departure - now, (float)(this->first_order_last_departure - now) / DAY_TICKS);
 	}
 }
 
