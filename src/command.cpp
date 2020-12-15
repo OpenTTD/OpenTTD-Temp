@@ -95,7 +95,6 @@ CommandProc CmdSkipToOrder;
 CommandProc CmdDeleteOrder;
 CommandProc CmdInsertOrder;
 CommandProc CmdOrderAutomaticSeparation;
-
 CommandProc CmdChangeServiceInt;
 
 CommandProc CmdBuildIndustry;

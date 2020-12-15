@@ -2354,7 +2354,7 @@ void Vehicle::UpdateAutomaticSeparation()
 	 * to over-compensate rather than aim exactly for the ideal (which is very approximate here). */
 	int round_trip_time = round_trip_count > 0 ? round_trip_sum / round_trip_count : 0;
 	int vehicles_moving_ratio = max(1, vehicles - 2 * vehicles_queuing);
-	int separation = max(1, vehicles > 0 ? ((round_trip_time * vehicles_moving_ratio) / vehicles) / vehicles : 1);
+	int separation = max(1, vehicles > 0 ? round_trip_time * vehicles_moving_ratio / vehicles / vehicles : 1);
 
 	/* Finally we can calculate when this vehicle should depart; if that's in the past, it'll depart right now */
 	this->first_order_last_departure = max(last_departure + separation, now);

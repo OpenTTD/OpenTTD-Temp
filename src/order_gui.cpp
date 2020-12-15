@@ -560,7 +560,7 @@ private:
 	 */
 	void OrderClick_AutomaticSeparation()
 	{
-		if (DoCommandP(this->vehicle->tile, this->vehicle->index, !this->vehicle->AutomaticSeparationIsEnabled(), CMD_ORDER_AUTOMATIC_SEPARATION | CMD_MSG(STR_ERROR_CAN_T_DELETE_THIS_ORDER))) {
+		if (DoCommandP(this->vehicle->tile, this->vehicle->index, !this->vehicle->AutomaticSeparationIsEnabled(), CMD_ORDER_AUTOMATIC_SEPARATION)) {
 			this->UpdateButtonState();
 		}
 	}
