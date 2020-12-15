@@ -2319,8 +2319,8 @@ void Vehicle::UpdateAutomaticSeparation()
 	Date last_departure = 0;
 	uint round_trip_sum = 0;
 	uint round_trip_count = 0;
-	uint vehicles_operating = 0;
-	uint vehicles_queuing = 0;
+	int vehicles = 0;
+	int vehicles_queuing = 0;
 	Vehicle *v = this->FirstShared();
 	while (v != nullptr) {
 		last_departure = max(last_departure, v->first_order_last_departure);
@@ -2330,7 +2330,7 @@ void Vehicle::UpdateAutomaticSeparation()
 		}
 		/* A stopped vehicle is not included; it might be stopped by player or parked in a depot */
 		if (!(v->vehstatus & VS_STOPPED)) {
-			vehicles_operating++;
+			vehicles++;
 			/* Count vehicles queing for the first manual order but not currently in the station */
 			if (v != this && v->cur_speed == 0 && v->cur_implicit_order_index == first_manual_order && !v->current_order.IsType(OT_LOADING)) {
 				vehicles_queuing++;
@@ -2339,11 +2339,22 @@ void Vehicle::UpdateAutomaticSeparation()
 		v = v->NextShared();
 	}
 
-	/* Calculate the mean round trip time and separation; round trip time is scaled down based on number of queuing
-	 * vehicles, so that the extra time queuing does not have an adverse effect on separation */
+	/* Calculate the mean round trip time and separation. The time spent queuing for stations is included in vehicle
+	 * round trip times.
+	 *
+	 * For a single shared order into a single station, this will increase and decrease the separation as needed.
+	 * However, for multiple shared orders into the same station, each shared order can back up the others and all
+	 * the routes will slowly increase their separation until every available vehicle is in the same queue.
+	 *
+	 * To counter this, we need to reduce the round trip time when vehicles are queuing. The scaling here reduces it
+	 * by twice the proportion of queuing vehicles, e.g. if 1/N vehicles are queuing, the RTT is reduced by 2/N.
+	 *
+	 * This is based on the idea that if only M/N vehicles are progressing, the non-queuing RTT is approximately M/N
+	 * of the measured RTT, because (N-M)/N of the RTT is spent in the queue, with the 'twice' coming from the need
+	 * to over-compensate rather than aim exactly for the ideal (which is very approximate here). */
 	int round_trip_time = round_trip_count > 0 ? round_trip_sum / round_trip_count : 0;
-	int vehicles = vehicles_operating + vehicles_queuing;
-	int separation = max(1, vehicles > 0 ? (int)(round_trip_time * ((float)vehicles_operating / vehicles) / (int)vehicles) : 1);
+	int vehicles_moving_ratio = max(1, vehicles - 2 * vehicles_queuing);
+	int separation = max(1, vehicles > 0 ? ((round_trip_time * vehicles_moving_ratio) / vehicles) / vehicles : 1);
 
 	/* Finally we can calculate when this vehicle should depart; if that's in the past, it'll depart right now */
 	this->first_order_last_departure = max(last_departure + separation, now);
@@ -2353,7 +2364,7 @@ void Vehicle::UpdateAutomaticSeparation()
 		char buffer[128];
 		SetDParam(0, this->index);
 		GetString(buffer, STR_VEHICLE_NAME, lastof(buffer));
-		DEBUG(misc, 4, "Orders for %s: RTT = %d [%.2f days] [%d veh], gap = %d [%.2f days] [%d veh + %d q] / gap = %d [%.2f days], wait = %d [%.2f days]", buffer, round_trip_time, (float)round_trip_time / DAY_TICKS, round_trip_count, separation, (float)separation / DAY_TICKS, vehicles_operating, vehicles_queuing, now - last_departure, (float)(now - last_departure) / DAY_TICKS, this->first_order_last_departure - now, (float)(this->first_order_last_departure - now) / DAY_TICKS);
+		DEBUG(misc, 4, "Orders for %s: RTT = %d [%.2f days] [%d veh], gap = %d [%.2f days] [%d veh + %d q] / gap = %d [%.2f days], wait = %d [%.2f days]", buffer, round_trip_time, (float)round_trip_time / DAY_TICKS, round_trip_count, separation, (float)separation / DAY_TICKS, vehicles, vehicles_queuing, now - last_departure, (float)(now - last_departure) / DAY_TICKS, this->first_order_last_departure - now, (float)(this->first_order_last_departure - now) / DAY_TICKS);
 	}
 }
 
