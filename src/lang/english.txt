@@ -1749,6 +1749,9 @@ STR_CONFIG_SETTING_REVERSE_AT_SIGNALS_HELPTEXT                  :Allow trains to
 
 STR_CONFIG_SETTING_QUERY_CAPTION                                :{WHITE}Change setting value
 
+STR_CONFIG_SETTING_COMPANY_AUTOPROTECT                          :Automatically protect new companies with your public key
+STR_CONFIG_SETTING_COMPANY_AUTOPROTECT_HELPTEXT                 :Automatically protect new companies with your public key. This allows only you to access your companies, without the need for password. Key material is stored on disk in your OpenTTD data directory.
+
 # Config errors
 STR_CONFIG_ERROR                                                :{WHITE}Error with the configuration file...
 STR_CONFIG_ERROR_ARRAY                                          :{WHITE}... error in array '{RAW_STRING}'
@@ -2128,6 +2131,10 @@ STR_COMPANY_PASSWORD_OK                                         :{BLACK}Give the
 STR_COMPANY_PASSWORD_CAPTION                                    :{WHITE}Company password
 STR_COMPANY_PASSWORD_MAKE_DEFAULT                               :{BLACK}Default company password
 STR_COMPANY_PASSWORD_MAKE_DEFAULT_TOOLTIP                       :{BLACK}Use this company password as default for new companies
+STR_COMPANY_PROTECT_PUBKEY                                      :{BLACK}Protect with pubkey
+STR_COMPANY_PROTECT_PUBKEY_TOOLTIP                              :{BLACK}This protects company with your public key (and possibly replaces previous public key associated with company). Key material is stored on disk in your OpenTTD data directory. Password won't be needed, but it can be used as alternate authentication method.
+STR_COMPANY_UNPROTECT_PUBKEY                                    :{BLACK}Unprotect with pubkey
+STR_COMPANY_UNPROTECT_PUBKEY_TOOLTIP                            :{BLACK}This removes any possible public key authentication from the company. Company will be left unprotected, unless password is set.
 
 # Network company info join/password
 STR_COMPANY_VIEW_JOIN                                           :{BLACK}Join

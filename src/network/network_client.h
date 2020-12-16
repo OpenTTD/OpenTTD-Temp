@@ -25,6 +25,7 @@ private:
 		STATUS_JOIN,          ///< We are trying to join a server.
 		STATUS_NEWGRFS_CHECK, ///< Last action was checking NewGRFs.
 		STATUS_AUTH_GAME,     ///< Last action was requesting game (server) password.
+		STATUS_AUTH_KEY,      ///< Last action was requesting crypto challenge.
 		STATUS_AUTH_COMPANY,  ///< Last action was requesting company password.
 		STATUS_AUTHORIZED,    ///< The client is authorized at the server.
 		STATUS_MAP_WAIT,      ///< The client is waiting as someone else is downloading the map.
@@ -46,6 +47,7 @@ protected:
 	NetworkRecvStatus Receive_SERVER_COMPANY_INFO(Packet *p) override;
 	NetworkRecvStatus Receive_SERVER_CLIENT_INFO(Packet *p) override;
 	NetworkRecvStatus Receive_SERVER_NEED_GAME_PASSWORD(Packet *p) override;
+	NetworkRecvStatus Receive_SERVER_NEED_KEYAUTH(Packet *p) override;
 	NetworkRecvStatus Receive_SERVER_NEED_COMPANY_PASSWORD(Packet *p) override;
 	NetworkRecvStatus Receive_SERVER_WELCOME(Packet *p) override;
 	NetworkRecvStatus Receive_SERVER_WAIT(Packet *p) override;
@@ -92,6 +94,7 @@ public:
 
 	static NetworkRecvStatus SendChat(NetworkAction action, DestType type, int dest, const char *msg, int64 data);
 	static NetworkRecvStatus SendSetPassword(const char *password);
+	static NetworkRecvStatus SendSetCompanyPubkey(bool protect);
 	static NetworkRecvStatus SendSetName(const char *name);
 	static NetworkRecvStatus SendRCon(const char *password, const char *command);
 	static NetworkRecvStatus SendMove(CompanyID company, const char *password);
@@ -108,10 +111,13 @@ typedef ClientNetworkGameSocketHandler MyClient;
 
 void NetworkClient_Connected();
 void NetworkClientSetCompanyPassword(const char *password);
+void NetworkClientSetCompanyPubkey(bool protect);
 
 extern CompanyID _network_join_as;
 
 extern const char *_network_join_server_password;
 extern const char *_network_join_company_password;
+
+extern struct hydro_sign_keypair _network_keypair;
 
 #endif /* NETWORK_CLIENT_H */

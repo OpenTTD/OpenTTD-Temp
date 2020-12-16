@@ -120,6 +120,8 @@ enum NetworkCompanyPasswordWidgets {
 	WID_NCP_LABEL,                    ///< Label in front of the password field.
 	WID_NCP_PASSWORD,                 ///< Input field for the password.
 	WID_NCP_SAVE_AS_DEFAULT_PASSWORD, ///< Toggle 'button' for saving the current password as default password.
+	WID_NCP_PROTECT_PUBKEY,           ///< Button for protecting company with pubkey.
+	WID_NCP_UNPROTECT_PUBKEY,         ///< Button for unprotecting company with pubkey.
 	WID_NCP_WARNING,                  ///< Warning text about password security
 	WID_NCP_CANCEL,                   ///< Close the window without changing anything.
 	WID_NCP_OK,                       ///< Safe the password etc.

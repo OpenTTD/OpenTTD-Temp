@@ -198,6 +198,9 @@ OpenTTD is licensed under the GNU General Public License version 2.0.
 For the complete license text, see the file '[COPYING.md](./COPYING.md)'.
 This license applies to all files in this distribution, except as noted below.
 
+Libhydrogen library in `src/3rdparty/libhydrogen` is licensed under the ISC license.
+See `src/3rdparty/libhydrogen/LICENSE` for the complete license text.
+
 The squirrel implementation in `src/3rdparty/squirrel` is licensed under the Zlib license.
 See `src/3rdparty/squirrel/COPYRIGHT` for the complete license text.
 
