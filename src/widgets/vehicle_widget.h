@@ -63,6 +63,8 @@ enum VehicleListWidgets {
 	WID_VL_CAPTION,                  ///< Caption of window.
 	WID_VL_SORT_ORDER,               ///< Sort order.
 	WID_VL_SORT_BY_PULLDOWN,         ///< Sort by dropdown list.
+	WID_VL_FILTER_BY_CARGO,          ///< Cargo filter dropdown list.
+	WID_VL_FILTER_BY_CARGO_SEL,      ///< Cargo filter dropdown list panel selector.
 	WID_VL_LIST,                     ///< List of the vehicles.
 	WID_VL_SCROLLBAR,                ///< Scrollbar for the list.
 	WID_VL_HIDE_BUTTONS,             ///< Selection to hide the buttons.

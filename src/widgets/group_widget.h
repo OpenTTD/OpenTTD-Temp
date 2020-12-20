@@ -15,6 +15,7 @@ enum GroupListWidgets {
 	WID_GL_CAPTION,                  ///< Caption of the window.
 	WID_GL_SORT_BY_ORDER,            ///< Sort order.
 	WID_GL_SORT_BY_DROPDOWN,         ///< Sort by dropdown list.
+	WID_GL_FILTER_BY_CARGO,          ///< Filter vehicled by cargo type.
 	WID_GL_LIST_VEHICLE,             ///< List of the vehicles.
 	WID_GL_LIST_VEHICLE_SCROLLBAR,   ///< Scrollbar for the list.
 	WID_GL_AVAILABLE_VEHICLES,       ///< Available vehicles.
