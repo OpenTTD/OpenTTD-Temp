@@ -153,9 +153,8 @@ static const Depot *FindClosestShipDepot(const Vehicle *v, uint max_distance)
 	uint best_dist = max_distance == 0 ? UINT_MAX : max_distance + 1;
 
 	for (const Depot *depot : Depot::Iterate()) {
-		TileIndex tile = depot->xy;
-		if (IsShipDepotTile(tile) && IsTileOwner(tile, v->owner)) {
-			uint dist = DistanceManhattan(tile, v->tile);
+		if (depot->veh_type == VEH_SHIP && depot->company == v->owner) {
+			uint dist = DistanceManhattan(depot->xy, v->tile);
 			if (dist < best_dist) {
 				best_dist = dist;
 				best_depot = depot;
@@ -192,7 +191,7 @@ static void CheckIfShipNeedsService(Vehicle *v)
 	}
 
 	v->current_order.MakeGoToDepot(depot->index, ODTFB_SERVICE);
-	v->SetDestTile(depot->xy);
+	v->SetDestTile(depot->GetBestDepotTile(v));
 	SetWindowWidgetDirty(WC_VEHICLE_VIEW, v->index, WID_VV_START_STOP);
 }
 
@@ -893,7 +892,7 @@ bool Ship::FindClosestDepot(TileIndex *location, DestinationID *destination, boo
 
 	if (depot == nullptr) return false;
 
-	if (location    != nullptr) *location    = depot->xy;
+	if (location    != nullptr) *location    = depot->GetBestDepotTile(this);
 	if (destination != nullptr) *destination = depot->index;
 
 	return true;

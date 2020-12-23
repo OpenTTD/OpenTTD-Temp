@@ -19,6 +19,7 @@ typedef Pool<Depot, DepotID, 64, 64000> DepotPool;
 extern DepotPool _depot_pool;
 
 class CommandCost;
+struct Vehicle;
 
 struct Depot : DepotPool::PoolItem<&_depot_pool> {
 	Town *town;
@@ -48,6 +49,8 @@ struct Depot : DepotPool::PoolItem<&_depot_pool> {
 		assert(Depot::IsValidID(GetDepotIndex(tile)));
 		return Depot::Get(GetDepotIndex(tile));
 	}
+
+	TileIndex GetBestDepotTile(Vehicle *v) const;
 
 	/**
 	 * Is the "type" of depot the same as the given depot,

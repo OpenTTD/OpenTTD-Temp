@@ -2051,7 +2051,7 @@ bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth, bool
 				v->IncrementRealOrderIndex();
 			} else {
 				if (v->type != VEH_AIRCRAFT) {
-					v->SetDestTile(Depot::Get(order->GetDestination())->xy);
+					v->SetDestTile(Depot::Get(order->GetDestination())->GetBestDepotTile(v));
 				} else {
 					Aircraft *a = Aircraft::From(v);
 					DestinationID destination = a->current_order.GetDestination();

@@ -16,6 +16,7 @@
 #include "vehicle_gui.h"
 #include "vehiclelist.h"
 #include "command_func.h"
+#include "vehicle_base.h"
 
 #include "safeguards.h"
 
@@ -45,6 +46,30 @@ Depot::~Depot()
 	CloseWindowById(GetWindowClassForVehicleType(this->veh_type),
 			VehicleListIdentifier(VL_DEPOT_LIST,
 			this->veh_type, this->company, this->index).Pack());
+}
+
+/**
+ * Of all the depot parts a depot has, return the best destination for a vehicle.
+ * @param v The vehicle.
+ * @param dep Depot the vehicle \a v is heading for.
+ * @return The closest part of depot to vehicle v.
+ */
+TileIndex Depot::GetBestDepotTile(Vehicle *v) const
+{
+	assert(this->veh_type == v->type);
+	TileIndex best_depot = INVALID_TILE;
+	uint best_distance = UINT_MAX;
+
+	for (std::vector<TileIndex>::const_iterator it = this->depot_tiles.begin(); it != this->depot_tiles.end(); ++it) {
+		TileIndex tile = *it;
+		uint new_distance = DistanceManhattan(v->tile, tile);
+		if (new_distance < best_distance) {
+			best_depot = tile;
+			best_distance = new_distance;
+		}
+	}
+
+	return best_depot;
 }
 
 /* Check we can add some tiles to this depot. */
