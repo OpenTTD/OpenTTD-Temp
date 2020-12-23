@@ -696,13 +696,6 @@ static void ShipController(Ship *v)
 						UpdateVehicleTimetable(v, true);
 						v->IncrementRealOrderIndex();
 						v->current_order.MakeDummy();
-					} else if (v->current_order.IsType(OT_GOTO_DEPOT) &&
-						v->dest_tile == gp.new_tile) {
-						/* Depot orders really need to reach the tile */
-						if ((gp.x & 0xF) == 8 && (gp.y & 0xF) == 8) {
-							VehicleEnterDepot(v);
-							return;
-						}
 					} else if (v->current_order.IsType(OT_GOTO_STATION) && IsDockingTile(gp.new_tile)) {
 						/* Process station in the orderlist. */
 						Station *st = Station::Get(v->current_order.GetDestination());
@@ -722,6 +715,14 @@ static void ShipController(Ship *v)
 		} else {
 			/* New tile */
 			if (!IsValidTile(gp.new_tile)) goto reverse_direction;
+
+			if (v->current_order.IsType(OT_GOTO_DEPOT) &&
+						IsShipDepotTile(gp.new_tile) &&
+						GetOtherShipDepotTile(gp.new_tile) == gp.old_tile &&
+						v->current_order.GetDestination() == GetDepotIndex(gp.new_tile)) {
+				HandleShipEnterDepot(v);
+				goto getout;
+			}
 
 			DiagDirection diagdir = DiagdirBetweenTiles(gp.old_tile, gp.new_tile);
 			assert(diagdir != INVALID_DIAGDIR);
