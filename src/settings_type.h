@@ -542,6 +542,12 @@ struct StationSettings {
 	byte   station_spread;                   ///< amount a station may spread
 };
 
+/** Settings related to depots. */
+struct DepotSettings {
+	bool   allow_no_comp_railtype_replacements;  ///< allow replacing rail vehicles even if rail type is not compatible
+	bool   allow_no_comp_roadtype_replacements;  ///< allow replacing road vehicles even if road type is not compatible
+};
+
 /** Default settings for vehicles. */
 struct VehicleDefaultSettings {
 	bool   servint_ispercent;                ///< service intervals are in percents
@@ -575,6 +581,7 @@ struct GameSettings {
 	EconomySettings      economy;            ///< settings to change the economy
 	LinkGraphSettings    linkgraph;          ///< settings for link graph calculations
 	StationSettings      station;            ///< settings related to station management
+	DepotSettings        depot;              ///< settings related to depot management
 	LocaleSettings       locale;             ///< settings related to used currency/unit system in the current game
 };
 

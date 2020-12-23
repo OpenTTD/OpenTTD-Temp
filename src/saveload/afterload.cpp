@@ -766,6 +766,11 @@ bool AfterLoadGame()
 		_settings_game.game_creation.ending_year = DEF_END_YEAR;
 	}
 
+	if (IsSavegameVersionBefore(SLV_MULTITILE_DEPOTS)) {
+		_settings_game.depot.allow_no_comp_railtype_replacements = false;
+		_settings_game.depot.allow_no_comp_roadtype_replacements = false;
+	}
+
 	/* Load the sprites */
 	GfxLoadSprites();
 	LoadStringWidthTable();

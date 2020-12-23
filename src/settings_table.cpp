@@ -276,6 +276,22 @@ static void SpriteZoomMinChanged(int32 new_value)
 	MarkWholeScreenDirty();
 }
 
+static bool CheckDifferentRailRoadTypesReplacements(int32 &new_value)
+{
+	if (_game_mode == GM_NORMAL) {
+		if (new_value == 0) {
+			ShowErrorMessage(STR_CONFIG_SETTING_REPLACEMENTS_DIFF_TYPE, INVALID_STRING_ID, WL_ERROR);
+			return false;
+		}
+	}
+	return true;
+}
+
+static void InvalidateReplacementWindows(int32 new_value)
+{
+	InvalidateWindowClassesData(WC_REPLACE_VEHICLE);
+}
+
 /**
  * Update any possible saveload window and delete any newgrf dialogue as
  * its widget parts might change. Reinit all windows as it allows access to the
