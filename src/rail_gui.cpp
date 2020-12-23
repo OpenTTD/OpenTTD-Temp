@@ -137,7 +137,7 @@ void CcRailDepot(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2
 {
 	if (result.Failed()) return;
 
-	DiagDirection dir = (DiagDirection)p2;
+	DiagDirection dir = (DiagDirection)GB(p1, 6, 2);
 
 	if (_settings_client.sound.confirm) SndPlayTileFx(SND_20_CONSTRUCTION_RAIL, tile);
 	if (!_settings_client.gui.persistent_buildingtools) ResetObjectToPlace();
@@ -643,7 +643,7 @@ struct BuildRailToolbarWindow : Window {
 				break;
 
 			case WID_RAT_BUILD_DEPOT:
-				DoCommandP(tile, _cur_railtype, _build_depot_direction,
+				DoCommandP(tile, (uint32)(_cur_railtype | (_build_depot_direction << 6), 0,
 						CMD_BUILD_TRAIN_DEPOT | CMD_MSG(STR_ERROR_CAN_T_BUILD_TRAIN_DEPOT),
 						CcRailDepot);
 				break;
