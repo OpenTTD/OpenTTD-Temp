@@ -244,6 +244,16 @@ struct MAP5ChunkHandler : ChunkHandler {
 			SlCopy(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT8);
 			for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) _m[i++].m5 = buf[j];
 		}
+
+		if (IsSavegameVersionBefore(SLV_MULTITILE_DEPOTS)) {
+			/* Move some bits for alignment purposes. */
+			for (TileIndex i = 0; i != size; i++) {
+				if (IsTileType(i, MP_WATER)) {
+					SB(_m[i].m5, 6, 1, GB(_m[i].m5, 4, 1));
+					SB(_m[i].m5, 4, 1, 0);
+				}
+			}
+		}
 	}
 
 	void Save() const override

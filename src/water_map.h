@@ -17,12 +17,12 @@
  * Bit field layout of m5 for water tiles.
  */
 enum WaterTileTypeBitLayout {
-	WBL_TYPE_BEGIN        = 4,   ///< Start of the 'type' bitfield.
-	WBL_TYPE_COUNT        = 4,   ///< Length of the 'type' bitfield.
+	WBL_TYPE_BEGIN        = 6,   ///< Start of the 'type' bitfield.
+	WBL_TYPE_COUNT        = 2,   ///< Length of the 'type' bitfield.
 
 	WBL_TYPE_NORMAL       = 0x0, ///< Clear water or coast ('type' bitfield).
 	WBL_TYPE_LOCK         = 0x1, ///< Lock ('type' bitfield).
-	WBL_TYPE_DEPOT        = 0x8, ///< Depot ('type' bitfield).
+	WBL_TYPE_DEPOT        = 0x2, ///< Depot ('type' bitfield).
 
 	WBL_COAST_FLAG        = 0,   ///< Flag for coast.
 
