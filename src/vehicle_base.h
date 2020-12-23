@@ -50,6 +50,7 @@ enum VehicleFlags {
 	VF_PATHFINDER_LOST,         ///< Vehicle's pathfinder is lost.
 	VF_SERVINT_IS_CUSTOM,       ///< Service interval is custom.
 	VF_SERVINT_IS_PERCENT,      ///< Service interval is percent.
+	VF_IS_SERVICING,            ///< Vehicle is servicing.
 };
 
 /** Bit numbers used to indicate which of the #NewGRFCache values are valid. */
