@@ -335,6 +335,12 @@ static Vehicle *EnsureNoMovingShipProc(Vehicle *v, void *data)
 	return v->type == VEH_SHIP && (v->vehstatus & (VS_HIDDEN | VS_STOPPED)) == 0 ? v : nullptr;
 }
 
+static bool CheckPlaceShipOnDepot(TileIndex tile)
+{
+	assert(IsShipDepotTile(tile));
+	return !IsBigDepot(tile) || IsBigDepotEmpty(tile);
+}
+
 void HandleShipEnterDepot(Ship *v)
 {
 	assert(IsShipDepotTile(v->tile));
@@ -361,52 +367,61 @@ static bool CheckShipLeaveDepot(Ship *v)
 	/* We are leaving a depot, but have to go to the exact same one; re-enter */
 	if (v->current_order.IsType(OT_GOTO_DEPOT) &&
 			IsShipDepotTile(v->tile) && GetDepotIndex(v->tile) == v->current_order.GetDestination()) {
-		VehicleEnterDepot(v);
+		HandleShipEnterDepot(v);
 		return true;
 	}
 
 	/* Don't leave depot if no destination set */
 	if (v->dest_tile == 0) return true;
 
-	/* Don't leave depot if another vehicle is already entering/leaving */
-	/* This helps avoid CPU load if many ships are set to start at the same time */
-	if (HasVehicleOnPos(v->tile, nullptr, &EnsureNoMovingShipProc)) return true;
+	if (!IsBigDepot(v->tile)) {
+		/* Don't leave depot if another vehicle is already entering/leaving */
+		/* This helps avoid CPU load if many ships are set to start at the same time */
+		if (HasVehicleOnPos(v->tile, nullptr, &EnsureNoMovingShipProc)) return true;
 
-	TileIndex tile = v->tile;
-	Axis axis = GetShipDepotAxis(tile);
-
-	DiagDirection north_dir = ReverseDiagDir(AxisToDiagDir(axis));
-	TileIndex north_neighbour = TILE_ADD(tile, TileOffsByDiagDir(north_dir));
-	DiagDirection south_dir = AxisToDiagDir(axis);
-	TileIndex south_neighbour = TILE_ADD(tile, 2 * TileOffsByDiagDir(south_dir));
-
-	TrackBits north_tracks = DiagdirReachesTracks(north_dir) & GetTileShipTrackStatus(north_neighbour);
-	TrackBits south_tracks = DiagdirReachesTracks(south_dir) & GetTileShipTrackStatus(south_neighbour);
-	if (north_tracks && south_tracks) {
-		/* Ask pathfinder for best direction */
+		TileIndex tile = v->tile;
+		Axis axis = GetShipDepotAxis(tile);
 		bool reverse = false;
-		switch (_settings_game.pf.pathfinder_for_ships) {
-			case VPF_NPF: reverse = NPFShipCheckReverse(v); break;
-			case VPF_YAPF: reverse = YapfShipCheckReverse(v); break;
-			default: NOT_REACHED();
+
+		DiagDirection north_dir = ReverseDiagDir(AxisToDiagDir(axis));
+		TileIndex north_neighbour = TILE_ADD(tile, TileOffsByDiagDir(north_dir));
+		DiagDirection south_dir = AxisToDiagDir(axis);
+		TileIndex south_neighbour = TILE_ADD(tile, 2 * TileOffsByDiagDir(south_dir));
+
+		TrackBits north_tracks = DiagdirReachesTracks(north_dir) & GetTileShipTrackStatus(north_neighbour);
+		TrackBits south_tracks = DiagdirReachesTracks(south_dir) & GetTileShipTrackStatus(south_neighbour);
+		if (north_tracks && south_tracks) {
+			/* Ask pathfinder for best direction */
+			switch (_settings_game.pf.pathfinder_for_ships) {
+				case VPF_NPF: reverse = NPFShipCheckReverse(v); break;
+				case VPF_YAPF: reverse = YapfShipCheckReverse(v); break;
+				default: NOT_REACHED();
+			}
+			if (reverse) north_tracks = TRACK_BIT_NONE;
 		}
-		if (reverse) north_tracks = TRACK_BIT_NONE;
+
+		if (north_tracks) {
+			/* Leave towards north */
+			v->rotation = v->direction = DiagDirToDir(north_dir);
+		} else if (south_tracks) {
+			/* Leave towards south */
+			v->rotation = v->direction = DiagDirToDir(south_dir);
+		} else {
+			/* Both ways blocked */
+			return false;
+		}
+
+		v->state = AxisToTrackBits(axis);
+		v->vehstatus &= ~VS_HIDDEN;
+
+		/* Leave towards south if reverse. */
+		v->rotation = v->direction = DiagDirToDir(reverse ? south_dir : north_dir);
+
+		v->state = AxisToTrackBits(axis);
+		v->vehstatus &= ~VS_HIDDEN;
 	}
 
-	if (north_tracks) {
-		/* Leave towards north */
-		v->rotation = v->direction = DiagDirToDir(north_dir);
-	} else if (south_tracks) {
-		/* Leave towards south */
-		v->rotation = v->direction = DiagDirToDir(south_dir);
-	} else {
-		/* Both ways blocked */
-		return false;
-	}
-
-	v->state = AxisToTrackBits(axis);
-	v->vehstatus &= ~VS_HIDDEN;
-
+	v->state &= ~TRACK_BIT_DEPOT;
 	v->cur_speed = 0;
 	v->UpdateViewport(true, true);
 	DepotID depot_id = GetDepotIndex(v->tile);
@@ -659,6 +674,8 @@ static void ShipController(Ship *v)
 
 	if (v->vehstatus & VS_STOPPED) return;
 
+	if (v->ContinueServicing()) return;
+
 	ProcessOrders(v);
 	v->HandleLoading();
 
@@ -739,8 +756,10 @@ static void ShipController(Ship *v)
 						IsShipDepotTile(gp.new_tile) &&
 						GetOtherShipDepotTile(gp.new_tile) == gp.old_tile &&
 						v->current_order.GetDestination() == GetDepotIndex(gp.new_tile)) {
-				HandleShipEnterDepot(v);
-				goto getout;
+				if (CheckPlaceShipOnDepot(v->tile)) {
+					HandleShipEnterDepot(v);
+					goto getout;
+				}
 			}
 
 			DiagDirection diagdir = DiagdirBetweenTiles(gp.old_tile, gp.new_tile);
