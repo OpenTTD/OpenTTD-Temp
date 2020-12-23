@@ -48,28 +48,6 @@ TrackBits GetReservedTrackbits(TileIndex t)
 }
 
 /**
- * Set the reservation for a complete station platform.
- * @pre IsRailStationTile(start)
- * @param start starting tile of the platform
- * @param dir the direction in which to follow the platform
- * @param b the state the reservation should be set to
- */
-void SetRailStationPlatformReservation(TileIndex start, DiagDirection dir, bool b)
-{
-	TileIndex     tile = start;
-	TileIndexDiff diff = TileOffsByDiagDir(dir);
-
-	assert(IsRailStationTile(start));
-	assert(GetRailStationAxis(start) == DiagDirToAxis(dir));
-
-	do {
-		SetRailStationReservation(tile, b);
-		MarkTileDirtyByTile(tile);
-		tile = TILE_ADD(tile, diff);
-	} while (IsCompatibleTrainStationTile(tile, start));
-}
-
-/**
  * Try to reserve a specific track on a tile
  * @param tile the tile
  * @param t the track

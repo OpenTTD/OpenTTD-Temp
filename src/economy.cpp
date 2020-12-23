@@ -49,6 +49,7 @@
 #include "story_base.h"
 #include "linkgraph/refresh.h"
 #include "depot_base.h"
+#include "platform_func.h"
 
 #include "table/strings.h"
 #include "table/pricebase.h"
@@ -1598,7 +1599,7 @@ static void UpdateLoadUnloadTicks(Vehicle *front, const Station *st, int ticks)
 {
 	if (front->type == VEH_TRAIN) {
 		/* Each platform tile is worth 2 rail vehicles. */
-		int overhang = front->GetGroundVehicleCache()->cached_total_length - st->GetPlatformLength(front->tile) * TILE_SIZE;
+		int overhang = front->GetGroundVehicleCache()->cached_total_length - GetPlatformLength(front->tile) * TILE_SIZE;
 		if (overhang > 0) {
 			ticks <<= 1;
 			ticks += (overhang * ticks) / 8;

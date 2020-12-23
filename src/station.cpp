@@ -242,43 +242,6 @@ void Station::MarkTilesDirty(bool cargo_change) const
 	}
 }
 
-/* virtual */ uint Station::GetPlatformLength(TileIndex tile) const
-{
-	assert(this->TileBelongsToRailStation(tile));
-
-	TileIndexDiff delta = (GetRailStationAxis(tile) == AXIS_X ? TileDiffXY(1, 0) : TileDiffXY(0, 1));
-
-	TileIndex t = tile;
-	uint len = 0;
-	do {
-		t -= delta;
-		len++;
-	} while (IsCompatibleTrainStationTile(t, tile));
-
-	t = tile;
-	do {
-		t += delta;
-		len++;
-	} while (IsCompatibleTrainStationTile(t, tile));
-
-	return len - 1;
-}
-
-/* virtual */ uint Station::GetPlatformLength(TileIndex tile, DiagDirection dir) const
-{
-	TileIndex start_tile = tile;
-	uint length = 0;
-	assert(IsRailStationTile(tile));
-	assert(dir < DIAGDIR_END);
-
-	do {
-		length++;
-		tile += TileOffsByDiagDir(dir);
-	} while (IsCompatibleTrainStationTile(tile, start_tile));
-
-	return length;
-}
-
 /**
  * Get the catchment size of an individual station tile.
  * @param tile Station tile to get catchment size of.

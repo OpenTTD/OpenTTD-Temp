@@ -129,24 +129,6 @@ struct BaseStation : StationPool::PoolItem<&_station_pool> {
 	 */
 	virtual void GetTileArea(TileArea *ta, StationType type) const = 0;
 
-
-	/**
-	 * Obtain the length of a platform
-	 * @pre tile must be a rail station tile
-	 * @param tile A tile that contains the platform in question
-	 * @return The length of the platform
-	 */
-	virtual uint GetPlatformLength(TileIndex tile) const = 0;
-
-	/**
-	 * Determines the REMAINING length of a platform, starting at (and including)
-	 * the given tile.
-	 * @param tile the tile from which to start searching. Must be a rail station tile
-	 * @param dir The direction in which to search.
-	 * @return The platform length
-	 */
-	virtual uint GetPlatformLength(TileIndex tile, DiagDirection dir) const = 0;
-
 	/**
 	 * Get the base station belonging to a specific tile.
 	 * @param tile The tile to get the base station from.

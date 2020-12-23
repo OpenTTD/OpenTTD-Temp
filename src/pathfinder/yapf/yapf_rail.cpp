@@ -16,6 +16,7 @@
 #include "yapf_destrail.hpp"
 #include "../../viewport_func.h"
 #include "../../newgrf_station.h"
+#include "../../platform_func.h"
 
 #include "../../safeguards.h"
 

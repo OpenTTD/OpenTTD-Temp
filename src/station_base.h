@@ -495,9 +495,6 @@ public:
 	void MoveSign(TileIndex new_xy) override;
 
 	void AfterStationTileSetChange(bool adding, StationType type);
-
-	uint GetPlatformLength(TileIndex tile, DiagDirection dir) const override;
-	uint GetPlatformLength(TileIndex tile) const override;
 	void RecomputeCatchment();
 	static void RecomputeCatchmentForAll();
 

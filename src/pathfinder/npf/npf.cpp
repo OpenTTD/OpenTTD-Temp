@@ -18,6 +18,7 @@
 #include "../pathfinder_type.h"
 #include "../follow_track.hpp"
 #include "aystar.h"
+#include "../../platform_func.h"
 
 #include "../../safeguards.h"
 
@@ -647,8 +648,8 @@ static void ClearPathReservation(const PathNode *start, const PathNode *end)
 {
 	bool first_run = true;
 	for (; start != end; start = start->parent) {
-		if (IsRailStationTile(start->node.tile) && first_run) {
-			SetRailStationPlatformReservation(start->node.tile, TrackdirToExitdir(start->node.direction), false);
+		if (IsPlatformTile(start->node.tile) && first_run) {
+			SetPlatformReservation(start->node.tile, TrackdirToExitdir(start->node.direction), false);
 		} else {
 			UnreserveRailTrack(start->node.tile, TrackdirToTrack(start->node.direction));
 		}
@@ -682,13 +683,13 @@ static void NPFSaveTargetData(AyStar *as, OpenListNode *current)
 		/* If the target is a station skip to platform end. */
 		if (IsRailStationTile(target->node.tile)) {
 			DiagDirection dir = TrackdirToExitdir(target->node.direction);
-			uint len = Station::GetByTile(target->node.tile)->GetPlatformLength(target->node.tile, dir);
+			uint len = GetPlatformLength(target->node.tile, dir);
 			TileIndex end_tile = TILE_ADD(target->node.tile, (len - 1) * TileOffsByDiagDir(dir));
 
 			/* Update only end tile, trackdir of a station stays the same. */
 			ftd->node.tile = end_tile;
 			if (!IsWaitingPositionFree(v, end_tile, target->node.direction, _settings_game.pf.forbid_90_deg)) return;
-			SetRailStationPlatformReservation(target->node.tile, dir, true);
+			SetPlatformReservation(target->node.tile, dir, true);
 			SetRailStationReservation(target->node.tile, false);
 		} else {
 			if (!IsWaitingPositionFree(v, target->node.tile, target->node.direction, _settings_game.pf.forbid_90_deg)) return;

@@ -363,28 +363,6 @@ static inline TrackBits GetRailStationTrackBits(TileIndex t)
 }
 
 /**
- * Check if a tile is a valid continuation to a railstation tile.
- * The tile \a test_tile is a valid continuation to \a station_tile, if all of the following are true:
- * \li \a test_tile is a rail station tile
- * \li the railtype of \a test_tile is compatible with the railtype of \a station_tile
- * \li the tracks on \a test_tile and \a station_tile are in the same direction
- * \li both tiles belong to the same station
- * \li \a test_tile is not blocked (@see IsStationTileBlocked)
- * @param test_tile Tile to test
- * @param station_tile Station tile to compare with
- * @pre IsRailStationTile(station_tile)
- * @return true if the two tiles are compatible
- */
-static inline bool IsCompatibleTrainStationTile(TileIndex test_tile, TileIndex station_tile)
-{
-	assert(IsRailStationTile(station_tile));
-	return IsRailStationTile(test_tile) && IsCompatibleRail(GetRailType(test_tile), GetRailType(station_tile)) &&
-			GetRailStationAxis(test_tile) == GetRailStationAxis(station_tile) &&
-			GetStationIndex(test_tile) == GetStationIndex(station_tile) &&
-			!IsStationTileBlocked(test_tile);
-}
-
-/**
  * Get the reservation state of the rail station
  * @pre HasStationRail(t)
  * @param t the station tile
