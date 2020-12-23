@@ -920,6 +920,9 @@ static void MakeNewGameDone()
 	if (_network_server && !StrEmpty(_settings_client.network.default_company_pass)) {
 		NetworkChangeCompanyPassword(_local_company, _settings_client.network.default_company_pass);
 	}
+	if (_network_server && _settings_client.network.company_autoprotect) {
+		NetworkChangeCompanyPubkey(_local_company, true);
+	}
 
 	if (_settings_client.gui.pause_on_newgame) DoCommandP(0, PM_PAUSED_NORMAL, 1, CMD_PAUSE);
 

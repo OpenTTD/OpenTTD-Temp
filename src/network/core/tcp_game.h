@@ -58,6 +58,8 @@ enum PacketGameType {
 	/* Checking the game, and then company passwords. */
 	PACKET_SERVER_NEED_GAME_PASSWORD,    ///< Server requests the (hashed) game password.
 	PACKET_CLIENT_GAME_PASSWORD,         ///< Clients sends the (hashed) game password.
+	PACKET_SERVER_NEED_KEYAUTH,          ///< Server requests authentication challenge.
+	PACKET_CLIENT_KEYAUTH,               ///< Clients sends authentication challenge.
 	PACKET_SERVER_NEED_COMPANY_PASSWORD, ///< Server requests the (hashed) company password.
 	PACKET_CLIENT_COMPANY_PASSWORD,      ///< Client sends the (hashed) company password.
 
@@ -105,6 +107,7 @@ enum PacketGameType {
 
 	/* Configuration updates. */
 	PACKET_CLIENT_SET_PASSWORD,          ///< A client (re)sets its company's password.
+	PACKET_CLIENT_PROTECT_COMPANY,       ///< A client (un)protects its company, revoking or granting access to specific pubkey.
 	PACKET_CLIENT_SET_NAME,              ///< A client changes its name.
 	PACKET_SERVER_COMPANY_UPDATE,        ///< Information (password) of a company changed.
 	PACKET_SERVER_CONFIG_UPDATE,         ///< Some network configuration important to the client changed.
@@ -199,7 +202,7 @@ protected:
 	 * uint64  Money.
 	 * uint64  Income.
 	 * uint16  Performance (last quarter).
-	 * bool    Company is password protected.
+	 * bool    Company is protected.
 	 * uint16  Number of trains.
 	 * uint16  Number of lorries.
 	 * uint16  Number of busses.
@@ -232,6 +235,13 @@ protected:
 	virtual NetworkRecvStatus Receive_SERVER_NEED_GAME_PASSWORD(Packet *p);
 
 	/**
+	 * Server requests crypto authentication from client.
+	 * 16 * uint8  Random data for challenge.
+	 * @param p The packet that was just received.
+	 */
+	virtual NetworkRecvStatus Receive_SERVER_NEED_KEYAUTH(Packet *p);
+
+	/**
 	 * Indication to the client that the server needs a company password:
 	 * uint32  Generation seed.
 	 * string  Network ID of the server.
@@ -246,6 +256,14 @@ protected:
 	 * @param p The packet that was just received.
 	 */
 	virtual NetworkRecvStatus Receive_CLIENT_GAME_PASSWORD(Packet *p);
+
+	/**
+	 * Client responds with signed challenge.
+	 * 32 * uint8  Public key.
+	 * 64 * uint8  Signature.
+	 * @param p The packet that was just received.
+	 */
+	virtual NetworkRecvStatus Receive_CLIENT_KEYAUTH(Packet *p);
 
 	/**
 	 * Send a password to the server to authorize
@@ -400,6 +418,13 @@ protected:
 	 * @param p The packet that was just received.
 	 */
 	virtual NetworkRecvStatus Receive_CLIENT_SET_PASSWORD(Packet *p);
+
+	/**
+	 * Protect company using client pubkey.
+	 * bool  True for protect, false for unprotect.
+	 * @param p The packet that was just received.
+	 */
+	virtual NetworkRecvStatus Receive_CLIENT_PROTECT_COMPANY(Packet *p);
 
 	/**
 	 * Gives the client a new name:

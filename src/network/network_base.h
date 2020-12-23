@@ -26,6 +26,7 @@ struct NetworkClientInfo : NetworkClientInfoPool::PoolItem<&_networkclientinfo_p
 	byte client_lang;                               ///< The language of the client
 	CompanyID client_playas;                        ///< As which company is this client playing (CompanyID)
 	Date join_date;                                 ///< Gamedate the client has joined
+	uint8 pubkey[hydro_sign_PUBLICKEYBYTES];        ///< Public key of the client
 
 	/**
 	 * Create a new client.

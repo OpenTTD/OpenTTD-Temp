@@ -2235,6 +2235,16 @@ struct NetworkCompanyPasswordWindow : public Window {
 				delete this;
 				break;
 
+			case WID_NCP_PROTECT_PUBKEY:
+				NetworkChangeCompanyPubkey(_local_company, true);
+				delete this;
+				break;
+
+			case WID_NCP_UNPROTECT_PUBKEY:
+				NetworkChangeCompanyPubkey(_local_company, false);
+				delete this;
+				break;
+
 			case WID_NCP_SAVE_AS_DEFAULT_PASSWORD:
 				this->ToggleWidgetLoweredState(WID_NCP_SAVE_AS_DEFAULT_PASSWORD);
 				this->SetDirty();
@@ -2262,6 +2272,10 @@ static const NWidgetPart _nested_network_company_password_window_widgets[] = {
 		EndContainer(),
 	EndContainer(),
 	NWidget(WWT_PANEL, COLOUR_GREY, WID_NCP_WARNING), EndContainer(),
+	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_NCP_PROTECT_PUBKEY), SetFill(1, 0), SetDataTip(STR_COMPANY_PROTECT_PUBKEY, STR_COMPANY_PROTECT_PUBKEY_TOOLTIP),
+		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_NCP_UNPROTECT_PUBKEY), SetFill(1, 0), SetDataTip(STR_COMPANY_UNPROTECT_PUBKEY, STR_COMPANY_UNPROTECT_PUBKEY_TOOLTIP),
+	EndContainer(),
 	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_NCP_CANCEL), SetFill(1, 0), SetDataTip(STR_BUTTON_CANCEL, STR_COMPANY_PASSWORD_CANCEL),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_NCP_OK), SetFill(1, 0), SetDataTip(STR_BUTTON_OK, STR_COMPANY_PASSWORD_OK),

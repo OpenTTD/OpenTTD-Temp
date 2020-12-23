@@ -323,6 +323,9 @@ const char *_network_join_server_password = nullptr;
 /** Company password from -P argument */
 const char *_network_join_company_password = nullptr;
 
+/** Our crypto keypair */
+struct hydro_sign_keypair _network_keypair;
+
 /** Make sure the server ID length is the same as a md5 hash. */
 assert_compile(NETWORK_SERVER_ID_LENGTH == 16 * 2 + 1);
 
@@ -470,6 +473,19 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::SendSetPassword(const char *pa
 	Packet *p = new Packet(PACKET_CLIENT_SET_PASSWORD);
 
 	p->Send_string(GenerateCompanyPasswordHash(password, _password_server_id, _password_game_seed));
+	my_client->SendPacket(p);
+	return NETWORK_RECV_STATUS_OKAY;
+}
+
+/**
+ * Tell the server that we like to (un)protect the company using a pubkey.
+ * @param protect Whether to protect or unprotect.
+ */
+NetworkRecvStatus ClientNetworkGameSocketHandler::SendSetCompanyPubkey(bool protect)
+{
+	Packet *p = new Packet(PACKET_CLIENT_PROTECT_COMPANY);
+
+	p->Send_bool(protect);
 	my_client->SendPacket(p);
 	return NETWORK_RECV_STATUS_OKAY;
 }
@@ -737,6 +753,32 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_CHECK_NEWGRFS(P
 	/* NewGRF mismatch, bail out */
 	ShowErrorMessage(STR_NETWORK_ERROR_NEWGRF_MISMATCH, INVALID_STRING_ID, WL_CRITICAL);
 	return ret;
+}
+
+NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_NEED_KEYAUTH(Packet *p)
+{
+	if (this->status < STATUS_JOIN || this->status >= STATUS_AUTH_KEY) return NETWORK_RECV_STATUS_MALFORMED_PACKET;
+	this->status = STATUS_AUTH_KEY;
+
+	uint8 challenge[CRYPTO_CHALLENGE_LEN];
+	uint8 signature[hydro_sign_BYTES];
+
+	for (size_t i = 0; i < sizeof(challenge); i++) {
+		challenge[i] = p->Recv_uint8();
+	}
+
+	hydro_sign_create(signature, challenge, sizeof(challenge), "KEYAUTH", _network_keypair.sk);
+
+	Packet *r = new Packet(PACKET_CLIENT_KEYAUTH);
+	for (size_t i = 0; i < sizeof(_network_keypair.pk); i++) {
+		r->Send_uint8(_network_keypair.pk[i]);
+	}
+	for (size_t i = 0; i < sizeof(signature); i++) {
+		r->Send_uint8(signature[i]);
+	}
+	my_client->SendPacket(r);
+
+	return NETWORK_RECV_STATUS_OKAY;
 }
 
 NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_NEED_GAME_PASSWORD(Packet *p)
@@ -1294,6 +1336,15 @@ void NetworkClientSendChat(NetworkAction action, DestType type, int dest, const 
 void NetworkClientSetCompanyPassword(const char *password)
 {
 	MyClient::SendSetPassword(password);
+}
+
+/**
+ * (Un)protect company using a pubkey.
+ * @param protect Whether to protect or unprotect
+ */
+void NetworkClientSetCompanyPubkey(bool protect)
+{
+	MyClient::SendSetCompanyPubkey(protect);
 }
 
 /**

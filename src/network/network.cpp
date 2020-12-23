@@ -33,6 +33,7 @@
 #include "../core/pool_func.hpp"
 #include "../gfx_func.h"
 #include "../error.h"
+#include "../fileio_func.h"
 
 #include "../safeguards.h"
 
@@ -170,6 +171,20 @@ const char *NetworkChangeCompanyPassword(CompanyID company_id, const char *passw
 	}
 
 	return password;
+}
+
+/**
+ * (Un)protect company using a pubkey.
+ * @param company_id ID of the company
+ * @param protect Whether to protect or unprotect
+ */
+void NetworkChangeCompanyPubkey(CompanyID company_id, bool protect)
+{
+	if (_network_server) {
+		NetworkServerSetCompanyPubkey(company_id, protect ? _network_keypair.pk : nullptr);
+	} else {
+		NetworkClientSetCompanyPubkey(protect);
+	}
 }
 
 /**
@@ -1051,6 +1066,49 @@ void NetworkStartDebugLog(NetworkAddress address)
 	DEBUG(net, 0, "DEBUG() is now redirected");
 }
 
+bool NetworkReadKeypair()
+{
+	FILE *keypair_file = FioFOpenFile("keypair", "r", BASE_DIR);
+	if (keypair_file == nullptr) return false;
+
+	char public_key[sizeof(_network_keypair.pk) * 2];
+	char secret_key[sizeof(_network_keypair.sk) * 2];
+
+	assert_compile(sizeof(public_key) == 64);
+	assert_compile(sizeof(secret_key) == 128);
+	int count = fscanf(keypair_file, "%64c,%128c", public_key, secret_key);
+
+	FioFCloseFile(keypair_file);
+	if (count != 2) return false;
+
+	if (hydro_hex2bin(_network_keypair.pk, sizeof(_network_keypair.pk), public_key, sizeof(public_key), nullptr, nullptr) != sizeof(_network_keypair.pk)) return false;
+	if (hydro_hex2bin(_network_keypair.sk, sizeof(_network_keypair.sk), secret_key, sizeof(secret_key), nullptr, nullptr) != sizeof(_network_keypair.sk)) return false;
+
+	uint8 test_signature[hydro_sign_BYTES];
+	if (hydro_sign_create(test_signature, nullptr, 0, "TESTSIG", _network_keypair.sk) != 0) return false;
+	if (hydro_sign_verify(test_signature, nullptr, 0, "TESTSIG", _network_keypair.pk) != 0) return false;
+
+	return true;
+}
+
+void NetworkGenerateKeypair()
+{
+	hydro_sign_keygen(&_network_keypair);
+
+	char public_key[sizeof(_network_keypair.pk) * 2 + 1];
+	char secret_key[sizeof(_network_keypair.sk) * 2 + 1];
+
+	hydro_bin2hex(public_key, sizeof(public_key), _network_keypair.pk, sizeof(_network_keypair.pk));
+	hydro_bin2hex(secret_key, sizeof(secret_key), _network_keypair.sk, sizeof(_network_keypair.sk));
+
+	FILE *keypair_file = FioFOpenFile("keypair", "w", BASE_DIR);
+	if (keypair_file == nullptr) return;
+
+	fprintf(keypair_file, "%s,%s\n", public_key, secret_key);
+
+	FioFCloseFile(keypair_file);
+}
+
 /** This tries to launch the network for a given OS */
 void NetworkStartUp()
 {
@@ -1066,6 +1124,9 @@ void NetworkStartUp()
 	if (StrEmpty(_settings_client.network.network_id)) NetworkGenerateServerId();
 
 	memset(&_network_game_info, 0, sizeof(_network_game_info));
+
+	hydro_init();
+	if (!NetworkReadKeypair()) NetworkGenerateKeypair();
 
 	NetworkInitialize();
 	DEBUG(net, 3, "[core] network online, multiplayer available");

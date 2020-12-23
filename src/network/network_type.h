@@ -11,6 +11,9 @@
 #define NETWORK_TYPE_H
 
 #include "core/game.h"
+#include "../3rdparty/libhydrogen/hydrogen.h"
+
+#define CRYPTO_CHALLENGE_LEN 16
 
 /** How many clients can we have */
 static const uint MAX_CLIENTS = 255;
@@ -63,6 +66,8 @@ struct NetworkCompanyStats {
 /** Some state information of a company, especially for servers */
 struct NetworkCompanyState {
 	char password[NETWORK_PASSWORD_LENGTH];         ///< The password for the company
+	uint8 pubkey[hydro_sign_PUBLICKEYBYTES];        ///< Pubkey for the company
+	bool pubkey_protected;                          ///< Is company protected by pubkey
 	uint16 months_empty;                            ///< How many months the company is empty
 };
 

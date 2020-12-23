@@ -26,6 +26,7 @@ protected:
 	NetworkRecvStatus Receive_CLIENT_JOIN(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_COMPANY_INFO(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_GAME_PASSWORD(Packet *p) override;
+	NetworkRecvStatus Receive_CLIENT_KEYAUTH(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_COMPANY_PASSWORD(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_GETMAP(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_MAP_OK(Packet *p) override;
@@ -33,6 +34,7 @@ protected:
 	NetworkRecvStatus Receive_CLIENT_COMMAND(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_CHAT(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_SET_PASSWORD(Packet *p) override;
+	NetworkRecvStatus Receive_CLIENT_PROTECT_COMPANY(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_SET_NAME(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_QUIT(Packet *p) override;
 	NetworkRecvStatus Receive_CLIENT_ERROR(Packet *p) override;
@@ -45,6 +47,7 @@ protected:
 	NetworkRecvStatus SendWelcome();
 	NetworkRecvStatus SendWait();
 	NetworkRecvStatus SendNeedGamePassword();
+	NetworkRecvStatus SendNeedKeyauth();
 	NetworkRecvStatus SendNeedCompanyPassword();
 
 public:
@@ -53,6 +56,7 @@ public:
 		STATUS_INACTIVE,      ///< The client is not connected nor active.
 		STATUS_NEWGRFS_CHECK, ///< The client is checking NewGRFs.
 		STATUS_AUTH_GAME,     ///< The client is authorizing with game (server) password.
+		STATUS_AUTH_KEY,      ///< The client is requested to provide crypto challenge.
 		STATUS_AUTH_COMPANY,  ///< The client is authorizing with company password.
 		STATUS_AUTHORIZED,    ///< The client is authorized.
 		STATUS_MAP_WAIT,      ///< The client is waiting as someone else is downloading the map.
@@ -63,12 +67,13 @@ public:
 		STATUS_END,           ///< Must ALWAYS be on the end of this list!! (period).
 	};
 
-	byte lag_test;               ///< Byte used for lag-testing the client
-	byte last_token;             ///< The last random token we did send to verify the client is listening
-	uint32 last_token_frame;     ///< The last frame we received the right token
-	ClientStatus status;         ///< Status of this client
-	CommandQueue outgoing_queue; ///< The command-queue awaiting delivery
-	int receive_limit;           ///< Amount of bytes that we can receive at this moment
+	byte lag_test;                         ///< Byte used for lag-testing the client
+	byte last_token;                       ///< The last random token we did send to verify the client is listening
+	uint32 last_token_frame;               ///< The last frame we received the right token
+	ClientStatus status;                   ///< Status of this client
+	CommandQueue outgoing_queue;           ///< The command-queue awaiting delivery
+	int receive_limit;                     ///< Amount of bytes that we can receive at this moment
+	uint8 challenge[CRYPTO_CHALLENGE_LEN]; ///< Random crypto challenge that we sent to the client
 
 	struct PacketWriter *savegame; ///< Writer used to write the savegame.
 	NetworkAddress client_address; ///< IP-address of the client (so he can be banned)
@@ -118,6 +123,7 @@ public:
 
 void NetworkServer_Tick(bool send_frame);
 void NetworkServerSetCompanyPassword(CompanyID company_id, const char *password, bool already_hashed = true);
+void NetworkServerSetCompanyPubkey(CompanyID company_id, const uint8 *pubkey);
 void NetworkServerUpdateCompanyPassworded(CompanyID company_id, bool passworded);
 
 #endif /* NETWORK_SERVER_H */

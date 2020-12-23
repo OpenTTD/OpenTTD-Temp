@@ -2615,6 +2615,9 @@ struct CompanyWindow : Window
 				} else if (NetworkCompanyIsPassworded(company)) {
 					/* ask for the password */
 					ShowQueryString(STR_EMPTY, STR_NETWORK_NEED_COMPANY_PASSWORD_CAPTION, NETWORK_PASSWORD_LENGTH, this, CS_ALPHANUMERAL, QSF_PASSWORD);
+
+					/* We could have pubkey access, so try to move anyway. */
+					NetworkClientRequestMove(company);
 				} else {
 					/* just send the join command */
 					NetworkClientRequestMove(company);
@@ -2672,6 +2675,9 @@ struct CompanyWindow : Window
 	 */
 	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
+		/* If any prompt is pending, remove it */
+		DeleteWindowByClass(WC_QUERY_STRING);
+
 		if (this->window_number == _local_company) return;
 
 		if (_settings_game.economy.allow_shares) { // Shares are allowed

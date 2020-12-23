@@ -849,6 +849,9 @@ CommandCost CmdCompanyCtrl(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 				if (!StrEmpty(_settings_client.network.default_company_pass)) {
 					NetworkChangeCompanyPassword(_local_company, _settings_client.network.default_company_pass);
 				}
+				if (_settings_client.network.company_autoprotect) {
+					NetworkChangeCompanyPubkey(_local_company, true);
+				}
 
 				/* Now that we have a new company, broadcast our company settings to
 				 * all clients so everything is in sync */
