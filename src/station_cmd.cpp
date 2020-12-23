@@ -56,6 +56,7 @@
 #include "linkgraph/refresh.h"
 #include "widgets/station_widget.h"
 #include "tunnelbridge_map.h"
+#include "depot_base.h"
 
 #include "table/strings.h"
 
@@ -2259,6 +2260,8 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 
 	/* Check if a valid, buildable airport was chosen for construction */
 	const AirportSpec *as = AirportSpec::Get(airport_type);
+
+	if (as->nof_depots > 0 && !Depot::CanAllocateItem()) return CMD_ERROR;
 	if (!as->IsAvailable() || layout >= as->num_table) return CMD_ERROR;
 	if (!as->IsWithinMapBounds(layout, tile)) return CMD_ERROR;
 
@@ -2351,6 +2354,8 @@ CommandCost CmdBuildAirport(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 			AirportTileAnimationTrigger(st, iter, AAT_BUILT);
 		}
 
+		if (as->nof_depots > 0) st->airport.SetHangar(true);
+
 		UpdateAirplanesOnNewStation(st);
 
 		Company::Get(st->owner)->infrastructure.airport++;
@@ -2398,6 +2403,7 @@ static CommandCost RemoveAirport(TileIndex tile, DoCommandFlag flags)
 			OrderBackup::Reset(tile_cur, false);
 			CloseWindowById(WC_VEHICLE_DEPOT, tile_cur);
 		}
+		st->airport.SetHangar(false);
 
 		const AirportSpec *as = st->airport.GetSpec();
 		/* The noise level is the noise from the airport and reduce it to account for the distance to the town center.
