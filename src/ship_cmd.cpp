@@ -463,6 +463,13 @@ static Track ChooseShipTrack(Ship *v, TileIndex tile, DiagDirection enterdir, Tr
 {
 	assert(IsValidDiagDirection(enterdir));
 
+	/* Before choosing a track, if close to the destination station or depot (not an oil rig)... */
+	if (DistanceManhattan(v->dest_tile, tile) <= 5 && (v->current_order.IsType(OT_GOTO_DEPOT) &&
+			(!IsShipDepotTile(v->dest_tile) || (IsBigDepotTile(v->dest_tile) && !IsBigDepotEmpty(v->dest_tile))))) {
+		/* Try to get a depot tile. */
+		v->dest_tile = Depot::Get(v->current_order.GetDestination())->GetBestDepotTile(v);
+	}
+
 	bool path_found = true;
 	Track track;
 
