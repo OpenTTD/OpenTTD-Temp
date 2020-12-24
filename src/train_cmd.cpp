@@ -3112,6 +3112,7 @@ static bool TrainMovedChangeSignals(TileIndex tile, DiagDirection dir)
 void Train::ReserveTrackUnderConsist() const
 {
 	for (const Train *u = this; u != nullptr; u = u->Next()) {
+		if (u->vehstatus & VS_HIDDEN) continue;
 		switch (u->track) {
 			case TRACK_BIT_WORMHOLE:
 				TryReserveRailTrack(u->tile, DiagDirToDiagTrack(GetTunnelBridgeDirection(u->tile)));
@@ -3140,12 +3141,46 @@ uint Train::Crash(bool flooded)
 		/* Remove the reserved path in front of the train if it is not stuck.
 		 * Also clear all reserved tracks the train is currently on. */
 		if (!HasBit(this->flags, VRF_TRAIN_STUCK)) FreeTrainTrackReservation(this);
+
+		if (IsBigRailDepotTile(this->tile)) {
+			if (this->track & ~TRACK_BIT_DEPOT) {
+				for (Train *v = this; v != nullptr; v = v->Next()) {
+					v->track &= ~TRACK_BIT_DEPOT;
+				}
+				InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(this->tile));
+			}
+			/* Remove reserved tracks of platform ahead. */
+			TileIndexDiff diff = TileOffsByDiagDir(TrackdirToExitdir(this->GetVehicleTrackdir()));
+			for (TileIndex pt_tile = this->tile + diff; IsCompatiblePlatformTile(pt_tile, this->tile) && HasDepotReservation(pt_tile); pt_tile += diff) {
+				if (EnsureNoVisibleVehicleOnGround(pt_tile).Failed()) break;
+				SetDepotReservation(pt_tile, false);
+				MarkTileDirtyByTile(pt_tile);
+			}
+		}
+
 		for (const Train *v = this; v != nullptr; v = v->Next()) {
 			ClearPathReservation(v, v->tile, v->GetVehicleTrackdir());
 			if (IsTileType(v->tile, MP_TUNNELBRIDGE)) {
 				/* ClearPathReservation will not free the wormhole exit
 				 * if the train has just entered the wormhole. */
 				SetTunnelBridgeReservation(GetOtherTunnelBridgeEnd(v->tile), false);
+			}
+
+			if (v->Next() == nullptr && (IsRailStationTile(v->tile) || IsBigRailDepotTile(v->tile))) {
+				/* Remove reserved tracks of platform tiles behind the train. */
+				TileIndexDiff diff = TileOffsByDiagDir(TrackdirToExitdir(ReverseTrackdir(v->GetVehicleTrackdir())));
+				for (TileIndex pt_tile = v->tile + diff; IsCompatiblePlatformTile(pt_tile, v->tile); pt_tile += diff) {
+					if (IsBigRailDepotTile(pt_tile)) {
+						if (!HasDepotReservation(pt_tile)) break;
+						if (EnsureNoVisibleVehicleOnGround(pt_tile).Failed()) break;
+						SetDepotReservation(pt_tile, false);
+					} else {
+						if (!HasStationReservation(pt_tile)) break;
+						if (EnsureNoVisibleVehicleOnGround(pt_tile).Failed()) break;
+						SetRailStationReservation(pt_tile, false);
+					}
+					MarkTileDirtyByTile(pt_tile);
+				}
 			}
 		}
 
@@ -3159,6 +3194,7 @@ uint Train::Crash(bool flooded)
 	}
 
 	pass += this->GroundVehicleBase::Crash(flooded);
+	this->ReserveTrackUnderConsist();
 
 	this->crash_anim_pos = flooded ? 4000 : 1; // max 4440, disappear pretty fast when flooded
 	return pass;
@@ -3180,10 +3216,6 @@ static uint TrainCrashed(Train *v)
 		AI::NewEvent(v->owner, new ScriptEventVehicleCrashed(v->index, v->tile, ScriptEventVehicleCrashed::CRASH_TRAIN));
 		Game::NewEvent(new ScriptEventVehicleCrashed(v->index, v->tile, ScriptEventVehicleCrashed::CRASH_TRAIN));
 	}
-
-	/* Try to re-reserve track under already crashed train too.
-	 * Crash() clears the reservation! */
-	v->ReserveTrackUnderConsist();
 
 	return num;
 }
@@ -3236,6 +3268,9 @@ static Vehicle *FindTrainCollideEnum(Vehicle *v, void *data)
 	/* crash both trains */
 	tcc->num += TrainCrashed(tcc->v);
 	tcc->num += TrainCrashed(coll);
+
+	/* The crashing of the coll train frees reservation of train v: Reserve again for train v. */
+	tcc->v->ReserveTrackUnderConsist();
 
 	return nullptr; // continue searching
 }

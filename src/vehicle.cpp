@@ -660,6 +660,24 @@ CommandCost EnsureNoVehicleOnGround(TileIndex tile)
 	return CommandCost();
 }
 
+/**
+ * Ensure there is no visible vehicle at the ground at the given position.
+ * @param tile Position to examine.
+ * @return Succeeded command (ground is free) or failed command (a visible vehicle is found).
+ */
+CommandCost EnsureNoVisibleVehicleOnGround(TileIndex tile)
+{
+	int z = GetTileMaxPixelZ(tile);
+
+	/* Value v is not safe in MP games, however, it is used to generate a local
+	 * error message only (which may be different for different machines).
+	 * Such a message does not affect MP synchronisation.
+	 */
+	Vehicle *v = VehicleFromPos(tile, &z, &EnsureNoVehicleProcZ, true);
+	if (v != nullptr && (v->vehstatus & VS_HIDDEN) == 0) return_cmd_error(STR_ERROR_TRAIN_IN_THE_WAY + v->type);
+	return CommandCost();
+}
+
 /** Procedure called for every vehicle found in tunnel/bridge in the hash map */
 static Vehicle *GetVehicleTunnelBridgeProc(Vehicle *v, void *data)
 {
