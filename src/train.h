@@ -113,7 +113,7 @@ struct Train FINAL : public GroundVehicle<Train, VEH_TRAIN> {
 	int GetDisplayMaxSpeed() const { return this->vcache.cached_max_speed; }
 	Money GetRunningCost() const;
 	int GetDisplayImageWidth(Point *offset = nullptr) const;
-	bool IsInDepot() const { return this->track == TRACK_BIT_DEPOT; }
+	bool IsInDepot() const { return HasBit((byte)this->track, TRACK_DEPOT); }
 	bool Tick();
 	void OnNewDay();
 	uint Crash(bool flooded = false);
