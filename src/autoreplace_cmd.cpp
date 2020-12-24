@@ -491,6 +491,7 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 {
 	Vehicle *old_head = *chain;
 	assert(old_head->IsPrimaryVehicle());
+	TileIndex tile = old_head->tile;
 
 	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, 0);
 
@@ -640,6 +641,9 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 
 				if ((flags & DC_EXEC) != 0) CheckCargoCapacity(new_head);
 			}
+
+			assert(IsValidTile(tile));
+			if (!HasCompatibleDepotTile(tile, new_head)) cost.MakeError(STR_ERROR_UNABLE_TO_FIND_APPROPRIATE_DEPOT_TILE);
 
 			/* If we are not in DC_EXEC undo everything, i.e. rearrange old vehicles.
 			 * We do this from back to front, so that the head of the temporary vehicle chain does not change all the time.

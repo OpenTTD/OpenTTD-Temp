@@ -333,4 +333,6 @@ protected: // These functions should not be called outside acceleration code.
 	}
 };
 
+bool HasCompatibleDepotTile(TileIndex tile, const Train *t);
+
 #endif /* TRAIN_H */

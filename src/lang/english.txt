@@ -4555,6 +4555,7 @@ STR_ERROR_CAN_T_MOVE_VEHICLE                                    :{WHITE}Can't mo
 STR_ERROR_REAR_ENGINE_FOLLOW_FRONT                              :{WHITE}The rear engine will always follow its front counterpart
 STR_ERROR_UNABLE_TO_FIND_ROUTE_TO                               :{WHITE}Unable to find route to local depot
 STR_ERROR_UNABLE_TO_FIND_LOCAL_DEPOT                            :{WHITE}Unable to find local depot
+STR_ERROR_UNABLE_TO_FIND_APPROPRIATE_DEPOT_TILE                 :{WHITE}Unable to find appropriate depot tile
 
 STR_ERROR_DEPOT_TOO_SPREAD_OUT                                  :{WHITE}... depot too spread out
 STR_ERROR_DEPOT_WRONG_DEPOT_TYPE                                :Wrong depot type
