@@ -19,6 +19,7 @@
 #include "core/random_func.hpp"
 #include "vehiclelist.h"
 #include "road.h"
+#include "ship.h"
 #include "ai/ai.hpp"
 #include "news_func.h"
 #include "strings_func.h"
@@ -481,6 +482,25 @@ static CommandCost ReplaceFreeUnit(Vehicle **single_unit, DoCommandFlag flags, b
 }
 
 /**
+ * When replacing a ship in an extended depot, copy the direction as well.
+ * @param old_ship The ship being replaced.
+ * @param new_ship The new ship that will replace the old one.
+ */
+void CopyShipStatusInExtendedDepot(const Ship *old_ship, Ship *new_ship)
+{
+	assert(IsBigDepotTile(old_ship->tile));
+	assert(old_ship->tile == new_ship->tile);
+
+	new_ship->x_pos = old_ship->x_pos;
+	new_ship->y_pos = old_ship->y_pos;
+	new_ship->z_pos = old_ship->z_pos;
+	new_ship->state = old_ship->state;
+	new_ship->direction = old_ship->direction;
+	new_ship->rotation = old_ship->rotation;
+	new_ship->GetImage(new_ship->direction, EIT_ON_MAP, &new_ship->sprite_cache.sprite_seq);
+}
+
+/**
  * Replace a whole vehicle chain
  * @param chain vehicle chain to let autoreplace/renew operator on
  * @param flags command flags
@@ -689,6 +709,11 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 			cost.AddCost(CopyHeadSpecificThings(old_head, new_head, flags));
 
 			if (cost.Succeeded()) {
+				/* Copy position and direction for ships in extended depots. */
+				if (old_head->type == VEH_SHIP && IsBigDepotTile(old_head->tile)) {
+					CopyShipStatusInExtendedDepot(Ship::From(old_head), Ship::From(new_head));
+				}
+
 				/* The new vehicle is constructed, now take over cargo */
 				if ((flags & DC_EXEC) != 0) {
 					TransferCargo(old_head, new_head, true);

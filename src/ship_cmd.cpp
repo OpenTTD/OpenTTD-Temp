@@ -34,6 +34,7 @@
 #include "framerate_type.h"
 #include "industry.h"
 #include "industry_map.h"
+#include "command_func.h"
 
 #include "table/strings.h"
 
@@ -885,10 +886,22 @@ void Ship::SetDestTile(TileIndex tile)
  */
 CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, uint16 data, Vehicle **ret)
 {
-	tile = GetShipDepotNorthTile(tile);
+	assert(IsShipDepotTile(tile));
+	if (!(flags & DC_AUTOREPLACE)) {
+		std::vector<TileIndex> *depot_tiles = &(Depot::GetByTile(tile)->depot_tiles);
+		tile = INVALID_TILE;
+		for (std::vector<TileIndex>::iterator it = depot_tiles->begin(); it != depot_tiles->end(); ++it) {
+			if (CheckPlaceShipOnDepot(*it)) {
+				tile = *it;
+				break;
+			}
+		}
+		if (tile == INVALID_TILE) return_cmd_error(STR_ERROR_NO_DEPOT_FREE);
+	}
+
 	if (flags & DC_EXEC) {
-		int x;
-		int y;
+		bool is_big_depot = IsBigDepot(tile);
+		TileIndexDiffC offset = TileIndexDiffCByDiagDir(ReverseDiagDir(GetShipDepotDirection(tile)));
 
 		const ShipVehicleInfo *svi = &e->u.ship;
 
@@ -897,14 +910,22 @@ CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, u
 
 		v->owner = _current_company;
 		v->tile = tile;
-		x = TileX(tile) * TILE_SIZE + TILE_SIZE / 2;
-		y = TileY(tile) * TILE_SIZE + TILE_SIZE / 2;
-		v->x_pos = x;
-		v->y_pos = y;
-		v->z_pos = GetSlopePixelZ(x, y);
+		v->x_pos = TileX(tile) * TILE_SIZE + TILE_SIZE / 2 + offset.x * (TILE_SIZE / 2 - 1);
+		v->y_pos = TileY(tile) * TILE_SIZE + TILE_SIZE / 2 + offset.y * (TILE_SIZE / 2 - 1);
+		v->z_pos = GetSlopePixelZ(v->x_pos, v->y_pos);
+		v->state = TRACK_BIT_DEPOT;
 
+		if (is_big_depot) {
+			v->state |= AxisToTrackBits(GetShipDepotAxis(tile));
+			v->direction = AxisToDirection(GetShipDepotAxis(v->tile));
+			SetDepotReservation(v->tile, DEPOT_RESERVATION_FULL_STOPPED_VEH);
+		} else {
+			v->vehstatus |= VS_HIDDEN;
+		}
+
+		v->rotation = v->direction;
 		v->UpdateDeltaXY();
-		v->vehstatus = VS_HIDDEN | VS_STOPPED | VS_DEFPAL;
+		v->vehstatus |= VS_STOPPED | VS_DEFPAL;
 
 		v->spritenum = svi->image_index;
 		v->cargo_type = e->GetDefaultCargoType();
@@ -919,8 +940,6 @@ CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, u
 		v->reliability_spd_dec = e->reliability_spd_dec;
 		v->max_age = e->GetLifeLengthInDays();
 		_new_vehicle_id = v->index;
-
-		v->state = TRACK_BIT_DEPOT;
 
 		v->SetServiceInterval(Company::Get(_current_company)->settings.vehicle.servint_ships);
 		v->date_of_last_service = _date;
@@ -940,6 +959,8 @@ CommandCost CmdBuildShip(TileIndex tile, DoCommandFlag flags, const Engine *e, u
 		v->InvalidateNewGRFCacheOfChain();
 
 		v->UpdatePosition();
+
+		if (is_big_depot) v->MarkDirty();
 	}
 
 	return CommandCost();

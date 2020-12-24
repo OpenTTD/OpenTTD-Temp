@@ -4723,6 +4723,7 @@ STR_ERROR_TOO_MANY_VEHICLES_IN_GAME                             :{WHITE}Too many
 STR_ERROR_CAN_T_CHANGE_SERVICING                                :{WHITE}Can't change servicing interval...
 
 STR_ERROR_VEHICLE_IS_DESTROYED                                  :{WHITE}... vehicle is destroyed
+STR_ERROR_NO_DEPOT_FREE                                         :{WHITE}... there is no free depot
 
 STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL                          :{WHITE}No vehicles will be available at all
 STR_ERROR_NO_VEHICLES_AVAILABLE_AT_ALL_EXPLANATION              :{WHITE}Change your NewGRF configuration
