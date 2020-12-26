@@ -14,6 +14,7 @@
 #include "string_type.h"
 #include "gfx_type.h"
 #include "core/bitmath_func.hpp"
+#include "core/overflowsafe_type.hpp"
 
 /**
  * Extract the StringTab from a StringID.
@@ -200,8 +201,11 @@ static inline void SetDParam(uint n, uint64 v)
 {
 	_global_string_params.SetParam(n, v);
 }
+template <class T, class U> static inline void SetDParam(uint n, const OverflowSafeInt<T, U>& v) { SetDParam(n, static_cast<int64>(v)); }
 
 void SetDParamMaxValue(uint n, uint64 max_value, uint min_count = 0, FontSize size = FS_NORMAL);
+template <class T, class U> static inline void SetDParamMaxValue(uint n, const OverflowSafeInt<T, U>& max_value, uint min_count = 0, FontSize size = FS_NORMAL) { SetDParamMaxValue(n, static_cast<int64>(max_value), min_count, size); }
+
 void SetDParamMaxDigits(uint n, uint count, FontSize size = FS_NORMAL);
 
 void SetDParamStr(uint n, const char *str);

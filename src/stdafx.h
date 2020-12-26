@@ -430,6 +430,14 @@ assert_compile(SIZE_MAX >= UINT32_MAX);
 #	define CloseConnection OTTD_CloseConnection
 #endif /* __APPLE__ */
 
+#ifdef __GNUC__
+#	define likely(x)       __builtin_expect(!!(x), 1)
+#	define unlikely(x)     __builtin_expect(!!(x), 0)
+#else
+#	define likely(x)       (x)
+#	define unlikely(x)     (x)
+#endif
+
 void NORETURN CDECL usererror(const char *str, ...) WARN_FORMAT(1, 2);
 void NORETURN CDECL error(const char *str, ...) WARN_FORMAT(1, 2);
 #define NOT_REACHED() error("NOT_REACHED triggered at line %i of %s", __LINE__, __FILE__)
@@ -437,12 +445,15 @@ void NORETURN CDECL error(const char *str, ...) WARN_FORMAT(1, 2);
 /* For non-debug builds with assertions enabled use the special assertion handler. */
 #if defined(NDEBUG) && defined(WITH_ASSERT)
 #	undef assert
-#	define assert(expression) if (!(expression)) error("Assertion failed at line %i of %s: %s", __LINE__, __FILE__, #expression);
+#	define assert(expression) if (unlikely(!(expression))) error("Assertion failed at line %i of %s: %s", __LINE__, __FILE__, #expression);
 #endif
 
 /* Asserts are enabled if NDEBUG isn't defined or WITH_ASSERT is defined. */
 #if !defined(NDEBUG) || defined(WITH_ASSERT)
 #	define OTTD_ASSERT
+#	define assert_msg(expression, ...) if (unlikely(!(expression))) assert_msg_error(__LINE__, __FILE__, #expression, __VA_ARGS__);
+#else
+#	define assert_msg(expression, ...)
 #endif
 
 #if defined(OPENBSD)

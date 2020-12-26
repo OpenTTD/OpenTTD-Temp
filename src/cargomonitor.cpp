@@ -77,7 +77,7 @@ static int32 GetAmount(CargoMonitorMap &monitor_map, CargoMonitorID monitor, boo
 		}
 		return 0;
 	} else {
-		int32 result = iter->second;
+		int32 result = static_cast<int32>(iter->second);
 		iter->second = 0;
 		if (!keep_monitoring) monitor_map.erase(iter);
 		return result;

@@ -182,9 +182,9 @@ static bool EngineReliabilitySorter(const EngineID &a, const EngineID &b)
  */
 static bool EngineCostSorter(const EngineID &a, const EngineID &b)
 {
-	Money va = Engine::Get(a)->GetCost();
-	Money vb = Engine::Get(b)->GetCost();
-	int r = ClampToI32(va - vb);
+	const Money va = Engine::Get(a)->GetCost();
+	const Money vb = Engine::Get(b)->GetCost();
+	const Money r = va - vb;
 
 	/* Use EngineID to sort instead since we want consistent sorting */
 	if (r == 0) return EngineNumberSorter(a, b);
@@ -250,9 +250,9 @@ static bool EngineTractiveEffortSorter(const EngineID &a, const EngineID &b)
  */
 static bool EngineRunningCostSorter(const EngineID &a, const EngineID &b)
 {
-	Money va = Engine::Get(a)->GetRunningCost();
-	Money vb = Engine::Get(b)->GetRunningCost();
-	int r = ClampToI32(va - vb);
+	const Money va = Engine::Get(a)->GetRunningCost();
+	const Money vb = Engine::Get(b)->GetRunningCost();
+	const Money r = va - vb;
 
 	/* Use EngineID to sort instead since we want consistent sorting */
 	if (r == 0) return EngineNumberSorter(a, b);
@@ -269,10 +269,10 @@ static bool EnginePowerVsRunningCostSorter(const EngineID &a, const EngineID &b)
 {
 	const Engine *e_a = Engine::Get(a);
 	const Engine *e_b = Engine::Get(b);
-	uint p_a = e_a->GetPower();
-	uint p_b = e_b->GetPower();
-	Money r_a = e_a->GetRunningCost();
-	Money r_b = e_b->GetRunningCost();
+	const uint p_a = e_a->GetPower();
+	const uint p_b = e_b->GetPower();
+	const Money r_a = e_a->GetRunningCost();
+	const Money r_b = e_b->GetRunningCost();
 	/* Check if running cost is zero in one or both engines.
 	 * If only one of them is zero then that one has higher value,
 	 * else if both have zero cost then compare powers. */
@@ -288,8 +288,8 @@ static bool EnginePowerVsRunningCostSorter(const EngineID &a, const EngineID &b)
 	/* Using double for more precision when comparing close values.
 	 * This shouldn't have any major effects in performance nor in keeping
 	 * the game in sync between players since it's used in GUI only in client side */
-	double v_a = (double)p_a / (double)r_a;
-	double v_b = (double)p_b / (double)r_b;
+	double v_a = (double)p_a / (double)r_a.Value();
+	double v_b = (double)p_b / (double)r_b.Value();
 	/* Use EngineID to sort if both have same power/running cost,
 	 * since we want consistent sorting.
 	 * Also if both have no power then sort with reverse of running cost to simulate

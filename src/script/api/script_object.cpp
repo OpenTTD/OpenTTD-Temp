@@ -105,7 +105,7 @@ ScriptObject::ActiveInstance::~ActiveInstance()
 
 /* static */ void ScriptObject::SetDoCommandCosts(Money value)
 {
-	GetStorage()->costs = CommandCost(value);
+	GetStorage()->costs = CommandCost(GetStorage()->costs.GetExpensesType(), value);
 }
 
 /* static */ void ScriptObject::IncreaseDoCommandCosts(Money value)

@@ -51,7 +51,7 @@ static void SaveDelivery()
 	CargoMonitorMap::const_iterator iter = _cargo_deliveries.begin();
 	while (iter != _cargo_deliveries.end()) {
 		storage.number = iter->first;
-		storage.amount = iter->second;
+		storage.amount = static_cast<int32>(iter->second);
 
 		SlSetArrayIndex(i);
 		SlObject(&storage, _cargomonitor_pair_desc);
@@ -89,7 +89,7 @@ static void SavePickup()
 	CargoMonitorMap::const_iterator iter = _cargo_pickups.begin();
 	while (iter != _cargo_pickups.end()) {
 		storage.number = iter->first;
-		storage.amount = iter->second;
+		storage.amount = static_cast<int32>(iter->second);
 
 		SlSetArrayIndex(i);
 		SlObject(&storage, _cargomonitor_pair_desc);

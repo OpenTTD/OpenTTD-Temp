@@ -10,6 +10,9 @@
 #ifndef MATH_FUNC_HPP
 #define MATH_FUNC_HPP
 
+#include "../stdafx.h"
+#include <limits>
+
 /**
  * Returns the maximum of two values.
  *
@@ -21,7 +24,7 @@
  * @return The greater value or a if equals
  */
 template <typename T>
-static inline T max(const T a, const T b)
+static inline constexpr T max(const T& a, const T& b)
 {
 	return (a >= b) ? a : b;
 }
@@ -37,7 +40,7 @@ static inline T max(const T a, const T b)
  * @return The smaller value or b if equals
  */
 template <typename T>
-static inline T min(const T a, const T b)
+static inline constexpr T min(const T& a, const T& b)
 {
 	return (a < b) ? a : b;
 }
@@ -78,9 +81,21 @@ static inline uint minu(const uint a, const uint b)
  * @return The unsigned value
  */
 template <typename T>
-static inline T abs(const T a)
+static inline constexpr T abs(const T& a)
 {
 	return (a < (T)0) ? -a : a;
+}
+
+/**
+ * Returns the sign of (scalar) variable.
+ *
+ * @param a The value to obtain the sign of
+ * @return -1 if a < 0, +1 if a > 0, a otherwise
+ */
+template <typename T>
+static inline constexpr T signum(const T& a)
+{
+	return likely(a > (T)0) ? (T)1 : (likely(a < (T)0) ? (T)(-1) : a);
 }
 
 /**
@@ -134,12 +149,9 @@ static inline T *AlignPtr(T *x, uint n)
  * @see Clamp(int, int, int)
  */
 template <typename T>
-static inline T Clamp(const T a, const T min, const T max)
+static inline constexpr T Clamp(const T& a, const T& min, const T& max)
 {
-	assert(min <= max);
-	if (a <= min) return min;
-	if (a >= max) return max;
-	return a;
+	return unlikely(max < min) ? Clamp<T>(a, max, min) : unlikely(a < min) ? min : unlikely(a > max) ? max : a;
 }
 
 /**
@@ -185,6 +197,23 @@ static inline uint ClampU(const uint a, const uint min, const uint max)
 }
 
 /**
+ * Reduce one integral type to another integral type by using saturation arithmetic
+ *
+ * @tparam T The type to reduce to
+ * @tparam U The type to reduce from
+ * @param a The value to reduce
+ * @return The value, clamped to fit within the result type
+ * @see Clamp(int, int, int)
+ */
+template <class T, class U, class = typename std::enable_if<std::is_integral<T>::value && std::is_integral<U>::value>::type>
+static inline constexpr T ClampTo(const U& a)
+{
+	return static_cast<T>(Clamp<U>(a,
+			/* min */ static_cast<U>(max(static_cast<intmax_t>(std::numeric_limits<T>::min()), static_cast<intmax_t>(std::numeric_limits<U>::min()))),
+			/* max */ static_cast<U>(min(static_cast<uintmax_t>(std::numeric_limits<T>::max()), static_cast<uintmax_t>(std::numeric_limits<U>::max())))));
+}
+
+/**
  * Reduce a signed 64-bit int to a signed 32-bit one
  *
  * This function clamps a 64-bit integer to a 32-bit integer.
@@ -194,29 +223,29 @@ static inline uint ClampU(const uint a, const uint min, const uint max)
  * this value is returned. In all other cases the 64-bit value 'fits' in a
  * 32-bits integer field and so the value is casted to int32 and returned.
  *
- * @param a The 64-bit value to clamps
+ * @tparam T The type of the value to clamp (default int64)
+ * @param a The 64-bit value to clamp
  * @return The 64-bit value reduced to a 32-bit value
  * @see Clamp(int, int, int)
  */
-static inline int32 ClampToI32(const int64 a)
+template <class T = int64>
+static inline int32 ClampToI32(const T a)
 {
-	return static_cast<int32>(Clamp<int64>(a, INT32_MIN, INT32_MAX));
+	return ClampTo<int32, T>(a);
 }
 
 /**
  * Reduce an unsigned 64-bit int to an unsigned 16-bit one
  *
+ * @tparam T The type of the value to clamp (default uint64)
  * @param a The 64-bit value to clamp
  * @return The 64-bit value reduced to a 16-bit value
  * @see ClampU(uint, uint, uint)
  */
-static inline uint16 ClampToU16(const uint64 a)
+template <class T = uint64>
+static inline uint16 ClampToU16(const T a)
 {
-	/* MSVC thinks, in its infinite wisdom, that int min(int, int) is a better
-	 * match for min(uint64, uint) than uint64 min(uint64, uint64). As such we
-	 * need to cast the UINT16_MAX to prevent MSVC from displaying its
-	 * infinite loads of warnings. */
-	return static_cast<uint16>(min<uint64>(a, static_cast<uint64>(UINT16_MAX)));
+	return ClampTo<uint16, T>(a);
 }
 
 /**
@@ -243,6 +272,7 @@ static inline T Delta(const T a, const T b)
  * @param base The base value of the interval
  * @param size The size of the interval
  * @return True if the value is in the interval, false else.
+ * @see IsInsideMM()
  */
 template <typename T>
 static inline bool IsInsideBS(const T x, const size_t base, const size_t size)
@@ -307,57 +337,66 @@ int DivideApprox(int a, int b);
 
 /**
  * Computes ceil(a / b) for non-negative a and b.
- * @param a Numerator
- * @param b Denominator
- * @return Quotient, rounded up
+ * @param a Numerator.
+ * @param b Denominator.
+ * @return Quotient, rounded up.
  */
-static inline uint CeilDiv(uint a, uint b)
+static inline uint CeilDiv(const uint a, const uint b)
 {
 	return (a + b - 1) / b;
 }
 
 /**
  * Computes ceil(a / b) * b for non-negative a and b.
- * @param a Numerator
- * @param b Denominator
+ * @param a Numerator.
+ * @param b Denominator.
  * @return a rounded up to the nearest multiple of b.
  */
-static inline uint Ceil(uint a, uint b)
+static inline uint Ceil(const uint a, const uint b)
 {
 	return CeilDiv(a, b) * b;
 }
 
 /**
- * Computes round(a / b) for signed a and unsigned b.
- * @param a Numerator
- * @param b Denominator
- * @return Quotient, rounded to nearest
+ * Computes round(a / b) for b > 0.
+ * @param a Numerator.
+ * @param b Denominator.
+ * @return Quotient, rounded to nearest.
  */
-static inline int RoundDivSU(int a, uint b)
+static inline int RoundDivSU(const int a, const uint b)
 {
+	if (unlikely(b >= static_cast<uint>(std::numeric_limits<int>::max()))) {
+		/* This is correct for everything except the 0.5 boundary condition;
+		 * and certainly more correct than unchecked numeric overflow. */
+		return (static_cast<uint>(abs(a)) > (b / 2)) ? signum(a) : 0;
+	}
+
+	const int b_ = static_cast<int>(b);
 	if (a > 0) {
 		/* 0.5 is rounded to 1 */
-		return (a + static_cast<int>(b) / 2) / static_cast<int>(b);
+		return (a + b_ / 2) / b_;
 	} else {
 		/* -0.5 is rounded to 0 */
-		return (a - (static_cast<int>(b) - 1) / 2) / static_cast<int>(b);
+		return (a - (b_ - 1) / 2) / b_;
 	}
 }
 
 /**
- * Computes (a / b) rounded away from zero.
- * @param a Numerator
- * @param b Denominator
- * @return Quotient, rounded away from zero
+ * Computes (a / b) rounded away from zero for b > 0.
+ * @param a Numerator.
+ * @param b Denominator.
+ * @return Quotient, rounded away from zero.
  */
-static inline int DivAwayFromZero(int a, uint b)
+static inline int DivAwayFromZero(const int a, const uint b)
 {
-	const int _b = static_cast<int>(b);
+	if (unlikely(b >= static_cast<uint>(std::numeric_limits<int>::max()))) return signum(a);
+
+	const int b_ = static_cast<int>(b);
 	if (a > 0) {
-		return (a + _b - 1) / _b;
+		return (a + b_ - 1) / b_;
 	} else {
 		/* Note: Behaviour of negative numerator division is truncation toward zero. */
-		return (a - _b + 1) / _b;
+		return (a - b_ + 1) / b_;
 	}
 }
 

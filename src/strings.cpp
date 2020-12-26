@@ -478,7 +478,7 @@ static char *FormatGenericCurrency(char *buff, const CurrencySpec *spec, Money n
 	const char *separator = _settings_game.locale.digit_group_separator_currency;
 	if (separator == nullptr && !StrEmpty(_currency->separator)) separator = _currency->separator;
 	if (separator == nullptr) separator = _langpack->digit_group_separator_currency;
-	buff = FormatNumber(buff, number, last, separator);
+	buff = FormatNumber(buff, static_cast<int64>(number), last, separator);
 	buff = strecpy(buff, multiplier, last);
 
 	/* Add suffix part, following symbol_pos specification.

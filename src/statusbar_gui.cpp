@@ -119,8 +119,8 @@ struct StatusBarWindow : Window {
 				break;
 
 			case WID_S_RIGHT: {
-				int64 max_money = UINT32_MAX;
-				for (const Company *c : Company::Iterate()) max_money = max<int64>(c->money, max_money);
+				Money max_money = UINT32_MAX;
+				for (const Company *c : Company::Iterate()) max_money = max(c->money, max_money);
 				SetDParam(0, 100LL * max_money);
 				d = GetStringBoundingBox(STR_COMPANY_MONEY);
 				break;

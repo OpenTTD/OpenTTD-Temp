@@ -178,7 +178,7 @@ int UpdateCompanyRatingAndValue(Company *c, bool update)
 		_score_part[owner][SCORE_VEHICLES] = num;
 		/* Don't allow negative min_profit to show */
 		if (min_profit > 0) {
-			_score_part[owner][SCORE_MIN_PROFIT] = min_profit;
+			_score_part[owner][SCORE_MIN_PROFIT] = static_cast<int64>(min_profit);
 		}
 	}
 
@@ -206,10 +206,10 @@ int UpdateCompanyRatingAndValue(Company *c, bool update)
 			} while (++cee, --numec);
 
 			if (min_income > 0) {
-				_score_part[owner][SCORE_MIN_INCOME] = min_income;
+				_score_part[owner][SCORE_MIN_INCOME] = static_cast<int64>(min_income);
 			}
 
-			_score_part[owner][SCORE_MAX_INCOME] = max_income;
+			_score_part[owner][SCORE_MAX_INCOME] = static_cast<int64>(max_income);
 		}
 	}
 
@@ -223,7 +223,7 @@ int UpdateCompanyRatingAndValue(Company *c, bool update)
 				total_delivered += cee->delivered_cargo.GetSum<OverflowSafeInt64>();
 			} while (++cee, --numec);
 
-			_score_part[owner][SCORE_DELIVERED] = total_delivered;
+			_score_part[owner][SCORE_DELIVERED] = static_cast<int64>(total_delivered);
 		}
 	}
 
@@ -235,13 +235,13 @@ int UpdateCompanyRatingAndValue(Company *c, bool update)
 	/* Generate score for company's money */
 	{
 		if (c->money > 0) {
-			_score_part[owner][SCORE_MONEY] = c->money;
+			_score_part[owner][SCORE_MONEY] = static_cast<int64>(c->money);
 		}
 	}
 
 	/* Generate score for loan */
 	{
-		_score_part[owner][SCORE_LOAN] = _score_info[SCORE_LOAN].needed - c->current_loan;
+		_score_part[owner][SCORE_LOAN] = _score_info[SCORE_LOAN].needed - static_cast<int64>(c->current_loan);
 	}
 
 	/* Now we calculate the score for each item.. */
@@ -773,7 +773,7 @@ void RecomputePrices()
 		}
 
 		/* Apply inflation */
-		price = (int64)price * _economy.inflation_prices;
+		price = price * _economy.inflation_prices;
 
 		/* Apply newgrf modifiers, remove fractional part of inflation, and normalise on medium difficulty. */
 		int shift = _price_base_multiplier[i] - 16 - 3;
@@ -789,7 +789,7 @@ void RecomputePrices()
 		 * and based on that cause an error. When the price
 		 * is zero that fails even when things are done. */
 		if (price == 0) {
-			price = Clamp(_price_base_specs[i].start_price, -1, 1);
+			price = Clamp<Money>(_price_base_specs[i].start_price, -1, 1);
 			/* No base price should be zero, but be sure. */
 			assert(price != 0);
 		}
@@ -1008,7 +1008,7 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, C
 	 */
 	const int time_factor = max(MAX_TIME_FACTOR - days_over_days1 - days_over_days2, MIN_TIME_FACTOR);
 
-	return BigMulS(dist * time_factor * num_pieces, cs->current_payment, 21);
+	return BigMulS(dist * time_factor * num_pieces, static_cast<int32>(cs->current_payment), 21);
 }
 
 /** The industries we've currently brought cargo to. */

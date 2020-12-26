@@ -1243,14 +1243,14 @@ static bool VehicleAgeSorter(const Vehicle * const &a, const Vehicle * const &b)
 /** Sort vehicles by this year profit */
 static bool VehicleProfitThisYearSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
-	int r = ClampToI32(a->GetDisplayProfitThisYear() - b->GetDisplayProfitThisYear());
+	Money r = (a->GetDisplayProfitThisYear() - b->GetDisplayProfitThisYear());
 	return (r != 0) ? r < 0 : VehicleNumberSorter(a, b);
 }
 
 /** Sort vehicles by last year profit */
 static bool VehicleProfitLastYearSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
-	int r = ClampToI32(a->GetDisplayProfitLastYear() - b->GetDisplayProfitLastYear());
+	Money r = (a->GetDisplayProfitLastYear() - b->GetDisplayProfitLastYear());
 	return (r != 0) ? r < 0 : VehicleNumberSorter(a, b);
 }
 
@@ -1298,12 +1298,11 @@ static bool VehicleModelSorter(const Vehicle * const &a, const Vehicle * const &
 static bool VehicleValueSorter(const Vehicle * const &a, const Vehicle * const &b)
 {
 	const Vehicle *u;
-	Money diff = 0;
+	Money r = 0;
 
-	for (u = a; u != nullptr; u = u->Next()) diff += u->value;
-	for (u = b; u != nullptr; u = u->Next()) diff -= u->value;
+	for (u = a; u != nullptr; u = u->Next()) r += u->value;
+	for (u = b; u != nullptr; u = u->Next()) r -= u->value;
 
-	int r = ClampToI32(diff);
 	return (r != 0) ? r < 0 : VehicleNumberSorter(a, b);
 }
 

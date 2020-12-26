@@ -1525,9 +1525,9 @@ void NetworkSocketHandler::SendCompanyInformation(Packet *p, const Company *c, c
 	p->Send_uint8 (c->index);
 	p->Send_string(company_name);
 	p->Send_uint32(c->inaugurated_year);
-	p->Send_uint64(c->old_economy[0].company_value);
-	p->Send_uint64(c->money);
-	p->Send_uint64(income);
+	p->Send_uint64(static_cast<int64>(c->old_economy[0].company_value));
+	p->Send_uint64(static_cast<int64>(c->money));
+	p->Send_uint64(static_cast<int64>(income));
 	p->Send_uint16(c->old_economy[0].performance_history);
 
 	/* Send 1 if there is a password for the company else send 0 */
