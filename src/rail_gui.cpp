@@ -462,7 +462,8 @@ struct BuildRailToolbarWindow : Window {
 		this->GetWidget<NWidgetCore>(WID_RAT_BUILD_EW)->widget_data     = rti->gui_sprites.build_ew_rail;
 		this->GetWidget<NWidgetCore>(WID_RAT_BUILD_Y)->widget_data      = rti->gui_sprites.build_y_rail;
 		this->GetWidget<NWidgetCore>(WID_RAT_AUTORAIL)->widget_data     = rti->gui_sprites.auto_rail;
-		this->GetWidget<NWidgetCore>(WID_RAT_BUILD_DEPOT)->widget_data  = rti->gui_sprites.build_depot;
+		if (this->HasWidget(WID_RAT_BUILD_DEPOT)) this->GetWidget<NWidgetCore>(WID_RAT_BUILD_DEPOT)->widget_data  = rti->gui_sprites.build_depot;
+		if (this->HasWidget(WID_RAT_BUILD_BIG_DEPOT)) this->GetWidget<NWidgetCore>(WID_RAT_BUILD_BIG_DEPOT)->widget_data  = rti->gui_sprites.build_depot;
 		this->GetWidget<NWidgetCore>(WID_RAT_CONVERT_RAIL)->widget_data = rti->gui_sprites.convert_rail;
 		this->GetWidget<NWidgetCore>(WID_RAT_BUILD_TUNNEL)->widget_data = rti->gui_sprites.build_tunnel;
 	}
@@ -828,6 +829,30 @@ static Hotkey railtoolbar_hotkeys[] = {
 };
 HotkeyList BuildRailToolbarWindow::hotkeys("railtoolbar", railtoolbar_hotkeys, RailToolbarGlobalHotkeys);
 
+/**
+ * Add the depot icons depending on availability of construction.
+ * @param biggest_index Storage for collecting the biggest index used in the returned tree.
+ * @return Panel with company buttons.
+ * @post \c *biggest_index contains the largest used index in the tree.
+ */
+static NWidgetBase *MakeNWidgetRailDepot(int *biggest_index)
+{
+	NWidgetHorizontal *hor = new NWidgetHorizontal();
+
+	if (HasBit(_settings_game.depot.rail_depot_types, 0)) {
+		// small depot
+		hor->Add(new NWidgetLeaf(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_RAT_BUILD_DEPOT, SPR_IMG_DEPOT_RAIL, STR_RAIL_TOOLBAR_TOOLTIP_BUILD_TRAIN_DEPOT_FOR_BUILDING));
+	}
+
+	if (HasBit(_settings_game.depot.rail_depot_types, 1)) {
+		// big depot
+		hor->Add(new NWidgetLeaf(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_RAT_BUILD_BIG_DEPOT, SPR_IMG_DEPOT_RAIL, STR_RAIL_TOOLBAR_TOOLTIP_BUILD_BIG_TRAIN_DEPOT_FOR_BUILDING));
+	}
+
+	*biggest_index = WID_RAT_BUILD_BIG_DEPOT;
+	return hor;
+}
+
 static const NWidgetPart _nested_build_rail_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
@@ -850,8 +875,7 @@ static const NWidgetPart _nested_build_rail_widgets[] = {
 
 		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_RAT_DEMOLISH),
 						SetFill(0, 1), SetMinimalSize(22, 22), SetDataTip(SPR_IMG_DYNAMITE, STR_TOOLTIP_DEMOLISH_BUILDINGS_ETC),
-		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_RAT_BUILD_DEPOT),
-						SetFill(0, 1), SetMinimalSize(22, 22), SetDataTip(SPR_IMG_DEPOT_RAIL, STR_RAIL_TOOLBAR_TOOLTIP_BUILD_TRAIN_DEPOT_FOR_BUILDING),
+		NWidgetFunction(MakeNWidgetRailDepot),
 		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_RAT_BUILD_WAYPOINT),
 						SetFill(0, 1), SetMinimalSize(22, 22), SetDataTip(SPR_IMG_WAYPOINT, STR_RAIL_TOOLBAR_TOOLTIP_CONVERT_RAIL_TO_WAYPOINT),
 		NWidget(WWT_IMGBTN, COLOUR_DARK_GREEN, WID_RAT_BUILD_STATION),
