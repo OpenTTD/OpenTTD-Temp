@@ -88,6 +88,7 @@
 #include "command_func.h"
 #include "network/network_func.h"
 #include "framerate_type.h"
+#include "depot_map.h"
 
 #include <forward_list>
 #include <map>
@@ -989,6 +990,7 @@ enum TileHighlightType {
 
 const Station *_viewport_highlight_station; ///< Currently selected station for coverage area highlight
 const Town *_viewport_highlight_town;       ///< Currently selected town for coverage area highlight
+DepotID _viewport_highlight_depot = INVALID_DEPOT;    ///< Currently selected depot for depot highlight
 
 /**
  * Get tile highlight type of coverage area for a given tile.
@@ -997,6 +999,10 @@ const Town *_viewport_highlight_town;       ///< Currently selected town for cov
  */
 static TileHighlightType GetTileHighlightType(TileIndex t)
 {
+	if (_viewport_highlight_depot != INVALID_DEPOT) {
+		if (IsDepotTile(t) && GetDepotIndex(t) == _viewport_highlight_depot) return THT_WHITE;
+	}
+
 	if (_viewport_highlight_station != nullptr) {
 		if (IsTileType(t, MP_STATION) && GetStationIndex(t) == _viewport_highlight_station->index) return THT_WHITE;
 		if (_viewport_highlight_station->TileIsInCatchment(t)) return THT_BLUE;
@@ -3556,4 +3562,31 @@ void SetViewportCatchmentTown(const Town *t, bool sel)
 		MarkWholeScreenDirty();
 	}
 	if (_viewport_highlight_town != nullptr) SetWindowDirty(WC_TOWN_VIEW, _viewport_highlight_town->index);
+}
+
+static void MarkDepotTilesDirty()
+{
+	if (_viewport_highlight_depot != INVALID_DEPOT) {
+		MarkWholeScreenDirty();
+		return;
+	}
+}
+
+/**
+ * Select or deselect depot to highlight.
+ * @param *dep Depot in question
+ * @param sel Select or deselect given depot
+ */
+void SetViewportHighlightDepot(const DepotID dep, bool sel)
+{
+	if (_viewport_highlight_depot != INVALID_DEPOT) SetWindowDirty(WC_VEHICLE_DEPOT, _viewport_highlight_depot);
+	if (sel && _viewport_highlight_depot != dep) {
+		MarkDepotTilesDirty();
+		_viewport_highlight_depot = dep;
+		MarkDepotTilesDirty();
+	} else if (!sel && _viewport_highlight_depot == dep) {
+		MarkDepotTilesDirty();
+		_viewport_highlight_depot = INVALID_DEPOT;
+	}
+	if (_viewport_highlight_depot != INVALID_DEPOT) SetWindowDirty(WC_VEHICLE_DEPOT, _viewport_highlight_depot);
 }

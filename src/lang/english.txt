@@ -236,6 +236,8 @@ STR_TOOLTIP_FILTER_CRITERIA                                     :{BLACK}Select f
 STR_BUTTON_SORT_BY                                              :{BLACK}Sort by
 STR_BUTTON_CATCHMENT                                            :{BLACK}Coverage
 STR_TOOLTIP_CATCHMENT                                           :{BLACK}Toggle coverage area display
+STR_BUTTON_HIGHLIGHT_DEPOT                                      :{BLACK}Highlight
+STR_TOOLTIP_HIGHLIGHT_DEPOT                                     :{BLACK}Toogle highlight on viewport for this depot
 
 STR_TOOLTIP_CLOSE_WINDOW                                        :{BLACK}Close window
 STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS                              :{BLACK}Window title - drag this to move window

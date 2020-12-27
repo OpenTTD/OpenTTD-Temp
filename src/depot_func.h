@@ -38,4 +38,7 @@ struct Depot;
 CommandCost FindJoiningDepot(TileArea ta, VehicleType veh_type, DepotID &join_to, Depot *&depot, bool adjacent, DoCommandFlag flags);
 void ShowSelectDepotIfNeeded(CommandContainer cmd, TileArea ta, VehicleType veh_type);
 
+struct Window;
+void CheckRedrawDepotHighlight(const Window *w, VehicleType veh_type);
+
 #endif /* DEPOT_FUNC_H */

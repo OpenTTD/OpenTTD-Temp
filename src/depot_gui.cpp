@@ -74,6 +74,7 @@ static const NWidgetPart _nested_train_depot_widgets[] = {
 	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_D_BUILD), SetDataTip(0x0, STR_NULL), SetFill(1, 1), SetResize(1, 0),
 		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_D_CLONE), SetDataTip(0x0, STR_NULL), SetFill(1, 1), SetResize(1, 0),
+		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_D_HIGHLIGHT), SetDataTip(STR_BUTTON_HIGHLIGHT_DEPOT, STR_TOOLTIP_HIGHLIGHT_DEPOT), SetFill(1, 1), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_D_VEHICLE_LIST), SetDataTip(0x0, STR_NULL), SetFill(0, 1),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_D_STOP_ALL), SetDataTip(SPR_FLAG_VEH_STOPPED, STR_NULL), SetFill(0, 1),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_D_START_ALL), SetDataTip(SPR_FLAG_VEH_RUNNING, STR_NULL), SetFill(0, 1),
@@ -300,6 +301,7 @@ struct DepotWindow : Window {
 		CloseWindowById(WC_BUILD_VEHICLE, this->window_number);
 		CloseWindowById(GetWindowClassForVehicleType(this->type), VehicleListIdentifier(VL_DEPOT_LIST, this->type, this->owner, this->window_number).Pack(), false);
 		OrderBackup::Reset(this->window_number);
+		SetViewportHighlightDepot(this->window_number, false);
 		this->Window::Close();
 	}
 
@@ -709,6 +711,9 @@ struct DepotWindow : Window {
 
 	void OnPaint() override
 	{
+		extern DepotID _viewport_highlight_depot;
+		this->SetWidgetLoweredState(WID_D_HIGHLIGHT, _viewport_highlight_depot == this->window_number);
+
 		if (this->generate_list) {
 			/* Generate the vehicle list
 			 * It's ok to use the wagon pointers for non-trains as they will be ignored */
@@ -802,6 +807,11 @@ struct DepotWindow : Window {
 				SetDParam(0, this->type);
 				SetDParam(1, this->window_number);
 				ShowQueryString(STR_DEPOT_NAME, STR_DEPOT_RENAME_DEPOT_CAPTION, MAX_LENGTH_DEPOT_NAME_CHARS, this, CS_ALPHANUMERAL, QSF_ENABLE_DEFAULT | QSF_LEN_IN_CHARS);
+				break;
+
+			case WID_D_HIGHLIGHT:
+				this->SetWidgetDirty(WID_D_HIGHLIGHT);
+				SetViewportHighlightDepot(this->window_number, !this->IsWidgetLowered(WID_D_HIGHLIGHT));
 				break;
 
 			case WID_D_STOP_ALL:
@@ -1257,6 +1267,15 @@ struct SelectDepotWindow : Window {
 		this->GetWidget<NWidgetCore>(WID_JS_CAPTION)->widget_data = STR_JOIN_DEPOT_CAPTION;
 		this->FinishInitNested(veh_type);
 		this->OnInvalidateData(0);
+
+		_thd.freeze = true;
+	}
+
+	~SelectDepotWindow()
+	{
+		SetViewportHighlightDepot(INVALID_DEPOT, true);
+
+		_thd.freeze = false;
 	}
 
 	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
@@ -1350,6 +1369,24 @@ struct SelectDepotWindow : Window {
 		this->vscroll->SetCount((uint)_depots_nearby_list.size() + 1);
 		this->SetDirty();
 	}
+
+	void OnMouseOver(Point pt, int widget) override
+	{
+		if (widget != WID_JS_PANEL) {
+			SetViewportHighlightDepot(INVALID_DEPOT, true);
+			return;
+		}
+
+		/* Highlight depot under cursor */
+		uint dep_index = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_JS_PANEL, WD_FRAMERECT_TOP);
+		if (dep_index == 0 || dep_index > _depots_nearby_list.size()) {
+			SetViewportHighlightDepot(INVALID_DEPOT, true);
+		} else {
+			dep_index--;
+			SetViewportHighlightDepot(Depot::Get(_depots_nearby_list[dep_index])->index, true);
+		}
+	}
+
 };
 
 
@@ -1387,5 +1424,69 @@ void ShowSelectDepotIfNeeded(CommandContainer cmd, TileArea ta, VehicleType veh_
 		new SelectDepotWindow(&_select_depot_desc, cmd, ta, veh_type);
 	} else {
 		DoCommandP(&cmd);
+	}
+}
+
+/**
+ * Find depots adjacent to the current tile highlight area, so that all depot tiles
+ * can be highlighted.
+ */
+static void HighlightSingleAdjacentDepot(VehicleType v_type)
+{
+	/* With distant join we don't know which depot will be selected, so don't show any */
+	if (_ctrl_pressed) {
+		SetViewportHighlightDepot(INVALID_DEPOT, true);
+		return;
+	}
+
+	/* Tile area for TileHighlightData */
+	TileArea location(TileVirtXY(_thd.pos.x, _thd.pos.y), _thd.size.x / TILE_SIZE - 1, _thd.size.y / TILE_SIZE - 1);
+
+	/* Extended area by one tile */
+	uint x = TileX(location.tile);
+	uint y = TileY(location.tile);
+
+	int max_c = 1;
+	TileArea ta(TileXY(std::max<int>(0, x - max_c), std::max<int>(0, y - max_c)), TileXY(std::min<int>(MapMaxX(), x + location.w + max_c), std::min<int>(MapMaxY(), y + location.h + max_c)));
+
+	DepotID adjacent = INVALID_DEPOT;
+
+	for (TileIndex tile : ta) {
+		if (IsDepotTile(tile) && GetTileOwner(tile) == _local_company) {
+			Depot *depot = Depot::GetByTile(tile);
+			if (depot == nullptr) continue;
+			if (depot->veh_type != v_type) continue;
+			if (adjacent != INVALID_DEPOT && depot->index != adjacent) {
+				/* Multiple nearby, distant join is required. */
+				adjacent = INVALID_DEPOT;
+				break;
+			}
+			adjacent = depot->index;
+		}
+	}
+	SetViewportHighlightDepot(adjacent, true);
+}
+
+/**
+ * Check whether we need to redraw the depot highlight.
+ * If it is needed actually make the window for redrawing.
+ * @param w the window to check.
+ */
+void CheckRedrawDepotHighlight(const Window *w, VehicleType veh_type)
+{
+	/* Test if ctrl state changed */
+	static bool _last_ctrl_pressed;
+	if (_ctrl_pressed != _last_ctrl_pressed) {
+		_thd.dirty = 0xff;
+		_last_ctrl_pressed = _ctrl_pressed;
+	}
+
+	if (_thd.dirty & 1) {
+		_thd.dirty &= ~1;
+		w->SetDirty();
+
+		if (_thd.drawstyle == HT_RECT) {
+			HighlightSingleAdjacentDepot(veh_type);
+		}
 	}
 }
