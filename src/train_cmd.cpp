@@ -2277,6 +2277,14 @@ bool HandleTrainEnterDepot(Train *v)
 	if (IsBigRailDepot(v->tile)) {
 		v->cur_speed = 0;
 		Train *t = Train::From(v);
+		for (Train *u = t; u != nullptr; u = u->Next()) {
+			if (!IsCompatibleTrainDepotTile(u->tile, t->tile)) {
+				SetDParam(0, v->index);
+				AddVehicleAdviceNewsItem(STR_NEWS_VEHICLE_TOO_LONG_FOR_SERVICING, v->index);
+				return false;
+			}
+		}
+
 		for (Train *u = t; u != nullptr; u = u->Next()) u->track |= TRACK_BIT_DEPOT;
 		t->force_proceed = TFP_NONE;
 		ClrBit(t->flags, VRF_TOGGLE_REVERSE);
