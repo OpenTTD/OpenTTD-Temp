@@ -2307,7 +2307,7 @@ void Vehicle::UpdateAutomaticSeparation()
 
 	/* Calculate round trip time from last departure and now - automatic separation waiting time is not included */
 	if (this->first_order_last_departure > 0) {
-		this->first_order_round_trip_time = max(0, now - this->first_order_last_departure);
+		this->first_order_round_trip_time = now - this->first_order_last_departure;
 	}
 
 	/* To work out the automatic separation waiting time we need to know:
@@ -2316,9 +2316,9 @@ void Vehicle::UpdateAutomaticSeparation()
 	 *   - How many vehicles are currently operating the order list
 	 *   - How many vehicles are currently queuing for the first manual order
 	 */
-	Date last_departure = 0;
-	uint round_trip_sum = 0;
-	uint round_trip_count = 0;
+	Ticks last_departure = 0;
+	Ticks round_trip_sum = 0;
+	int round_trip_count = 0;
 	int vehicles = 0;
 	int vehicles_queuing = 0;
 	Vehicle *v = this->FirstShared();
