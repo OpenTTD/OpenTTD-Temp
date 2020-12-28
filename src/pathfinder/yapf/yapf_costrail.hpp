@@ -447,7 +447,7 @@ no_entry_cost: // jump here at the beginning if the node has no parent (it is th
 				 * if it is pass-through station (not our destination). */
 				segment_cost += Yapf().PfGetSettings().rail_station_penalty * platform_length;
 				/* We will end in this pass (station is possible target) */
-				end_segment_reason |= ESRB_STATION;
+				end_segment_reason |= ESRB_PLATFORM;
 
 			} else if (TrackFollower::DoTrackMasking() && cur.tile_type == MP_RAILWAY) {
 				/* Searching for a safe tile? */
@@ -592,7 +592,7 @@ no_entry_cost: // jump here at the beginning if the node has no parent (it is th
 			}
 
 			/* Platform-length penalty. */
-			if ((end_segment_reason & ESRB_STATION) != ESRB_NONE) {
+			if ((end_segment_reason & ESRB_PLATFORM) != ESRB_NONE) {
 				assert(HasStationTileRail(n.GetLastTile()) || IsBigRailDepotTile(n.GetLastTile()));
 				uint platform_length = GetPlatformLength(n.GetLastTile(), ReverseDiagDir(TrackdirToExitdir(n.GetLastTrackdir())));
 				/* Reduce the extra cost caused by passing-platform penalty (each platform receives it in the segment cost). */

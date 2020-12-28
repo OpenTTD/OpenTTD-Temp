@@ -23,7 +23,7 @@ enum EndSegmentReason {
 	ESR_CHOICE_FOLLOWS,    ///< the next tile contains a choice (the track splits to more than one segments)
 	ESR_DEPOT,             ///< stop in the depot (could be a target next time)
 	ESR_WAYPOINT,          ///< waypoint encountered (could be a target next time)
-	ESR_STATION,           ///< station encountered (could be a target next time)
+	ESR_PLATFORM,          ///< platform (station/extended depot) encountered (could be a target next time)
 	ESR_SAFE_TILE,         ///< safe waiting position found (could be a target)
 
 	/* The following reasons are used only internally by PfCalcCost().
@@ -47,7 +47,7 @@ enum EndSegmentReasonBits {
 	ESRB_CHOICE_FOLLOWS    = 1 << ESR_CHOICE_FOLLOWS,
 	ESRB_DEPOT             = 1 << ESR_DEPOT,
 	ESRB_WAYPOINT          = 1 << ESR_WAYPOINT,
-	ESRB_STATION           = 1 << ESR_STATION,
+	ESRB_PLATFORM          = 1 << ESR_PLATFORM,
 	ESRB_SAFE_TILE         = 1 << ESR_SAFE_TILE,
 
 	ESRB_PATH_TOO_LONG     = 1 << ESR_PATH_TOO_LONG,
@@ -58,10 +58,10 @@ enum EndSegmentReasonBits {
 	/* Additional (composite) values. */
 
 	/* What reasons mean that the target can be found and needs to be detected. */
-	ESRB_POSSIBLE_TARGET = ESRB_DEPOT | ESRB_WAYPOINT | ESRB_STATION | ESRB_SAFE_TILE,
+	ESRB_POSSIBLE_TARGET = ESRB_DEPOT | ESRB_WAYPOINT | ESRB_PLATFORM | ESRB_SAFE_TILE,
 
 	/* What reasons can be stored back into cached segment. */
-	ESRB_CACHED_MASK = ESRB_DEAD_END | ESRB_RAIL_TYPE | ESRB_INFINITE_LOOP | ESRB_SEGMENT_TOO_LONG | ESRB_CHOICE_FOLLOWS | ESRB_DEPOT | ESRB_WAYPOINT | ESRB_STATION | ESRB_SAFE_TILE,
+	ESRB_CACHED_MASK = ESRB_DEAD_END | ESRB_RAIL_TYPE | ESRB_INFINITE_LOOP | ESRB_SEGMENT_TOO_LONG | ESRB_CHOICE_FOLLOWS | ESRB_DEPOT | ESRB_WAYPOINT | ESRB_PLATFORM | ESRB_SAFE_TILE,
 
 	/* Reasons to abort pathfinding in this direction. */
 	ESRB_ABORT_PF_MASK = ESRB_DEAD_END | ESRB_PATH_TOO_LONG | ESRB_INFINITE_LOOP | ESRB_FIRST_TWO_WAY_RED,
