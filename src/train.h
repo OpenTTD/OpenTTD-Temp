@@ -331,5 +331,6 @@ protected: // These functions should not be called outside acceleration code.
 };
 
 bool HasCompatibleDepotTile(TileIndex tile, const Train *t);
+bool HandleTrainEnterDepot(Train *v);
 
 #endif /* TRAIN_H */

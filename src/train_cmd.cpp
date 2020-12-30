@@ -2270,6 +2270,31 @@ static void CheckNextTrainTile(Train *v)
 	}
 }
 
+bool HandleTrainEnterDepot(Train *v)
+{
+	assert(IsRailDepotTile(v->tile));
+
+	if (IsBigRailDepot(v->tile)) {
+		v->cur_speed = 0;
+		Train *t = Train::From(v);
+		for (Train *u = t; u != nullptr; u = u->Next()) u->track |= TRACK_BIT_DEPOT;
+		t->force_proceed = TFP_NONE;
+		ClrBit(t->flags, VRF_TOGGLE_REVERSE);
+		v->UpdateViewport(true, true);
+		SetWindowClassesDirty(WC_TRAINS_LIST);
+		SetWindowDirty(WC_VEHICLE_VIEW, v->index);
+
+		InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
+		v->StartService();
+	} else {
+		/* Clear path reservation */
+		SetDepotReservation(v->tile, false);
+		VehicleEnterDepot(v);
+	}
+
+	return true;
+}
+
 /**
  * Will the train stay in the depot the next tick?
  * @param v %Train to check.
@@ -2278,15 +2303,30 @@ static void CheckNextTrainTile(Train *v)
 static bool CheckTrainStayInDepot(Train *v)
 {
 	/* bail out if not all wagons are in the same depot or not in a depot at all */
-	for (const Train *u = v; u != nullptr; u = u->Next()) {
-		if (!u->IsInDepot() || u->tile != v->tile) return false;
-	}
+	if (!v->IsInDepot()) return false;
+	assert(IsRailDepotTile(v->tile));
 
-	/* if the train got no power, then keep it in the depot */
-	if (v->gcache.cached_power == 0) {
-		v->vehstatus |= VS_STOPPED;
-		SetWindowDirty(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
-		return true;
+	DepotID depot_id = GetDepotIndex(v->tile);
+	if (IsBigRailDepot(v->tile)) {
+		for (Train *u = v; u != nullptr; u = u->Next()) u->track &= ~TRACK_BIT_DEPOT;
+		v->cur_speed = 0;
+
+		v->UpdatePosition();
+		v->UpdateViewport(true, true);
+		v->UpdateAcceleration();
+		InvalidateWindowData(WC_VEHICLE_DEPOT, depot_id);
+		return false;
+	} else {
+		for (const Train *u = v; u != nullptr; u = u->Next()) {
+			if (!u->IsInDepot() || u->tile != v->tile) return false;
+		}
+
+		/* if the train got no power, then keep it in the depot */
+		if (v->gcache.cached_power == 0) {
+			v->vehstatus |= VS_STOPPED;
+			SetWindowDirty(WC_VEHICLE_DEPOT, depot_id);
+			return true;
+		}
 	}
 
 	SigSegState seg_state;
@@ -2313,7 +2353,7 @@ static bool CheckTrainStayInDepot(Train *v)
 	/* We are leaving a depot, but have to go to the exact same one; re-enter. */
 	if (v->current_order.IsType(OT_GOTO_DEPOT) && v->tile == v->dest_tile) {
 		/* Service when depot has no reservation. */
-		if (!HasDepotReservation(v->tile)) VehicleEnterDepot(v);
+		if (!HasDepotReservation(v->tile)) HandleTrainEnterDepot(v);
 		return true;
 	}
 
@@ -2342,7 +2382,7 @@ static bool CheckTrainStayInDepot(Train *v)
 	v->UpdatePosition();
 	UpdateSignalsOnSegment(v->tile, INVALID_DIAGDIR, v->owner);
 	v->UpdateAcceleration();
-	InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
+	InvalidateWindowData(WC_VEHICLE_DEPOT, depot_id);
 
 	return false;
 }
@@ -3284,6 +3324,12 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 					if (HasBit(r, VETS_ENTERED_STATION)) {
 						/* The new position is the end of the platform */
 						TrainEnterStation(v, r >> VETS_STATION_ID_OFFSET);
+					} else if (HasBit(r, VETS_ENTERED_DEPOT_PLATFORM)) {
+						if (HandleTrainEnterDepot(first)) {
+							v->UpdatePosition();
+							v->UpdateViewport(true, true);
+							return false;
+						}
 					}
 				}
 			} else {
@@ -3918,6 +3964,8 @@ static bool TrainLocoHandler(Train *v, bool mode)
 
 	/* exit if train is stopped */
 	if ((v->vehstatus & VS_STOPPED) && v->cur_speed == 0) return true;
+
+	if (v->ContinueServicing()) return true;
 
 	bool valid_order = !v->current_order.IsType(OT_NOTHING) && v->current_order.GetType() != OT_CONDITIONAL;
 	if (ProcessOrders(v) && CheckReverseTrain(v)) {
