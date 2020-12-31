@@ -278,6 +278,13 @@ static SigFlags ExploreSegment(Owner owner)
 				if (GetTileOwner(tile) != owner) continue; // do not propagate signals on others' tiles (remove for tracksharing)
 
 				if (IsRailDepot(tile)) {
+					if (IsBigRailDepot(tile)) {
+						assert(enterdir != INVALID_DIAGDIR);
+						if (DiagDirToDiagTrack(enterdir) != GetRailDepotTrack(tile)) continue; // different axis
+						if (!(flags & SF_TRAIN) && HasVehicleOnPos(tile, nullptr, &TrainOnTileEnum)) flags |= SF_TRAIN;
+						tile += TileOffsByDiagDir(exitdir);
+						break;
+					}
 					if (enterdir == INVALID_DIAGDIR) { // from 'inside' - train just entered or left the depot
 						if (!(flags & SF_TRAIN) && HasVehicleOnPos(tile, nullptr, &TrainOnTileEnum)) flags |= SF_TRAIN;
 						exitdir = GetRailDepotDirection(tile);
@@ -496,8 +503,14 @@ static SigSegState UpdateSignalsInBuffer(Owner owner)
 			case MP_RAILWAY:
 				if (IsRailDepot(tile)) {
 					/* 'optimization assert' do not try to update signals in other cases */
-					assert(dir == INVALID_DIAGDIR || dir == GetRailDepotDirection(tile));
-					_tbdset.Add(tile, INVALID_DIAGDIR); // start from depot inside
+					if (IsBigRailDepot(tile)) {
+						DiagDirection dir = GetRailDepotDirection(tile);
+						_tbdset.Add(tile, dir);
+						_tbdset.Add(tile + TileOffsByDiagDir(dir), ReverseDiagDir(dir));
+					} else {
+						assert(dir == INVALID_DIAGDIR || dir == GetRailDepotDirection(tile));
+						_tbdset.Add(tile, INVALID_DIAGDIR); // start from depot inside
+					}
 					break;
 				}
 				FALLTHROUGH;
