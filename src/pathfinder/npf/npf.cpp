@@ -412,6 +412,19 @@ static int32 NPFRoadPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 	return cost;
 }
 
+/* Return a small penalty for longer platform than needed and a bigger penalty for a too short one. */
+inline int PlatformLengthPenalty(NPFFindStationOrTileData *fstd, int platform_length)
+{
+	const Train *v = Train::From(fstd->v);
+	assert(v != nullptr);
+	assert(v->type == VEH_TRAIN);
+	assert(v->gcache.cached_total_length != 0);
+
+	int missing_platform_length = CeilDiv(v->gcache.cached_total_length, TILE_SIZE) - platform_length;
+
+	return _settings_game.pf.npf.npf_rail_station_penalty * (missing_platform_length < 0 ? missing_platform_length : 64);
+}
+
 
 /* Determine the cost of this node, for railway tracks */
 static int32 NPFRailPathCost(AyStar *as, AyStarNode *current, OpenListNode *parent)
@@ -430,6 +443,16 @@ static int32 NPFRailPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 
 		case MP_RAILWAY:
 			cost = _trackdir_length[trackdir]; // Should be different for diagonal tracks
+			if (IsBigRailDepotTile(tile)) {
+				cost += _settings_game.pf.npf.npf_rail_station_penalty;
+				NPFFindStationOrTileData *fstd = (NPFFindStationOrTileData*)as->user_target;
+				if (fstd->v->current_order.IsType(OT_GOTO_DEPOT) &&
+						GetDepotIndex(tile) == fstd->v->current_order.GetDestination() &&
+						IsAnyStartPlatformTile(tile)) {
+					uint platform_length = GetPlatformLength(tile, TrackdirToExitdir(trackdir));
+					cost += PlatformLengthPenalty(fstd, platform_length);
+				}
+			}
 			break;
 
 		case MP_ROAD: // Railway crossing
@@ -681,7 +704,7 @@ static void NPFSaveTargetData(AyStar *as, OpenListNode *current)
 		ftd->node = target->node;
 
 		/* If the target is a station skip to platform end. */
-		if (IsRailStationTile(target->node.tile)) {
+		if (IsRailStationTile(target->node.tile) || IsBigRailDepotTile(target->node.tile)) {
 			DiagDirection dir = TrackdirToExitdir(target->node.direction);
 			uint len = GetPlatformLength(target->node.tile, dir);
 			TileIndex end_tile = TILE_ADD(target->node.tile, (len - 1) * TileOffsByDiagDir(dir));
@@ -690,7 +713,12 @@ static void NPFSaveTargetData(AyStar *as, OpenListNode *current)
 			ftd->node.tile = end_tile;
 			if (!IsWaitingPositionFree(v, end_tile, target->node.direction, _settings_game.pf.forbid_90_deg)) return;
 			SetPlatformReservation(target->node.tile, dir, true);
-			SetRailStationReservation(target->node.tile, false);
+			if (IsDepotTile(target->node.tile)) {
+				SetDepotReservation(target->node.tile, false);
+			} else {
+				assert(IsTileType(target->node.tile, MP_STATION));
+				SetRailStationReservation(target->node.tile, false);
+			}
 		} else {
 			if (!IsWaitingPositionFree(v, target->node.tile, target->node.direction, _settings_game.pf.forbid_90_deg)) return;
 		}
