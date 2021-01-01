@@ -710,7 +710,7 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 					w->engine_type == e->index &&   ///< Same type
 					w->First() != v &&              ///< Don't connect to ourself
 					!(w->vehstatus & VS_CRASHED)) { ///< Not crashed/flooded
-				if (DoCommand(0, v->index | 1 << 20, w->Last()->index, DC_EXEC, CMD_MOVE_RAIL_VEHICLE).Succeeded()) {
+				if (DoCommand(0, v->index | 1 << 20, w->Last()->index, flags | DC_EXEC, CMD_MOVE_RAIL_VEHICLE).Succeeded()) {
 					break;
 				}
 			}
@@ -721,13 +721,14 @@ static CommandCost CmdBuildRailWagon(TileIndex tile, DoCommandFlag flags, const 
 }
 
 /** Move all free vehicles in the depot to the train */
-static void NormalizeTrainVehInDepot(const Train *u)
+static void NormalizeTrainVehInDepot(const Train *u, DoCommandFlag flags)
 {
+	assert(flags & DC_EXEC);
 	DepotID dep_id = GetDepotIndex(u->tile);
 	for (const Train *v : Train::Iterate()) {
 		if (v->IsFreeWagon() && v->IsInDepot() &&
 				GetDepotIndex(v->tile) == dep_id) {
-			if (DoCommand(0, v->index | 1 << 20, u->index, DC_EXEC,
+			if (DoCommand(0, v->index | 1 << 20, u->index, flags,
 					CMD_MOVE_RAIL_VEHICLE).Failed())
 				break;
 		}
@@ -846,7 +847,7 @@ CommandCost CmdBuildRailVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		UpdateTrainGroupID(v);
 
 		if (!HasBit(data, 0) && !(flags & DC_AUTOREPLACE)) { // check if the cars should be added to the new vehicle
-			NormalizeTrainVehInDepot(v);
+			NormalizeTrainVehInDepot(v, flags);
 		}
 
 		CheckConsistencyOfArticulatedVehicle(v);
