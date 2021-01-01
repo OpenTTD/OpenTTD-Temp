@@ -19,6 +19,7 @@ enum RoadToolbarWidgets {
 	WID_ROT_AUTOROAD,       ///< Autorail.
 	WID_ROT_DEMOLISH,       ///< Demolish.
 	WID_ROT_DEPOT,          ///< Build depot.
+	WID_ROT_BIG_DEPOT,      ///< Build a multi-tile depot.
 	WID_ROT_BUS_STATION,    ///< Build bus station.
 	WID_ROT_TRUCK_STATION,  ///< Build truck station.
 	WID_ROT_ONE_WAY,        ///< Build one-way road.

@@ -134,8 +134,8 @@ void AfterLoadCompanyStats()
 					RoadType rt = GetRoadType(tile, rtt);
 					if (rt == INVALID_ROADTYPE) continue;
 					c = Company::GetIfValid(IsRoadDepot(tile) ? GetTileOwner(tile) : GetRoadOwner(tile, rtt));
-					/* A level crossings and depots have two road bits. */
-					if (c != nullptr) c->infrastructure.road[rt] += IsNormalRoad(tile) ? CountBits(GetRoadBits(tile, rtt)) : 2;
+					/* Level crossings have two road bits. */
+					if (c != nullptr) c->infrastructure.road[rt] += (IsNormalRoad(tile) || IsRoadDepot(tile)) ? CountBits(GetRoadBits(tile, rtt)) : 2;
 				}
 				break;
 			}

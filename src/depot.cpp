@@ -187,12 +187,41 @@ void UpdateExtendedDepotReservation(Vehicle *v, bool reserve)
 	assert(IsBigDepotTile(v->tile));
 	DepotReservation res_type = DEPOT_RESERVATION_EMPTY;
 
-	res_type = (v->vehstatus & VS_STOPPED) ?
-			DEPOT_RESERVATION_FULL_STOPPED_VEH : DEPOT_RESERVATION_IN_USE;
+	if (reserve) {
+		res_type = (v->vehstatus & VS_STOPPED) ?
+				DEPOT_RESERVATION_FULL_STOPPED_VEH : DEPOT_RESERVATION_IN_USE;
+	}
 
 	switch (v->type) {
-		case VEH_ROAD:
+		case VEH_ROAD: {
+			assert(v == v->First());
+			assert(IsDiagonalDirection(v->direction));
+			bool is_facing_south = IsDiagDirFacingSouth(DirToDiagDir(v->direction));
+			TileArea ta;
+			for (Vehicle *u = v; u != nullptr; u = u->Next()) ta.Add(u->tile);
+			for (TileIndex t : ta) {
+				res_type = DEPOT_RESERVATION_EMPTY;
+
+				if (reserve) {
+					res_type = (v->vehstatus & VS_STOPPED) ?
+							DEPOT_RESERVATION_FULL_STOPPED_VEH : DEPOT_RESERVATION_IN_USE;
+				}
+				for (Vehicle *rv : Vehicle::Iterate()) {
+					if (res_type == DEPOT_RESERVATION_FULL_STOPPED_VEH) break;
+					if (rv->IsInDepot() && ta.Contains(rv->tile) && rv->First() != v) {
+						assert(rv->type == v->type);
+						DiagDirection diag_dir = DirToDiagDir(rv->direction);
+						assert(DiagDirToAxis(DirToDiagDir(v->direction)) == DiagDirToAxis(diag_dir));
+						if (is_facing_south == IsDiagDirFacingSouth(DirToDiagDir(rv->direction))) {
+							res_type = (v->vehstatus & VS_STOPPED) ?
+									DEPOT_RESERVATION_FULL_STOPPED_VEH : DEPOT_RESERVATION_IN_USE;
+						}
+					}
+				}
+				SetDepotReservation(t, res_type, is_facing_south);
+			}
 			break;
+		}
 
 		case VEH_SHIP:
 			SetDepotReservation(v->tile, res_type);
