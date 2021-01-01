@@ -29,13 +29,8 @@ Depot::~Depot()
 {
 	if (CleaningPool()) return;
 
-	if (!IsDepotTile(this->xy) || GetDepotIndex(this->xy) != this->index) {
-		/* It can happen there is no depot here anymore (TTO/TTD savegames) */
-		return;
-	}
-
 	/* Clear the order backup. */
-	OrderBackup::Reset(this->xy, false);
+	OrderBackup::Reset(this->index, false);
 
 	/* Clear the depot from all order-lists */
 	RemoveOrderFromAllVehicles(OT_GOTO_DEPOT, this->index);

@@ -2399,6 +2399,7 @@ static CommandCost RemoveAirport(TileIndex tile, DoCommandFlag flags)
 
 	if (flags & DC_EXEC) {
 		CloseWindowById(WC_VEHICLE_DEPOT, st->airport.depot_id);
+		if (st->airport.depot_id != INVALID_DEPOT) OrderBackup::Reset(st->airport.depot_id, false);
 		st->airport.SetHangar(false);
 
 		const AirportSpec *as = st->airport.GetSpec();
