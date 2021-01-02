@@ -874,6 +874,12 @@ void InitializeTrees()
 
 static CommandCost TerraformTile_Trees(TileIndex tile, DoCommandFlag flags, int z_new, Slope tileh_new)
 {
+	if (flags & DC_NO_TERRAFORM_FLOOD) {
+		if (!CanTerraformFloodingTile(tile, z_new, tileh_new)) {
+			return CMD_ERROR;
+		}
+	}
+
 	return DoCommand(tile, 0, 0, flags, CMD_LANDSCAPE_CLEAR);
 }
 
