@@ -24,8 +24,10 @@
 #include "tilehighlight_func.h"
 #include "window_gui.h"
 #include "vehiclelist.h"
+#include "vehicle_func.h"
 #include "order_backup.h"
 #include "zoom_func.h"
+#include "error.h"
 
 #include "widgets/depot_widget.h"
 
@@ -912,6 +914,52 @@ struct DepotWindow : Window {
 			/* Copy-clone, open viewport for new vehicle, and deselect the tool (assume player wants to changs things on new vehicle) */
 			if (DoCommandP(this->window_number, v->index, 0, CMD_CLONE_VEHICLE | CMD_MSG(STR_ERROR_CAN_T_BUY_TRAIN + v->type), CcCloneVehicle)) {
 				ResetObjectToPlace();
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Clones a vehicle from a vehicle list.
+	 * @return Returns true if clone/copy succeeded, false otherwise.
+	 */
+	bool OnVehicleSelect(VehicleList::const_iterator begin, VehicleList::const_iterator end) override
+	{
+		if (!_ctrl_pressed) {
+			/* If CTRL is not pressed: If all the vehicles in this list have the same orders, then copy orders */
+			if (AllEqual(begin, end, [](const Vehicle *v1, const Vehicle *v2) {
+				return VehiclesHaveSameEngineList(v1, v2);
+			})) {
+				if (AllEqual(begin, end, [](const Vehicle *v1, const Vehicle *v2) {
+					return VehiclesHaveSameOrderList(v1, v2);
+				})) {
+					OnVehicleSelect(*begin);
+				}
+				else {
+					ShowErrorMessage(STR_ERROR_CAN_T_BUY_TRAIN + (*begin)->type, STR_ERROR_CAN_T_COPY_ORDER_VEHICLE_LIST, WL_INFO);
+				}
+			}
+			else {
+				ShowErrorMessage(STR_ERROR_CAN_T_BUY_TRAIN + (*begin)->type, STR_ERROR_CAN_T_CLONE_VEHICLE_LIST, WL_INFO);
+			}
+		}
+		else {
+			/* If CTRL is pressed: If all the vehicles in this list share orders, then copy orders */
+			if (AllEqual(begin, end, [](const Vehicle *v1, const Vehicle *v2) {
+				return VehiclesHaveSameEngineList(v1, v2);
+			})) {
+				if (AllEqual(begin, end, [](const Vehicle *v1, const Vehicle *v2) {
+					return v1->FirstShared() == v2->FirstShared();
+				})) {
+					OnVehicleSelect(*begin);
+				}
+				else {
+					ShowErrorMessage(STR_ERROR_CAN_T_BUY_TRAIN + (*begin)->type, STR_ERROR_CAN_T_SHARE_ORDER_VEHICLE_LIST, WL_INFO);
+				}
+			}
+			else {
+				ShowErrorMessage(STR_ERROR_CAN_T_BUY_TRAIN + (*begin)->type, STR_ERROR_CAN_T_CLONE_VEHICLE_LIST, WL_INFO);
 			}
 		}
 

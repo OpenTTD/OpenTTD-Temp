@@ -10,6 +10,10 @@
 #ifndef WINDOW_GUI_H
 #define WINDOW_GUI_H
 
+#include <algorithm>
+#include <functional>
+
+#include "vehiclelist.h"
 #include "vehicle_type.h"
 #include "viewport_type.h"
 #include "company_type.h"
@@ -758,6 +762,13 @@ public:
 	virtual bool OnVehicleSelect(const struct Vehicle *v) { return false; }
 
 	/**
+	 * The user clicked on a vehicle while HT_VEHICLE has been set.
+	 * @param v clicked vehicle. It is guaranteed to be v->IsPrimaryVehicle() == true
+	 * @return True if the click is handled, false if it is ignored.
+	 */
+	virtual bool OnVehicleSelect(VehicleList::const_iterator begin, VehicleList::const_iterator end) { return false; }
+
+	/**
 	 * The user cancelled a tile highlight mode that has been set.
 	 */
 	virtual void OnPlaceObjectAbort() {}
@@ -808,6 +819,19 @@ public:
 	 */
 	virtual void ShowNewGRFInspectWindow() const { NOT_REACHED(); }
 };
+
+/**
+ * Generic helper function that checks if all elements of the range are equal with respect to the given predicate.
+ * @param begin The start of the range.
+ * @param end The end of the range.
+ * @param pred The predicate to use.
+ * @return True if all elements are equal, false otherwise.
+ */
+template <class It, class Pred>
+inline bool AllEqual(It begin, It end, Pred pred)
+{
+	return std::adjacent_find(begin, end, std::not_fn(pred)) == end;
+}
 
 /**
  * Get the nested widget with number \a widnum from the nested widget tree.

@@ -12,6 +12,8 @@
 
 #include "window_type.h"
 #include "vehicle_type.h"
+#include "vehicle_gui_base.h"
+#include "vehiclelist.h"
 #include "order_type.h"
 #include "station_type.h"
 #include "engine_type.h"
@@ -102,6 +104,8 @@ static inline WindowClass GetWindowClassForVehicleType(VehicleType vt)
 /* Unified window procedure */
 void ShowVehicleViewWindow(const Vehicle *v);
 bool VehicleClicked(const Vehicle *v);
+bool VehicleClicked(VehicleList::const_iterator begin, VehicleList::const_iterator end);
+bool VehicleClicked(const GUIVehicleGroup &vehgroup);
 void StartStopVehicle(const Vehicle *v, bool texteffect);
 
 Vehicle *CheckClickOnVehicle(const struct Viewport *vp, int x, int y);

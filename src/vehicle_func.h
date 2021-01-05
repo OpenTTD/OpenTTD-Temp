@@ -178,4 +178,7 @@ void GetVehicleSet(VehicleSet &set, Vehicle *v, uint8 num_vehicles);
 
 void CheckCargoCapacity(Vehicle *v);
 
+bool VehiclesHaveSameEngineList(const Vehicle *v1, const Vehicle *v2);
+bool VehiclesHaveSameOrderList(const Vehicle *v1, const Vehicle *v2);
+
 #endif /* VEHICLE_FUNC_H */
