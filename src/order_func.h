@@ -15,7 +15,7 @@
 #include "company_type.h"
 
 /* Functions */
-void RemoveOrderFromAllVehicles(OrderType type, DestinationID destination, bool hangar = false);
+void RemoveOrderFromAllVehicles(OrderType type, DestinationID destination);
 void InvalidateVehicleOrder(const Vehicle *v, int data);
 void CheckOrders(const Vehicle*);
 void DeleteVehicleOrders(Vehicle *v, bool keep_orderlist = false, bool reset_order_indices = true);
@@ -23,6 +23,7 @@ bool ProcessOrders(Vehicle *v);
 bool UpdateOrderDest(Vehicle *v, const Order *order, int conditional_depth = 0, bool pbs_look_ahead = false);
 VehicleOrderID ProcessConditionalOrder(const Order *order, const Vehicle *v);
 uint GetOrderDistance(const Order *prev, const Order *cur, const Vehicle *v, int conditional_depth = 0);
+DestinationID GetDestination(const Vehicle *v, const Order *order);
 
 void DrawOrderString(const Vehicle *v, const Order *order, int order_index, int y, bool selected, bool timetable, int left, int middle, int right);
 

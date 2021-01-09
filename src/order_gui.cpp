@@ -29,6 +29,7 @@
 #include "aircraft.h"
 #include "engine_func.h"
 #include "vehicle_func.h"
+#include "depot_base.h"
 
 #include "widgets/order_widget.h"
 
@@ -297,7 +298,7 @@ void DrawOrderString(const Vehicle *v, const Order *order, int order_index, int 
 			} else {
 				SetDParam(0, STR_ORDER_GO_TO_DEPOT_FORMAT);
 				SetDParam(2, v->type);
-				SetDParam(3, order->GetDestination());
+				SetDParam(3, GetDestination(v, order));
 			}
 
 			if (order->GetDepotOrderType() & ODTFB_SERVICE) {
@@ -366,8 +367,7 @@ static Order GetOrderCmdFromTile(const Vehicle *v, TileIndex tile)
 
 	/* check depot first */
 	if (IsDepotTypeTile(tile, (TransportType)(uint)v->type) && IsTileOwner(tile, _local_company)) {
-		order.MakeGoToDepot(v->type == VEH_AIRCRAFT ? GetStationIndex(tile) : GetDepotIndex(tile),
-				ODTFB_PART_OF_ORDERS,
+		order.MakeGoToDepot(GetDepotIndex(tile), ODTFB_PART_OF_ORDERS,
 				(_settings_client.gui.new_nonstop && v->IsGroundVehicle()) ? ONSF_NO_STOP_AT_INTERMEDIATE_STATIONS : ONSF_STOP_EVERYWHERE);
 
 		if (_ctrl_pressed) order.SetDepotOrderType((OrderDepotTypeFlags)(order.GetDepotOrderType() ^ ODTFB_SERVICE));

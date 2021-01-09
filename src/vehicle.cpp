@@ -1540,7 +1540,7 @@ void VehicleEnterDepot(Vehicle *v)
 		 * Note: The target depot for nearest-/manual-depot-orders is only updated on junctions, but we want to accept every depot. */
 		if ((v->current_order.GetDepotOrderType() & ODTFB_PART_OF_ORDERS) &&
 				real_order != nullptr && !(real_order->GetDepotActionType() & ODATFB_NEAREST_DEPOT) &&
-				(v->type == VEH_AIRCRAFT ? v->current_order.GetDestination() != GetStationIndex(v->tile) : v->dest_tile != v->tile)) {
+				v->current_order.GetDestination() != depot_id) {
 			/* We are heading for another depot, keep driving. */
 			return;
 		}
