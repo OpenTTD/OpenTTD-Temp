@@ -12,6 +12,7 @@
 
 typedef uint16 DepotID; ///< Type for the unique identifier of depots.
 static const DepotID INVALID_DEPOT = UINT16_MAX;        ///< Invalid index for depots.
+static const DepotID NEW_DEPOT     = INVALID_DEPOT - 1; ///< Index for building a new depot.
 
 struct Depot;
 

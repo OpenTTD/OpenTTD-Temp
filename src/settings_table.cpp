@@ -104,6 +104,7 @@ static void RedrawSmallmap(int32 new_value)
 
 static void StationSpreadChanged(int32 p1)
 {
+	InvalidateWindowClassesData(WC_SELECT_DEPOT, 0);
 	InvalidateWindowData(WC_SELECT_STATION, 0);
 	InvalidateWindowData(WC_BUILD_STATION, 0);
 }

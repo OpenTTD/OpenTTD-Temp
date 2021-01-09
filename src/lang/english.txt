@@ -2399,6 +2399,11 @@ STR_JOIN_STATION_CREATE_SPLITTED_STATION                        :{YELLOW}Build a
 STR_JOIN_WAYPOINT_CAPTION                                       :{WHITE}Join waypoint
 STR_JOIN_WAYPOINT_CREATE_SPLITTED_WAYPOINT                      :{YELLOW}Build a separate waypoint
 
+# Join depot window
+STR_JOIN_DEPOT_CAPTION                                          :{WHITE}Join depot
+STR_JOIN_DEPOT_CREATE_SPLITTED_DEPOT                            :{YELLOW}Build a separate depot
+STR_DEPOT_LIST_DEPOT                                            :{YELLOW}{DEPOT}
+
 # Generic toolbar
 STR_TOOLBAR_DISABLED_NO_VEHICLE_AVAILABLE                       :{BLACK}Disabled as currently no vehicles are available for this infrastructure
 
@@ -4522,6 +4527,8 @@ STR_ERROR_CAN_T_BUILD_ROAD_DEPOT                                :{WHITE}Can't bu
 STR_ERROR_CAN_T_BUILD_TRAM_DEPOT                                :{WHITE}Can't build tram vehicle depot here...
 STR_ERROR_CAN_T_BUILD_SHIP_DEPOT                                :{WHITE}Can't build ship depot here...
 
+STR_ERROR_ADJOINS_MORE_THAN_ONE_EXISTING_DEPOTS                 :{WHITE}... adjoins more than one existing depot
+
 STR_ERROR_CAN_T_RENAME_DEPOT                                    :{WHITE}Can't rename depot...
 
 STR_ERROR_TRAIN_MUST_BE_STOPPED_INSIDE_DEPOT                    :{WHITE}... must be stopped inside a depot
@@ -4540,6 +4547,7 @@ STR_ERROR_REAR_ENGINE_FOLLOW_FRONT                              :{WHITE}The rear
 STR_ERROR_UNABLE_TO_FIND_ROUTE_TO                               :{WHITE}Unable to find route to local depot
 STR_ERROR_UNABLE_TO_FIND_LOCAL_DEPOT                            :{WHITE}Unable to find local depot
 
+STR_ERROR_DEPOT_TOO_SPREAD_OUT                                  :{WHITE}... depot too spread out
 STR_ERROR_DEPOT_WRONG_DEPOT_TYPE                                :Wrong depot type
 
 # Autoreplace related errors
