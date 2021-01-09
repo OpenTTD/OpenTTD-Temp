@@ -22,6 +22,7 @@
 #include "ai/ai.hpp"
 #include "news_func.h"
 #include "strings_func.h"
+#include "depot_map.h"
 
 #include "table/strings.h"
 
@@ -757,46 +758,45 @@ CommandCost CmdAutoreplaceVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1
 		any_replacements |= (e != INVALID_ENGINE);
 		w = (!free_wagon && w->type == VEH_TRAIN ? Train::From(w)->GetNextUnit() : nullptr);
 	}
+	if (!any_replacements) return_cmd_error(STR_ERROR_AUTOREPLACE_NOTHING_TO_DO);
 
 	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, 0);
 	bool nothing_to_do = true;
+	bool was_stopped = free_wagon || ((v->vehstatus & VS_STOPPED) != 0);
 
-	if (any_replacements) {
-		bool was_stopped = free_wagon || ((v->vehstatus & VS_STOPPED) != 0);
+	/* Stop the vehicle */
+	if (!was_stopped) cost.AddCost(CmdStartStopVehicle(v, true));
+	if (cost.Failed()) return cost;
 
-		/* Stop the vehicle */
-		if (!was_stopped) cost.AddCost(CmdStartStopVehicle(v, true));
-		if (cost.Failed()) return cost;
+	assert(free_wagon || v->IsStoppedInDepot());
 
-		assert(free_wagon || v->IsStoppedInDepot());
+	/* We have to construct the new vehicle chain to test whether it is valid.
+	 * Vehicle construction needs random bits, so we have to save the random seeds
+	 * to prevent desyncs and to replay newgrf callbacks during DC_EXEC */
+	SavedRandomSeeds saved_seeds;
+	SaveRandomSeeds(&saved_seeds);
+	if (free_wagon) {
+		cost.AddCost(ReplaceFreeUnit(&v, flags & ~DC_EXEC, &nothing_to_do));
+	} else {
+		cost.AddCost(ReplaceChain(&v, flags & ~DC_EXEC, wagon_removal, &nothing_to_do));
+	}
+	RestoreRandomSeeds(saved_seeds);
 
-		/* We have to construct the new vehicle chain to test whether it is valid.
-		 * Vehicle construction needs random bits, so we have to save the random seeds
-		 * to prevent desyncs and to replay newgrf callbacks during DC_EXEC */
-		SavedRandomSeeds saved_seeds;
-		SaveRandomSeeds(&saved_seeds);
+	if (cost.Succeeded() && (flags & DC_EXEC) != 0) {
+		CommandCost ret;
 		if (free_wagon) {
-			cost.AddCost(ReplaceFreeUnit(&v, flags & ~DC_EXEC, &nothing_to_do));
+			ret = ReplaceFreeUnit(&v, flags, &nothing_to_do);
 		} else {
-			cost.AddCost(ReplaceChain(&v, flags & ~DC_EXEC, wagon_removal, &nothing_to_do));
+			ret = ReplaceChain(&v, flags, wagon_removal, &nothing_to_do);
 		}
-		RestoreRandomSeeds(saved_seeds);
-
-		if (cost.Succeeded() && (flags & DC_EXEC) != 0) {
-			CommandCost ret;
-			if (free_wagon) {
-				ret = ReplaceFreeUnit(&v, flags, &nothing_to_do);
-			} else {
-				ret = ReplaceChain(&v, flags, wagon_removal, &nothing_to_do);
-			}
-			assert(ret.Succeeded() && ret.GetCost() == cost.GetCost());
-		}
-
-		/* Restart the vehicle */
-		if (!was_stopped) cost.AddCost(CmdStartStopVehicle(v, false));
+		assert(ret.Succeeded());
+		assert(ret.GetCost() == cost.GetCost());
 	}
 
-	if (cost.Succeeded() && nothing_to_do) cost = CommandCost(STR_ERROR_AUTOREPLACE_NOTHING_TO_DO);
+	/* Restart the vehicle */
+	if (!was_stopped) cost.AddCost(CmdStartStopVehicle(v, false));
+
+	assert(cost.Failed() || !nothing_to_do);
 	return cost;
 }
 
