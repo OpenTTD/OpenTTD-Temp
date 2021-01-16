@@ -2334,14 +2334,61 @@ static bool CheckTrainStayInDepot(Train *v)
 
 	DepotID depot_id = GetDepotIndex(v->tile);
 	if (IsBigRailDepot(v->tile)) {
-		for (Train *u = v; u != nullptr; u = u->Next()) u->track &= ~TRACK_BIT_DEPOT;
-		v->cur_speed = 0;
+		/* If not placed, try it. If not possible, exit. */
+		if (CheckIfTrainNeedsPlacement(v)) {
+			/* If stuck, wait a little bit, so we can avoid
+			 * trying placing it as much as we can. */
+			bool already_stuck = false;
+			bool send_message = false;
+			if (HasBit(v->flags, VRF_TRAIN_STUCK)) {
+				already_stuck = true;
+				v->wait_counter++;
+				if (v->wait_counter % (1 << 7) != 0) {
+					return true;
+				} else if (v->wait_counter % (1 << 11) == 0) {
+					send_message = true;
+				}
+				ClrBit(v->flags, VRF_TRAIN_STUCK);
+			}
 
-		v->UpdatePosition();
-		v->UpdateViewport(true, true);
+			TrainPlacement train_placement;
+			train_placement.LiftTrain(v, DC_EXEC);
+			train_placement.LookForPlaceInDepot(v);
+			if (train_placement.info < PI_FAILED_END) {
+				if (send_message) {
+					ClrBit(v->flags, VRF_TRAIN_STUCK);
+					/* Show message to player. */
+					if (_settings_client.gui.lost_vehicle_warn && v->owner == _local_company) {
+						SetDParam(0, v->index);
+						AddVehicleAdviceNewsItem(STR_ADVICE_PLATFORM_TYPE + train_placement.info - PI_ERROR_BEGIN, v->index);
+					}
+				}
+				if (already_stuck) {
+					SetBit(v->flags, VRF_TRAIN_STUCK);
+				} else {
+					MarkTrainAsStuck(v);
+				}
+				return true;
+			} else {
+				VehicleServiceInBigDepot(v);
+				train_placement.PlaceTrain(v, DC_EXEC);
+				if (!IsBigDepot(v->tile)) return true;
+			}
+		} else {
+			VehicleServiceInBigDepot(v);
+		}
+
+		for (Train *u = v; u != nullptr; u = u->Next()) u->track &= ~TRACK_BIT_DEPOT;
+
+		v->cur_speed = 0;
 		v->UpdateAcceleration();
 		if (CheckReverseTrain(v)) ReverseTrainDirection(v);
 		InvalidateWindowData(WC_VEHICLE_DEPOT, depot_id);
+
+		/* Check whether it is safe to exit the depot. */
+		if (UpdateSignalsOnSegment(v->tile, VehicleExitDir(v->direction, v->track), v->owner) == SIGSEG_PBS || _settings_game.pf.reserve_paths) {
+			if (!TryPathReserve(v, true, true)) return true;
+		}
 		return false;
 	} else {
 		for (const Train *u = v; u != nullptr; u = u->Next()) {
