@@ -20,6 +20,7 @@ enum OrderWidgets {
 	WID_O_DELETE,                    ///< Delete selected order.
 	WID_O_STOP_SHARING,              ///< Stop sharing orders.
 	WID_O_NON_STOP,                  ///< Goto non-stop to destination.
+	WID_O_AUTOMATIC_SEPARATION,      ///< Toggle automatic separation.
 	WID_O_GOTO,                      ///< Goto destination.
 	WID_O_FULL_LOAD,                 ///< Select full load.
 	WID_O_UNLOAD,                    ///< Select unload.

@@ -709,6 +709,9 @@ const SaveLoad *GetVehicleDescription(VehicleType vt)
 		 SLE_CONDVAR(Vehicle, current_order_time,    SLE_UINT32,                  SLV_67, SL_MAX_VERSION),
 		 SLE_CONDVAR(Vehicle, lateness_counter,      SLE_INT32,                   SLV_67, SL_MAX_VERSION),
 
+		 SLE_CONDVAR(Vehicle, first_order_last_departure, SLE_INT32,              SLV_AUTOMATIC_SEPARATION, SL_MAX_VERSION),
+		 SLE_CONDVAR(Vehicle, first_order_round_trip_time, SLE_INT32,             SLV_AUTOMATIC_SEPARATION, SL_MAX_VERSION),
+
 		SLE_CONDNULL(10,                                                           SLV_2, SLV_144), // old reserved space
 
 		     SLE_END()

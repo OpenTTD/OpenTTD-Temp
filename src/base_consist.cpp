@@ -42,3 +42,12 @@ void BaseConsist::CopyConsistPropertiesFrom(const BaseConsist *src)
 	}
 	if (HasBit(src->vehicle_flags, VF_SERVINT_IS_CUSTOM)) SetBit(this->vehicle_flags, VF_SERVINT_IS_CUSTOM);
 }
+
+/**
+ * Resets all the data used for automatic separation
+ */
+void BaseConsist::ResetAutomaticSeparation()
+{
+	this->first_order_last_departure = 0;
+	this->first_order_round_trip_time = 0;
+}

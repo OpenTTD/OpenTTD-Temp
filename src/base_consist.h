@@ -23,6 +23,9 @@ struct BaseConsist {
 	int32 lateness_counter;             ///< How many ticks late (or early if negative) this vehicle is.
 	Date timetable_start;               ///< When the vehicle is supposed to start the timetable.
 
+	Ticks first_order_last_departure;   ///< When the vehicle last left the first order.
+	Ticks first_order_round_trip_time;  ///< How many ticks for a single circumnavigation of the orders.
+
 	uint16 service_interval;            ///< The interval for (automatic) servicing; either in days or %.
 
 	VehicleOrderID cur_real_order_index;///< The index to the current real (non-implicit) order
@@ -33,6 +36,7 @@ struct BaseConsist {
 	virtual ~BaseConsist() {}
 
 	void CopyConsistPropertiesFrom(const BaseConsist *src);
+	void ResetAutomaticSeparation();
 };
 
 #endif /* BASE_CONSIST_H */
