@@ -78,6 +78,7 @@ enum BuildRailStationWidgets {
 
 /** Widgets of the #BuildSignalWindow class. */
 enum BuildSignalWidgets {
+	WID_BS_CAPTION,            ///< Caption for the Signal Selection window
 	WID_BS_SEMAPHORE_NORM,     ///< Build a semaphore normal block signal
 	WID_BS_SEMAPHORE_ENTRY,    ///< Build a semaphore entry block signal
 	WID_BS_SEMAPHORE_EXIT,     ///< Build a semaphore exit block signal
@@ -94,6 +95,14 @@ enum BuildSignalWidgets {
 	WID_BS_DRAG_SIGNALS_DENSITY_LABEL,    ///< The current signal density.
 	WID_BS_DRAG_SIGNALS_DENSITY_DECREASE, ///< Decrease the signal density.
 	WID_BS_DRAG_SIGNALS_DENSITY_INCREASE, ///< Increase the signal density.
+	WID_BS_SEMAPHORE_NORM_SEL,  ///< NWID_SELECTION for WID_BS_SEMAPHORE_NORM
+	WID_BS_ELECTRIC_NORM_SEL,   ///< NWID_SELECTION for WID_BS_ELECTRIC_NORM
+	WID_BS_SEMAPHORE_ENTRY_SEL, ///< NWID_SELECTION for WID_BS_SEMAPHORE_ENTRY
+	WID_BS_ELECTRIC_ENTRY_SEL,  ///< NWID_SELECTION for WID_BS_ELECTRIC_ENTRY
+	WID_BS_SEMAPHORE_EXIT_SEL,  ///< NWID_SELECTION for WID_BS_SEMAPHORE_EXIT
+	WID_BS_ELECTRIC_EXIT_SEL,   ///< NWID_SELECTION for WID_BS_ELECTRIC_EXIT
+	WID_BS_SEMAPHORE_COMBO_SEL, ///< NWID_SELECTION for WID_BS_SEMAPHORE_COMBO
+	WID_BS_ELECTRIC_COMBO_SEL,  ///< NWID_SELECTION for WID_BS_ELECTRIC_COMBO
 };
 
 /** Widgets of the #BuildRailDepotWindow class. */

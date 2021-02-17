@@ -132,7 +132,8 @@ struct GUISettings {
 	bool   timetable_arrival_departure;      ///< show arrivals and departures in vehicle timetables
 	bool   right_mouse_wnd_close;            ///< close window with right click
 	bool   pause_on_newgame;                 ///< whether to start new games paused or not
-	bool   enable_signal_gui;                ///< show the signal GUI when the signal button is pressed
+	uint8  signal_gui_mode;                  ///< select which signal types are shown in the signal GUI
+	uint8  cycle_signal_types;               ///< what signal types to cycle with the build signal tool.
 	Year   coloured_news_year;               ///< when does newspaper become coloured?
 	bool   timetable_in_ticks;               ///< whether to show the timetable in ticks rather than days
 	bool   quick_goto;                       ///< Allow quick access to 'goto button' in vehicle orders window
@@ -142,8 +143,6 @@ struct GUISettings {
 	Year   semaphore_build_before;           ///< build semaphore signals automatically before this year
 	byte   news_message_timeout;             ///< how much longer than the news message "age" should we keep the message in the history
 	bool   show_track_reservation;           ///< highlight reserved tracks.
-	uint8  default_signal_type;              ///< the signal type to build by default.
-	uint8  cycle_signal_types;               ///< what signal types to cycle with the build signal tool.
 	byte   station_numtracks;                ///< the number of platforms to default on for rail stations
 	byte   station_platlength;               ///< the platform length, in tiles, for rail stations
 	bool   station_dragdrop;                 ///< whether drag and drop is enabled for stations
