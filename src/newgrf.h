@@ -84,6 +84,7 @@ enum GrfSpecFeature {
 	GSF_AIRPORTTILES,
 	GSF_ROADTYPES,
 	GSF_TRAMTYPES,
+	GSF_ROADSTOPS,
 	GSF_END,
 
 	GSF_FAKE_TOWNS = GSF_END, ///< Fake town GrfSpecFeature for NewGRF debugging (parent scope)
@@ -117,6 +118,7 @@ struct GRFFile : ZeroedMemoryAllocator {
 	struct ObjectSpec **objectspec;
 	struct AirportSpec **airportspec;
 	struct AirportTileSpec **airtspec;
+	struct RoadStopSpec **roadstops;
 
 	uint32 param[0x80];
 	uint param_end;  ///< one more than the highest set parameter

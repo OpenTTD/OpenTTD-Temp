@@ -158,5 +158,6 @@ void UpdateCompanyRoadInfrastructure(RoadType rt, Owner o, int count);
 
 struct TileInfo;
 void DrawRoadOverlays(const TileInfo *ti, PaletteID pal, const RoadTypeInfo *road_rti, const RoadTypeInfo *tram_rit, uint road_offset, uint tram_offset);
+void DrawRoadOverlays(const TileIndex tile, PaletteID pal, const RoadTypeInfo* road_rti, const RoadTypeInfo* tram_rit, uint road_offset, uint tram_offset);
 
 #endif /* ROAD_FUNC_H */

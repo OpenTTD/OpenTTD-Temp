@@ -559,8 +559,7 @@ uint32 StationResolverObject::GetDebugID() const
 StationResolverObject::StationResolverObject(const StationSpec *statspec, BaseStation *st, TileIndex tile,
 		CallbackID callback, uint32 callback_param1, uint32 callback_param2)
 	: ResolverObject(statspec->grf_prop.grffile, callback, callback_param1, callback_param2),
-	station_scope(*this, statspec, st, tile), town_scope(nullptr)
-{
+	station_scope(*this, statspec, st, tile), town_scope(nullptr) {
 	/* Invalidate all cached vars */
 	_svc.valid = 0;
 

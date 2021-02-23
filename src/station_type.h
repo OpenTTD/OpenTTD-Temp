@@ -38,12 +38,16 @@ enum StationType {
 	STATION_DOCK,
 	STATION_BUOY,
 	STATION_WAYPOINT,
+	STATION_TRAM,
+	STATION_FREIGHT_TRAM,
 };
 
 /** Types of RoadStops */
 enum RoadStopType {
-	ROADSTOP_BUS,    ///< A standard stop for buses
-	ROADSTOP_TRUCK,  ///< A standard stop for trucks
+	ROADSTOP_BUS,          ///< A standard stop for buses
+	ROADSTOP_TRUCK,        ///< A standard stop for trucks
+	ROADSTOP_TRAM,         ///< A standard stop for trams
+	ROADSTOP_FREIGHT_TRAM, ///< A standard stop for freight trams
 };
 
 /** The facilities a station might be having */

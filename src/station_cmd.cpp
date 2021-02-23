@@ -56,6 +56,7 @@
 #include "linkgraph/refresh.h"
 #include "widgets/station_widget.h"
 #include "tunnelbridge_map.h"
+#include "newgrf_roadstop.h"
 
 #include "table/strings.h"
 
@@ -1822,29 +1823,40 @@ static CommandCost FindJoiningRoadStop(StationID existing_stop, StationID statio
  * @param flags Operation to perform.
  * @param p1 bit 0..7: Width of the road stop.
  *           bit 8..15: Length of the road stop.
+ *           bit 16..31: Station ID to join (NEW_STATION if build new one).
  * @param p2 bit 0: 0 For bus stops, 1 for truck stops.
  *           bit 1: 0 For normal stops, 1 for drive-through.
  *           bit 2: Allow stations directly adjacent to other stations.
  *           bit 3..4: Entrance direction (#DiagDirection) for normal stops.
  *           bit 3: #Axis of the road for drive-through stops.
- *           bit 5..10: The roadtype.
- *           bit 16..31: Station ID to join (NEW_STATION if build new one).
+ *           bit 5..13: The roadstop class
+ *           bit 14..21: The roadstopspec index
+ *           bit 22..27: The roadtype
  * @param text Unused.
  * @return The cost of this operation or an error.
  */
 CommandCost CmdBuildRoadStop(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const char *text)
 {
-	bool type = HasBit(p2, 0);
 	bool is_drive_through = HasBit(p2, 1);
-	RoadType rt = Extract<RoadType, 5, 6>(p2);
+	RoadType rt = Extract<RoadType, 22, 6>(p2);
 	if (!ValParamRoadType(rt)) return CMD_ERROR;
-	StationID station_to_join = GB(p2, 16, 16);
+	StationID station_to_join = GB(p1, 16, 16);
 	bool reuse = (station_to_join != NEW_STATION);
 	if (!reuse) station_to_join = INVALID_STATION;
 	bool distant_join = (station_to_join != INVALID_STATION);
 
 	uint8 width = (uint8)GB(p1, 0, 8);
 	uint8 length = (uint8)GB(p1, 8, 8);
+
+	RoadStopClassID roadstopclassid = Extract<RoadStopClassID, 5, 8>(p2);
+	byte roadstopspec_index = GB(p2, 14, 8);
+	const RoadStopSpec* roadstopspec = RoadStopClass::Get(roadstopclassid)->GetSpec(roadstopspec_index);
+	bool type;
+	if (roadstopspec == nullptr) {
+		type = HasBit(p2, 0);
+	} else {
+		type = roadstopspec->stop_type == ROADSTOPTYPE_FREIGHT || roadstopspec->stop_type == ROADSTOPTYPE_ALL;
+	}
 
 	/* Check if the requested road stop is too big */
 	if (width > _settings_game.station.station_spread || length > _settings_game.station.station_spread) return_cmd_error(STR_ERROR_STATION_TOO_SPREAD_OUT);
@@ -1906,6 +1918,7 @@ CommandCost CmdBuildRoadStop(TileIndex tile, DoCommandFlag flags, uint32 p1, uin
 			}
 
 			RoadStop *road_stop = new RoadStop(cur_tile);
+			road_stop->roadstopspec = roadstopspec;
 			/* Insert into linked list of RoadStops. */
 			RoadStop **currstop = FindRoadStopSpot(type, st);
 			*currstop = road_stop;
@@ -1952,7 +1965,7 @@ CommandCost CmdBuildRoadStop(TileIndex tile, DoCommandFlag flags, uint32 p1, uin
 	}
 
 	if (st != nullptr) {
-		st->AfterStationTileSetChange(true, type ? STATION_TRUCK: STATION_BUS);
+		st->AfterStationTileSetChange(true, type ? STATION_TRUCK : STATION_BUS);
 	}
 	return cost;
 }
@@ -3044,17 +3057,33 @@ draw_default_foundation:
 		const RoadTypeInfo* road_rti = road_rt == INVALID_ROADTYPE ? nullptr : GetRoadTypeInfo(road_rt);
 		const RoadTypeInfo* tram_rti = tram_rt == INVALID_ROADTYPE ? nullptr : GetRoadTypeInfo(tram_rt);
 
-		if (IsDriveThroughStopTile(ti->tile)) {
-			Axis axis = GetRoadStopDir(ti->tile) == DIAGDIR_NE ? AXIS_X : AXIS_Y;
-			uint sprite_offset = axis == AXIS_X ? 1 : 0;
+		Axis axis = GetRoadStopDir(ti->tile) == DIAGDIR_NE ? AXIS_X : AXIS_Y;
+		DiagDirection dir = GetRoadStopDir(ti->tile);
 
-			DrawRoadOverlays(ti, PAL_NONE, road_rti, tram_rti, sprite_offset, sprite_offset);
+		RoadStopType stop_type = GetRoadStopType(ti->tile);
+		RoadStop *road_stop = RoadStop::GetByTile(ti->tile, stop_type);
+		if (road_stop->roadstopspec != nullptr) {
+			const RoadStopSpec *stopspec = road_stop->roadstopspec;
+
+			int view = dir;
+			if (IsDriveThroughStopTile(ti->tile)) view += 4;
+			st = BaseStation::GetByTile(ti->tile);
+			RoadStopResolverObject object(stopspec, st, ti->tile, road_rti, view);
+			const SpriteGroup *group = object.Resolve();
+			const DrawTileSprites *dts = ((const TileLayoutSpriteGroup *)group)->ProcessRegisters(nullptr);
+			t = dts;
+		}
+
+		if (IsDriveThroughStopTile(ti->tile)) {
+			if ((road_stop->roadstopspec->draw_mode & ROADSTOP_DRAW_MODE_OVERLAY) != 0) {
+				uint sprite_offset = axis == AXIS_X ? 1 : 0;
+				DrawRoadOverlays(ti, PAL_NONE, road_rti, tram_rti, sprite_offset, sprite_offset);
+			}
 		} else {
 			/* Non-drivethrough road stops are only valid for roads. */
 			assert(road_rt != INVALID_ROADTYPE && tram_rt == INVALID_ROADTYPE);
 
-			if (road_rti->UsesOverlay()) {
-				DiagDirection dir = GetRoadStopDir(ti->tile);
+			if ((road_stop->roadstopspec != nullptr && 0 != (road_stop->roadstopspec->draw_mode & ROADSTOP_DRAW_MODE_ROAD)) && road_rti->UsesOverlay()) {
 				SpriteID ground = GetCustomRoadSprite(road_rti, ti->tile, ROTSG_ROADSTOP);
 				DrawGroundSprite(ground + dir, PAL_NONE);
 			}

@@ -999,4 +999,6 @@ static const DrawTileSprites * const _station_display_datas[] = {
 	_station_display_datas_dock,
 	_station_display_datas_buoy,
 	_station_display_datas_waypoint,
+	_station_display_datas_bus,
+	_station_display_datas_truck,
 };

@@ -402,6 +402,18 @@ enum WindowClass {
 	WC_TRUCK_STATION,
 
 	/**
+	 * Build tram station; %Window numbers:
+	 *   - #TRANSPORT_ROAD = #BuildRoadStationWidgets
+	 */
+	WC_TRAM_STATION,
+
+	/**
+	 * Build tram station; %Window numbers:
+	 *   - #TRANSPORT_ROAD = #BuildRoadStationWidgets
+	 */
+	WC_FREIGHT_TRAM_STATION,
+
+	/**
 	 * Build depot; %Window numbers:
 	 *   - #TRANSPORT_WATER = #BuildDockDepotWidgets
 	 *   - #TRANSPORT_RAIL = #BuildRailDepotWidgets

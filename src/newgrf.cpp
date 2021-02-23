@@ -47,6 +47,7 @@
 #include "language.h"
 #include "vehicle_base.h"
 #include "road.h"
+#include "newgrf_roadstop.h"
 
 #include "table/strings.h"
 #include "table/build_industry.h"
@@ -4677,6 +4678,60 @@ static ChangeInfoResult AirportTilesChangeInfo(uint airtid, int numinfo, int pro
 	return ret;
 }
 
+static ChangeInfoResult RoadStopChangeInfo(uint id, int numinfo, int prop, ByteReader *buf) {
+	ChangeInfoResult ret = CIR_SUCCESS;
+
+	if (id + numinfo > 255) {
+		grfmsg(1, "RoadStopChangeInfo: RoadStop %u is invalid, max %u, ignoring", id + numinfo, 255);
+		return CIR_INVALID_ID;
+	}
+
+	if (_cur.grffile->roadstops == nullptr) _cur.grffile->roadstops = CallocT<RoadStopSpec*>(255);
+
+	for (int i = 0; i < numinfo; i++) {
+		RoadStopSpec *rs = _cur.grffile->roadstops[id + i];
+
+		if (rs == nullptr && prop != 0x08) {
+			grfmsg(1, "RoadStopChangeInfo: Attempt to modify undefined road stop %u, ignoring", id + i);
+			return CIR_INVALID_ID;
+		}
+
+		switch (prop) {
+			case 0x08: { // Road Stop Class ID
+				RoadStopSpec **spec = &_cur.grffile->roadstops[id + i];
+
+				if (*spec == nullptr) *spec = CallocT<RoadStopSpec>(1);
+
+				uint32 classid = buf->ReadDWord();
+				(*spec)->cls_id = RoadStopClass::Allocate(BSWAP32(classid));
+				break;
+			}
+
+			case 0x09:
+				rs->stop_type = (RoadStopAvailabilityType)buf->ReadByte();
+				break;
+
+			case 0x0A: // Road Stop Name
+				AddStringForMapping(buf->ReadWord(), &rs->name);
+				break;
+
+			case 0x0B: // Road Stop Class name
+				AddStringForMapping(buf->ReadWord(), &RoadStopClass::Get(rs->cls_id)->name);
+				break;
+
+			case 0x0C: // The draw mode
+				rs->draw_mode = (RoadStopDrawMode)buf->ReadByte();
+				break;
+
+			default:
+				ret = CIR_UNKNOWN;
+				break;
+		}
+	}
+
+	return ret;
+}
+
 static bool HandleChangeInfoResult(const char *caller, ChangeInfoResult cir, uint8 feature, uint8 property)
 {
 	switch (cir) {
@@ -4741,6 +4796,7 @@ static void FeatureChangeInfo(ByteReader *buf)
 		/* GSF_AIRPORTTILES */  AirportTilesChangeInfo,
 		/* GSF_ROADTYPES */     RoadTypeChangeInfo,
 		/* GSF_TRAMTYPES */     TramTypeChangeInfo,
+		/* GSF_ROADSTOPS */     RoadStopChangeInfo,
 	};
 
 	uint8 feature  = buf->ReadByte();
@@ -5200,7 +5256,8 @@ static void NewSpriteGroup(ByteReader *buf)
 				case GSF_HOUSES:
 				case GSF_AIRPORTTILES:
 				case GSF_OBJECTS:
-				case GSF_INDUSTRYTILES: {
+				case GSF_INDUSTRYTILES:
+				case GSF_ROADSTOPS: {
 					byte num_building_sprites = std::max((uint8)1, type);
 
 					assert(TileLayoutSpriteGroup::CanAllocateItem());
@@ -5835,6 +5892,43 @@ static void AirportTileMapSpriteGroup(ByteReader *buf, uint8 idcount)
 	}
 }
 
+static void RoadStopMapSpriteGroup(ByteReader *buf, uint8 idcount) {
+	uint8 *roadstops = AllocaM(uint8, idcount);
+	for (uint i = 0; i < idcount; i++) {
+		roadstops[i] = buf->ReadByte();
+	}
+
+	/* Skip the cargo type section, we only care about the default group */
+	uint8 cidcount = buf->ReadByte();
+	buf->Skip(cidcount * 3);
+
+	uint16 groupid = buf->ReadWord();
+	if (!IsValidGroupID(groupid, "RoadStopMapSpriteGroup")) return;
+
+	if (_cur.grffile->roadstops == nullptr) {
+		grfmsg(0, "RoadStopMapSpriteGroup: No roadstops defined, skipping.");
+		return;
+	}
+
+	for (uint i = 0; i < idcount; i++) {
+		RoadStopSpec *roadstopspec = _cur.grffile->roadstops == nullptr ? nullptr : _cur.grffile->roadstops[roadstops[i]];
+
+		if (roadstopspec == nullptr) {
+			grfmsg(1, "RoadStopMapSpriteGroup: Road stop with ID 0x%02X does not exist, skipping.", roadstops[i]);
+			continue;
+		}
+
+		if (roadstopspec->grf_prop.grffile != nullptr) {
+			grfmsg(1, "RoadStopMapSpriteGroup: Road stop with ID 0x%02X mapped multiple times, skipping", roadstops[i]);
+			continue;
+		}
+
+		roadstopspec->grf_prop.spritegroup[CT_DEFAULT] = _cur.spritegroups[groupid];
+		roadstopspec->grf_prop.grffile = _cur.grffile;
+		roadstopspec->grf_prop.local_id = roadstops[i];
+		RoadStopClass::Assign(roadstopspec);
+	}
+}
 
 /* Action 0x03 */
 static void FeatureMapSpriteGroup(ByteReader *buf)
@@ -5933,6 +6027,10 @@ static void FeatureMapSpriteGroup(ByteReader *buf)
 
 		case GSF_AIRPORTTILES:
 			AirportTileMapSpriteGroup(buf, idcount);
+			return;
+
+		case GSF_ROADSTOPS:
+			RoadStopMapSpriteGroup(buf, idcount);
 			return;
 
 		default:
@@ -8612,6 +8710,10 @@ void ResetNewGRFData()
 	ResetCustomAirports();
 	AirportSpec::ResetAirports();
 	AirportTileSpec::ResetAirportTiles();
+
+	/* Reset road stop classes */
+	RoadStopClass::Reset();
+	//ResetCustomRoadStops();
 
 	/* Reset canal sprite groups and flags */
 	memset(_water_feature, 0, sizeof(_water_feature));

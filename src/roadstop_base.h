@@ -14,6 +14,7 @@
 #include "core/pool_type.hpp"
 #include "core/bitmath_func.hpp"
 #include "vehicle_type.h"
+#include "newgrf_roadstop.h"
 
 typedef Pool<RoadStop, RoadStopID, 32, 64000> RoadStopPool;
 extern RoadStopPool _roadstop_pool;
@@ -63,6 +64,8 @@ struct RoadStop : RoadStopPool::PoolItem<&_roadstop_pool> {
 		void CheckIntegrity(const RoadStop *rs) const;
 		void Rebuild(const RoadStop *rs, int side = -1);
 	};
+
+	const RoadStopSpec *roadstopspec;
 
 	TileIndex       xy;     ///< Position on the map
 	byte            status; ///< Current status of the Stop, @see RoadStopSatusFlag. Access using *Bay and *Busy functions.

@@ -549,13 +549,16 @@ static bool NeighbourHasReachableRoad(::RoadType rt, TileIndex start_tile, DiagD
 		entrance_dir = (::TileX(tile) == ::TileX(front)) ? (::TileY(tile) < ::TileY(front) ? 1 : 3) : (::TileX(tile) < ::TileX(front) ? 2 : 0);
 	}
 
-	uint p2 = station_id == ScriptStation::STATION_JOIN_ADJACENT ? 0 : 4;
-	p2 |= drive_through ? 2 : 0;
-	p2 |= road_veh_type == ROADVEHTYPE_TRUCK ? 1 : 0;
-	p2 |= ScriptObject::GetRoadType() << 5;
+	// Documentation for these values can be found at CmdBuildRoadStop, in station_cmd.cpp
+	uint p1 = 1 | 1 << 8;
+	p1 |= (ScriptStation::IsValidStation(station_id) ? station_id : INVALID_STATION) << 16;
+
+	uint p2 = road_veh_type == ROADVEHTYPE_TRUCK;
+	p2 |= (drive_through ? 1 : 0) << 1;
+	p2 |= !(station_id == ScriptStation::STATION_JOIN_ADJACENT) << 2;
 	p2 |= entrance_dir << 3;
-	p2 |= (ScriptStation::IsValidStation(station_id) ? station_id : INVALID_STATION) << 16;
-	return ScriptObject::DoCommand(tile, 1 | 1 << 8, p2, CMD_BUILD_ROAD_STOP);
+	p2 |= ScriptObject::GetRoadType() << 22;
+	return ScriptObject::DoCommand(tile, p1, p2, CMD_BUILD_ROAD_STOP);
 }
 
 /* static */ bool ScriptRoad::BuildRoadStation(TileIndex tile, TileIndex front, RoadVehicleType road_veh_type, StationID station_id)

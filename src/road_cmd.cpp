@@ -1494,17 +1494,24 @@ static void DrawRoadDetail(SpriteID img, const TileInfo *ti, int dx, int dy, int
  * @param road_offset Road sprite offset (based on road bits)
  * @param tram_offset Tram sprite offset (based on road bits)
  */
-void DrawRoadOverlays(const TileInfo *ti, PaletteID pal, const RoadTypeInfo *road_rti, const RoadTypeInfo *tram_rti, uint road_offset, uint tram_offset)
-{
+void DrawRoadOverlays(const TileInfo* ti, PaletteID pal, const RoadTypeInfo* road_rti, const RoadTypeInfo* tram_rti, uint road_offset, uint tram_offset) {
+	DrawRoadOverlays(ti->tile, pal, road_rti, tram_rti, road_offset, tram_offset);
+}
+
+/**
+ * Draw road underlay and overlay sprites.
+ * @param tile TileIndex
+ */
+void DrawRoadOverlays(const TileIndex tile, PaletteID pal, const RoadTypeInfo *road_rti, const RoadTypeInfo *tram_rti, uint road_offset, uint tram_offset) {
 	/* Road underlay takes precedence over tram */
 	if (road_rti != nullptr) {
 		if (road_rti->UsesOverlay()) {
-			SpriteID ground = GetCustomRoadSprite(road_rti, ti->tile, ROTSG_GROUND);
+			SpriteID ground = GetCustomRoadSprite(road_rti, tile, ROTSG_GROUND);
 			DrawGroundSprite(ground + road_offset, pal);
 		}
 	} else {
 		if (tram_rti->UsesOverlay()) {
-			SpriteID ground = GetCustomRoadSprite(tram_rti, ti->tile, ROTSG_GROUND);
+			SpriteID ground = GetCustomRoadSprite(tram_rti, tile, ROTSG_GROUND);
 			DrawGroundSprite(ground + tram_offset, pal);
 		} else {
 			DrawGroundSprite(SPR_TRAMWAY_TRAM + tram_offset, pal);
@@ -1514,7 +1521,7 @@ void DrawRoadOverlays(const TileInfo *ti, PaletteID pal, const RoadTypeInfo *roa
 	/* Draw road overlay */
 	if (road_rti != nullptr) {
 		if (road_rti->UsesOverlay()) {
-			SpriteID ground = GetCustomRoadSprite(road_rti, ti->tile, ROTSG_OVERLAY);
+			SpriteID ground = GetCustomRoadSprite(road_rti, tile, ROTSG_OVERLAY);
 			if (ground != 0) DrawGroundSprite(ground + road_offset, pal);
 		}
 	}
@@ -1522,7 +1529,7 @@ void DrawRoadOverlays(const TileInfo *ti, PaletteID pal, const RoadTypeInfo *roa
 	/* Draw tram overlay */
 	if (tram_rti != nullptr) {
 		if (tram_rti->UsesOverlay()) {
-			SpriteID ground = GetCustomRoadSprite(tram_rti, ti->tile, ROTSG_OVERLAY);
+			SpriteID ground = GetCustomRoadSprite(tram_rti, tile, ROTSG_OVERLAY);
 			if (ground != 0) DrawGroundSprite(ground + tram_offset, pal);
 		} else if (road_rti != nullptr) {
 			DrawGroundSprite(SPR_TRAMWAY_OVERLAY + tram_offset, pal);

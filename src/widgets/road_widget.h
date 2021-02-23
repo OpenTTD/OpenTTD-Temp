@@ -52,6 +52,18 @@ enum BuildRoadStationWidgets {
 	WID_BROS_LT_OFF,        ///< Turn off area highlight.
 	WID_BROS_LT_ON,         ///< Turn on area highlight.
 	WID_BROS_INFO,          ///< Station acceptance info.
+
+	WID_BROS_MATRIX,                     ///< Matrix widget displaying all available road stops.
+	WID_BROS_IMAGE,                      ///< Panel used for each image of the matrix.
+	WID_BROS_MATRIX_SCROLL,              ///< Scrollbar of the #WID_BROS_SHOW_NEWST_ADDITIONS.
+
+	WID_BROS_SHOW_NEWST_DEFSIZE,         ///< Selection for default-size button for new road stops.
+	WID_BROS_SHOW_NEWST_ADDITIONS,       ///< Selection for new class selection list.
+	WID_BROS_SHOW_NEWST_MATRIX,          ///< Selection for new stop image matrix.
+	WID_BROS_SHOW_NEWST_RESIZE,          ///< Selection for panel and resize at bottom right for new stops.
+	WID_BROS_SHOW_NEWST_TYPE,            ///< Display of selected stop type.
+	WID_BROS_NEWST_LIST,                 ///< List with new road stops.
+	WID_BROS_NEWST_SCROLL,               ///< Scrollbar of the #WID_BROS_NEWST_LIST.
 };
 
 #endif /* WIDGETS_ROAD_WIDGET_H */
