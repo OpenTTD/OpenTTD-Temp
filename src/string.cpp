@@ -608,7 +608,7 @@ char *strcasestr(const char *haystack, const char *needle)
  * @param str The string to skip the initial garbage of.
  * @return The string with the garbage skipped.
  */
-static const char *SkipGarbage(const char *str)
+const char *SkipGarbage(const char *str)
 {
 	while (*str != '\0' && (*str < '0' || IsInsideMM(*str, ';', '@' + 1) || IsInsideMM(*str, '[', '`' + 1) || IsInsideMM(*str, '{', '~' + 1))) str++;
 	return str;

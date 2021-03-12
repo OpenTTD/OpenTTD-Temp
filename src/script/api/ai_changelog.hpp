@@ -20,6 +20,8 @@
  * API additions:
  * \li AICargo::GetName
  * \li AIPriorityQueue
+ * \li AIGroup::CreateGroupAutogenName
+ * \li AIGroup::AutoGroupVehicles
  *
  * Other changes:
  * \li AIVehicle::CloneVehicle now correctly returns estimate when short on cash

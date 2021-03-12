@@ -319,11 +319,13 @@ enum Commands {
 	CMD_DEPOT_MASS_AUTOREPLACE,       ///< force the autoreplace to take action in a given depot
 
 	CMD_CREATE_GROUP,                 ///< create a new group
+	CMD_CREATE_GROUP_AUTOGEN_NAME,    ///< create a new group with an automatically generated name
 	CMD_DELETE_GROUP,                 ///< delete a group
 	CMD_ALTER_GROUP,                  ///< alter a group
 	CMD_ADD_VEHICLE_GROUP,            ///< add a vehicle to a group
 	CMD_ADD_SHARED_VEHICLE_GROUP,     ///< add all other shared vehicles to a group which are missing
 	CMD_REMOVE_ALL_VEHICLES_GROUP,    ///< remove all vehicles from a group
+	CMD_AUTO_GROUP_VEHICLES,          ///< create groups for all vehicles of a certain type that are not yet in any group
 	CMD_SET_GROUP_REPLACE_PROTECTION, ///< set the autoreplace-protection for a group
 	CMD_SET_GROUP_LIVERY,             ///< set the livery for a group
 

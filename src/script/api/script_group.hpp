@@ -48,6 +48,26 @@ public:
 	static GroupID CreateGroup(ScriptVehicle::VehicleType vehicle_type, GroupID parent_group_id);
 
 	/**
+	 * Create a new group, rename it with specific name and add vehicle to this group
+	 *
+	 * @param vehicle_id vehicle to add to a group
+	 * @param parent_group_id parent groupid
+	 * @param add_shared_vehicles whether to add shared vehicles as well
+	 * @return The GroupID of the new group, or an invalid GroupID when
+	 *  it failed. Check the return value using IsValidGroup(). In test-mode
+	 *  0 is returned if it was successful; any other value indicates failure.
+	 */
+	static GroupID CreateGroupAutogenName(VehicleID vehicle_id, GroupID parent_group_id, bool add_shared_vehicles = false);
+
+	/**
+	 * Create groups for all vehicles of a certain type that are not yet in any group.
+	 *
+	 * @param vehicle_type The VehicleType of the vehicles that should be auto-grouped.
+	 * @return False if the groups was not successfully created.
+	 */
+	static void AutoGroupVehicles(ScriptVehicle::VehicleType vehicle_type);
+
+	/**
 	 * Delete the given group. When the deletion succeeds all vehicles in the
 	 *  given group will move to the GROUP_DEFAULT.
 	 * @param group_id The group to delete.

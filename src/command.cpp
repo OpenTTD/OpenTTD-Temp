@@ -188,11 +188,13 @@ CommandProc CmdDepotSellAllVehicles;
 CommandProc CmdDepotMassAutoReplace;
 
 CommandProc CmdCreateGroup;
+CommandProc CmdCreateGroupAutogenName;
 CommandProc CmdAlterGroup;
 CommandProc CmdDeleteGroup;
 CommandProc CmdAddVehicleGroup;
 CommandProc CmdAddSharedVehicleGroup;
 CommandProc CmdRemoveAllVehiclesGroup;
+CommandProc CmdAutoGroupVehicles;
 CommandProc CmdSetGroupReplaceProtection;
 CommandProc CmdSetGroupLivery;
 
@@ -354,11 +356,13 @@ static const Command _command_proc_table[] = {
 	DEF_CMD(CmdDepotSellAllVehicles,                           0, CMDT_VEHICLE_CONSTRUCTION  ), // CMD_DEPOT_SELL_ALL_VEHICLES
 	DEF_CMD(CmdDepotMassAutoReplace,                           0, CMDT_VEHICLE_CONSTRUCTION  ), // CMD_DEPOT_MASS_AUTOREPLACE
 	DEF_CMD(CmdCreateGroup,                                    0, CMDT_ROUTE_MANAGEMENT      ), // CMD_CREATE_GROUP
+	DEF_CMD(CmdCreateGroupAutogenName,                         0, CMDT_ROUTE_MANAGEMENT      ), // CMD_CREATE_GROUP_AUTOGEN_NAME
 	DEF_CMD(CmdDeleteGroup,                                    0, CMDT_ROUTE_MANAGEMENT      ), // CMD_DELETE_GROUP
 	DEF_CMD(CmdAlterGroup,                                     0, CMDT_OTHER_MANAGEMENT      ), // CMD_ALTER_GROUP
 	DEF_CMD(CmdAddVehicleGroup,                                0, CMDT_ROUTE_MANAGEMENT      ), // CMD_ADD_VEHICLE_GROUP
 	DEF_CMD(CmdAddSharedVehicleGroup,                          0, CMDT_ROUTE_MANAGEMENT      ), // CMD_ADD_SHARE_VEHICLE_GROUP
 	DEF_CMD(CmdRemoveAllVehiclesGroup,                         0, CMDT_ROUTE_MANAGEMENT      ), // CMD_REMOVE_ALL_VEHICLES_GROUP
+	DEF_CMD(CmdAutoGroupVehicles,                              0, CMDT_ROUTE_MANAGEMENT      ), // CMD_AUTO_GROUP_VEHICLES
 	DEF_CMD(CmdSetGroupReplaceProtection,                      0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SET_GROUP_REPLACE_PROTECTION
 	DEF_CMD(CmdSetGroupLivery,                                 0, CMDT_ROUTE_MANAGEMENT      ), // CMD_SET_GROUP_LIVERY
 	DEF_CMD(CmdMoveOrder,                                      0, CMDT_ROUTE_MANAGEMENT      ), // CMD_MOVE_ORDER

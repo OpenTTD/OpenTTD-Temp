@@ -64,6 +64,12 @@ static const NWidgetPart _nested_group_widgets[] = {
 						SetDataTip(SPR_GROUP_RENAME_TRAIN, STR_GROUP_RENAME_TOOLTIP),
 				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_GL_LIVERY_GROUP), SetFill(0, 1),
 						SetDataTip(SPR_GROUP_LIVERY_TRAIN, STR_GROUP_LIVERY_TOOLTIP),
+				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_GL_COLLAPSE_ALL_GROUPS), SetFill(0, 1),
+						SetDataTip(SPR_IMG_ZOOMOUT, STR_GROUP_COLLAPSE_ALL),
+				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_GL_EXPAND_ALL_GROUPS), SetFill(0, 1),
+						SetDataTip(SPR_IMG_ZOOMIN, STR_GROUP_EXPAND_ALL),
+				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_GL_AUTO_GROUP), SetFill(0, 1),
+						SetDataTip(SPR_CLONE_TRAIN, STR_AUTO_GROUP_TOOLTIP),
 				NWidget(WWT_PANEL, COLOUR_GREY), SetFill(1, 1), EndContainer(),
 				NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_GL_REPLACE_PROTECTION), SetFill(0, 1),
 						SetDataTip(SPR_GROUP_REPLACE_OFF_TRAIN, STR_GROUP_REPLACE_PROTECTION_TOOLTIP),
@@ -160,11 +166,24 @@ private:
 
 		GUIGroupList list;
 
+		bool enable_expand_all = false;
+		bool enable_collapse_all = false;
+
 		for (const Group *g : Group::Iterate()) {
 			if (g->owner == owner && g->vehicle_type == this->vli.vtype) {
 				list.push_back(g);
+				if (g->parent != INVALID_GROUP) {
+					if (Group::Get(g->parent)->folded) {
+						enable_expand_all = true;
+					} else {
+						enable_collapse_all = true;
+					}
+				}
 			}
 		}
+
+		this->SetWidgetDisabledState(WID_GL_EXPAND_ALL_GROUPS, !enable_expand_all);
+		this->SetWidgetDisabledState(WID_GL_COLLAPSE_ALL_GROUPS, !enable_collapse_all);
 
 		list.ForceResort();
 
@@ -338,6 +357,19 @@ private:
 		}
 	}
 
+	void SetAllGroupsFoldState(bool folded)
+	{
+		for (const Group *g : Group::Iterate()) {
+			if (g->owner == this->owner && g->vehicle_type == this->vli.vtype) {
+				if (g->parent != INVALID_GROUP) {
+					Group::Get(g->parent)->folded = folded;
+				}
+			}
+		}
+		this->groups.ForceRebuild();
+		this->SetDirty();
+	}
+
 public:
 	VehicleGroupWindow(WindowDesc *desc, WindowNumber window_number) : BaseVehicleListWindow(desc, window_number)
 	{
@@ -367,6 +399,7 @@ public:
 		this->GetWidget<NWidgetCore>(WID_GL_RENAME_GROUP)->widget_data += this->vli.vtype;
 		this->GetWidget<NWidgetCore>(WID_GL_DELETE_GROUP)->widget_data += this->vli.vtype;
 		this->GetWidget<NWidgetCore>(WID_GL_LIVERY_GROUP)->widget_data += this->vli.vtype;
+		this->GetWidget<NWidgetCore>(WID_GL_AUTO_GROUP)->widget_data += this->vli.vtype;
 		this->GetWidget<NWidgetCore>(WID_GL_REPLACE_PROTECTION)->widget_data += this->vli.vtype;
 
 		this->FinishInitNested(window_number);
@@ -513,6 +546,7 @@ public:
 
 		/* Disable all lists management button when the list is empty */
 		this->SetWidgetsDisabledState(this->vehicles.size() == 0 || _local_company != this->vli.company,
+				WID_GL_AUTO_GROUP,
 				WID_GL_STOP_ALL,
 				WID_GL_START_ALL,
 				WID_GL_MANAGE_VEHICLES_DROPDOWN,
@@ -786,6 +820,23 @@ public:
 				ShowCompanyLiveryWindow(this->owner, this->vli.index);
 				break;
 
+			case WID_GL_COLLAPSE_ALL_GROUPS:
+				this->SetAllGroupsFoldState(true);
+				break;
+
+			case WID_GL_EXPAND_ALL_GROUPS:
+				this->SetAllGroupsFoldState(false);
+				break;
+
+			case WID_GL_AUTO_GROUP: {
+				DoCommandP(0, vli.company, vli.vtype, CMD_AUTO_GROUP_VEHICLES, nullptr);
+
+				this->vehicle_sel = INVALID_VEHICLE;
+				this->group_over = INVALID_GROUP;
+				this->SetDirty();
+				break;
+			}
+
 			case WID_GL_AVAILABLE_VEHICLES:
 				ShowBuildVehicleWindow(INVALID_TILE, this->vli.vtype);
 				break;
@@ -900,6 +951,16 @@ public:
 					default:
 						NOT_REACHED();
 				}
+				break;
+			}
+			case WID_GL_CREATE_GROUP: {
+				const VehicleID vindex = this->vehicle_sel;
+				this->vehicle_sel = INVALID_VEHICLE;
+				this->group_over = INVALID_GROUP;
+				this->SetDirty();
+
+				DoCommandP(0, vindex | (_ctrl_pressed ? 1 << 31 : 0), this->vli.index, CMD_CREATE_GROUP_AUTOGEN_NAME | CMD_MSG(STR_ERROR_GROUP_CAN_T_CREATE_AUTOGEN_NAME),  nullptr);
+
 				break;
 			}
 		}

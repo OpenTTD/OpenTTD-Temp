@@ -267,6 +267,7 @@ static inline bool IsWhitespace(WChar c)
 char *strcasestr(const char *haystack, const char *needle);
 #endif /* strcasestr is available */
 
+const char *SkipGarbage(const char *str);
 int strnatcmp(const char *s1, const char *s2, bool ignore_garbage_at_front = false);
 
 #endif /* STRING_FUNC_H */

@@ -34,6 +34,21 @@
 	return (ScriptGroup::GroupID)0;
 }
 
+/* static */ ScriptGroup::GroupID ScriptGroup::CreateGroupAutogenName(VehicleID vehicle_id, GroupID parent_group_id, bool add_shared_vehicles)
+{
+	EnforcePrecondition(ScriptGroup::GROUP_INVALID, ScriptVehicle::IsValidVehicle(vehicle_id));
+	if (!ScriptObject::DoCommand(0, vehicle_id | (add_shared_vehicles << 31), parent_group_id, CMD_CREATE_GROUP_AUTOGEN_NAME, nullptr, &ScriptInstance::DoCommandReturnGroupID)) return GROUP_INVALID;
+
+	/* In case of test-mode, we return GroupID 0 */
+	return (ScriptGroup::GroupID)0;
+}
+
+/* static */ void ScriptGroup::AutoGroupVehicles(ScriptVehicle::VehicleType vehicle_type)
+{
+	ScriptObject::DoCommand(0, ScriptObject::GetCompany(), (::VehicleType)vehicle_type, CMD_AUTO_GROUP_VEHICLES, nullptr);
+}
+
+
 /* static */ bool ScriptGroup::DeleteGroup(GroupID group_id)
 {
 	EnforcePrecondition(false, IsValidGroup(group_id));

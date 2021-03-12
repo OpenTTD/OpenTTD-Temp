@@ -95,6 +95,7 @@ struct GUISettings {
 	uint8  order_review_system;              ///< perform order reviews on vehicles
 	bool   vehicle_income_warn;              ///< if a vehicle isn't generating income, show a warning
 	bool   show_finances;                    ///< show finances at end of year
+	uint8  autogen_group_name;               ///< use station or town names for automatically generated group names
 	bool   sg_new_nonstop;                   ///< ttdpatch compatible nonstop handling read from pre v93 savegames
 	bool   new_nonstop;                      ///< ttdpatch compatible nonstop handling
 	uint8  stop_location;                    ///< what is the default stop location of trains?

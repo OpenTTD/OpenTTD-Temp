@@ -1258,6 +1258,10 @@ STR_CONFIG_SETTING_SIGNALSIDE_DRIVING_SIDE                      :On the driving 
 STR_CONFIG_SETTING_SIGNALSIDE_RIGHT                             :On the right
 STR_CONFIG_SETTING_SHOWFINANCES                                 :Show finances window at the end of the year: {STRING2}
 STR_CONFIG_SETTING_SHOWFINANCES_HELPTEXT                        :If enabled, the finances window pops up at the end of each year to allow easy inspection of the financial status of the company
+STR_CONFIG_SETTING_AUTOGEN_GROUP_NAME                           :Use {STRING2} names for automatically generated group name
+STR_CONFIG_SETTING_AUTOGEN_GROUP_NAME_HELPTEXT                  :Uses the selected name from the first and last order of a vehicle to create an autmatically generated group name
+STR_CONFIG_SETTING_AUTOGEN_GROUP_NAME_TOWN                      :town
+STR_CONFIG_SETTING_AUTOGEN_GROUP_NAME_STATION                   :station
 STR_CONFIG_SETTING_NONSTOP_BY_DEFAULT                           :New orders are 'non-stop' by default: {STRING2}
 STR_CONFIG_SETTING_NONSTOP_BY_DEFAULT_HELPTEXT                  :Normally, a vehicle will stop at every station it passes. By enabling this setting, it will drive through all station on the way to its final destination without stopping. Note, that this setting only defines a default value for new orders. Individual orders can be set explicitly to either behaviour nevertheless
 STR_CONFIG_SETTING_STOP_LOCATION                                :New train orders stop by default at the {STRING2} of the platform
@@ -3528,10 +3532,13 @@ STR_GROUP_DEFAULT_AIRCRAFTS                                     :Ungrouped aircr
 STR_GROUP_COUNT_WITH_SUBGROUP                                   :{TINY_FONT}{COMMA} (+{COMMA})
 
 STR_GROUPS_CLICK_ON_GROUP_FOR_TOOLTIP                           :{BLACK}Groups - click on a group to list all vehicles of this group. Drag and drop groups to arrange hierarchy.
-STR_GROUP_CREATE_TOOLTIP                                        :{BLACK}Click to create a group
+STR_GROUP_CREATE_TOOLTIP                                        :{BLACK}Click to create a group. Drag and drop a vehicle to create a group for it with an automatic name. Ctrl+Drag to add vehicles with shared orders.
 STR_GROUP_DELETE_TOOLTIP                                        :{BLACK}Delete the selected group
 STR_GROUP_RENAME_TOOLTIP                                        :{BLACK}Rename the selected group
 STR_GROUP_LIVERY_TOOLTIP                                        :{BLACK}Change livery of the selected group
+STR_GROUP_EXPAND_ALL                                            :{BLACK}Expand all
+STR_GROUP_COLLAPSE_ALL                                          :{BLACK}Collapse all
+STR_AUTO_GROUP_TOOLTIP                                          :{BLACK}Automatically group all otherwise ungrouped vehicles.
 STR_GROUP_REPLACE_PROTECTION_TOOLTIP                            :{BLACK}Click to protect this group from global autoreplace
 
 STR_QUERY_GROUP_DELETE_CAPTION                                  :{WHITE}Delete Group
@@ -3541,6 +3548,9 @@ STR_GROUP_ADD_SHARED_VEHICLE                                    :Add shared vehi
 STR_GROUP_REMOVE_ALL_VEHICLES                                   :Remove all vehicles
 
 STR_GROUP_RENAME_CAPTION                                        :{BLACK}Rename a group
+STR_GROUP_AUTOGEN_NAME_STATION                                  :[{RAW_STRING}] {STATION} - {STATION}
+STR_GROUP_AUTOGEN_NAME_TOWN                                     :[{RAW_STRING}] {TOWN} - {TOWN}
+STR_GROUP_AUTOGEN_NAME_TOWN_LOCAL                               :[{RAW_STRING}] Local {TOWN}
 
 STR_GROUP_PROFIT_THIS_YEAR                                      :Profit this year:
 STR_GROUP_PROFIT_LAST_YEAR                                      :Profit last year:
@@ -4603,6 +4613,8 @@ STR_ERROR_GROUP_CAN_T_SET_PARENT_RECURSION                      :{WHITE}... loop
 STR_ERROR_GROUP_CAN_T_REMOVE_ALL_VEHICLES                       :{WHITE}Can't remove all vehicles from this group...
 STR_ERROR_GROUP_CAN_T_ADD_VEHICLE                               :{WHITE}Can't add the vehicle to this group...
 STR_ERROR_GROUP_CAN_T_ADD_SHARED_VEHICLE                        :{WHITE}Can't add shared vehicles to group...
+STR_ERROR_GROUP_CAN_T_CREATE_AUTOGEN_NAME                       :{WHITE}Can't create group with automatically generated name...
+STR_ERROR_GROUP_CAN_T_CREATE_NAME                               :{WHITE}Can't create group name...
 
 # Generic vehicle errors
 STR_ERROR_TRAIN_IN_THE_WAY                                      :{WHITE}Train in the way
