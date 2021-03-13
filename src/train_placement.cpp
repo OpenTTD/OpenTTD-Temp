@@ -185,6 +185,7 @@ void TrainPlacement::LiftTrain(Train *train, DoCommandFlag flags)
 	if ((flags & DC_EXEC) == 0) return;
 
 	SetPlatformReservation(train->tile, false);
+	UpdateExtendedDepotReservation(train, false);
 
 	UpdateSignalsOnSegment(train->tile, INVALID_DIAGDIR, train->owner);
 }
@@ -307,6 +308,7 @@ void TrainPlacement::PlaceTrain(Train *train, DoCommandFlag flags)
 	}
 
 	SetPlatformReservation(train->tile, true);
+	UpdateExtendedDepotReservation(train, true);
 
 	UpdateSignalsOnSegment(train->tile, INVALID_DIAGDIR, train->owner);
 }

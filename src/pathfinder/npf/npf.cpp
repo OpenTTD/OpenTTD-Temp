@@ -444,13 +444,20 @@ static int32 NPFRailPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 		case MP_RAILWAY:
 			cost = _trackdir_length[trackdir]; // Should be different for diagonal tracks
 			if (IsBigRailDepotTile(tile)) {
-				cost += _settings_game.pf.npf.npf_rail_station_penalty;
-				NPFFindStationOrTileData *fstd = (NPFFindStationOrTileData*)as->user_target;
-				if (fstd->v->current_order.IsType(OT_GOTO_DEPOT) &&
-						GetDepotIndex(tile) == fstd->v->current_order.GetDestination() &&
-						IsAnyStartPlatformTile(tile)) {
+				DepotReservation depot_reservation = GetDepotReservation(tile);
+				if (depot_reservation == DEPOT_RESERVATION_FULL_STOPPED_VEH) {
+					cost += NPF_INFINITE_PENALTY;
+				} else {
 					uint platform_length = GetPlatformLength(tile, TrackdirToExitdir(trackdir));
-					cost += PlatformLengthPenalty(fstd, platform_length);
+					cost += (HasDepotReservation(tile) ? 2 : 1) * platform_length * _settings_game.pf.npf.npf_rail_station_penalty;
+
+					/* Add additional length penalties if train has to visit this depot. */
+					NPFFindStationOrTileData *fstd = (NPFFindStationOrTileData*)as->user_target;
+					if (fstd->v->current_order.IsType(OT_GOTO_DEPOT) &&
+							GetDepotIndex(tile) == fstd->v->current_order.GetDestination() &&
+							IsAnyStartPlatformTile(tile)) {
+						cost += PlatformLengthPenalty(fstd, platform_length);
+					}
 				}
 			}
 			break;

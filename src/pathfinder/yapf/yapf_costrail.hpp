@@ -608,6 +608,15 @@ no_entry_cost: // jump here at the beginning if the node has no parent (it is th
 				uint platform_length = GetPlatformLength(n.GetLastTile(), ReverseDiagDir(TrackdirToExitdir(n.GetLastTrackdir())));
 				/* Reduce the extra cost caused by passing-platform penalty (each platform receives it in the segment cost). */
 				extra_cost -= Yapf().PfGetSettings().rail_station_penalty * platform_length;
+				if (tf->m_is_big_depot) {
+					DepotReservation depot_reservation = GetDepotReservation(n.GetLastTile());
+					if (depot_reservation == DEPOT_RESERVATION_FULL_STOPPED_VEH) {
+						extra_cost += NPF_INFINITE_PENALTY;
+					} else {
+						extra_cost += (HasDepotReservation(n.GetLastTile()) ? 2 : 1) * platform_length * Yapf().PfGetSettings().rail_station_penalty;
+					}
+				}
+
 				/* Add penalty for the inappropriate platform length. */
 				extra_cost += PlatformLengthPenalty(platform_length);
 			}
