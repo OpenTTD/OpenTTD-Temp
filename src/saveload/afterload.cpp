@@ -767,6 +767,10 @@ bool AfterLoadGame()
 	}
 
 	if (IsSavegameVersionBefore(SLV_MULTITILE_DEPOTS)) {
+		_settings_game.depot.rail_depot_types = 1;
+		_settings_game.depot.road_depot_types = 1;
+		_settings_game.depot.water_depot_types = 1;
+
 		_settings_game.depot.allow_no_comp_railtype_replacements = false;
 		_settings_game.depot.allow_no_comp_roadtype_replacements = false;
 	}

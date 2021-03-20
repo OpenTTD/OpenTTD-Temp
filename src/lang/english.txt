@@ -1400,6 +1400,15 @@ STR_CONFIG_SETTING_SE_FLAT_WORLD_HEIGHT                         :The height leve
 STR_CONFIG_SETTING_EDGES_NOT_EMPTY                              :{WHITE}One or more tiles at the northern edge are not empty
 STR_CONFIG_SETTING_EDGES_NOT_WATER                              :{WHITE}One or more tiles at one of the edges is not water
 
+STR_CONFIG_SETTING_RAIL_DEPOT_TYPES                             :Rail depot types: {STRING2}
+STR_CONFIG_SETTING_RAIL_DEPOT_TYPES_HELPTEXT                    :Available rail depot types for construction for human players.
+STR_CONFIG_SETTING_ROAD_DEPOT_TYPES                             :Road depot types: {STRING2}
+STR_CONFIG_SETTING_ROAD_DEPOT_TYPES_HELPTEXT                    :Available road depot types for construction for human players.
+STR_CONFIG_SETTING_WATER_DEPOT_TYPES                            :Water depot types: {STRING2}
+STR_CONFIG_SETTING_WATER_DEPOT_TYPES_HELPTEXT                   :Available water depot types for construction for human players.
+STR_CONFIG_SETTING_ONLY_SMALL_DEPOT                             :Small depots
+STR_CONFIG_SETTING_ONLY_BIG_DEPOT                               :Big depots
+STR_CONFIG_SETTING_BOTH_DEPOT_TYPES                             :Both depot types
 STR_CONFIG_SETTING_REPLACE_INCOMPATIBLE_RAIL                    :Allow replacing rail vehicles with incompatible rail types: {STRING2}
 STR_CONFIG_SETTING_REPLACE_INCOMPATIBLE_RAIL_HELPTEXT           :Allow replacing rail vehicles even if they are not compatible by rail type.
 STR_CONFIG_SETTING_REPLACE_INCOMPATIBLE_ROAD                    :Allow replacing road vehicles with incompatible road types: {STRING2}
@@ -4538,6 +4547,7 @@ STR_ERROR_CAN_T_BUILD_TRAM_DEPOT                                :{WHITE}Can't bu
 STR_ERROR_CAN_T_BUILD_SHIP_DEPOT                                :{WHITE}Can't build ship depot here...
 
 STR_ERROR_ADJOINS_MORE_THAN_ONE_EXISTING_DEPOTS                 :{WHITE}... adjoins more than one existing depot
+STR_ERROR_DEPOT_TYPE_NOT_AVAILABLE                              :{WHITE}... depot type not available
 
 STR_ERROR_CAN_T_RENAME_DEPOT                                    :{WHITE}Can't rename depot...
 
