@@ -11,6 +11,7 @@
 #define PLATFORM_FUNC_H
 
 #include "station_map.h"
+#include "depot_map.h"
 #include "platform_type.h"
 
 /**
@@ -36,6 +37,27 @@ static inline bool IsCompatibleTrainStationTile(TileIndex test_tile, TileIndex s
 }
 
 /**
+ * Check if a tile is a valid continuation to a big rail depot tile.
+ * The tile \a test_tile is a valid continuation to \a depot_tile, if all of the following are true:
+ * \li \a test_tile is a big depot tile
+ * \li \a test_tile and \a depot_tile have the same rail type
+ * \li the tracks on \a test_tile and \a depot_tile are in the same direction
+ * \li both tiles belong to the same depot
+ * @param test_tile Tile to test
+ * @param depot_tile Depot tile to compare with
+ * @pre IsBigRailDepotTile(depot_tile)
+ * @return true if the two tiles are compatible
+ */
+static inline bool IsCompatibleTrainDepotTile(TileIndex test_tile, TileIndex depot_tile)
+{
+	assert(IsBigRailDepotTile(depot_tile));
+	return IsBigRailDepotTile(test_tile) &&
+			GetRailType(test_tile) == GetRailType(depot_tile) &&
+			GetRailDepotTrack(test_tile) == GetRailDepotTrack(depot_tile) &&
+			GetDepotIndex(test_tile) == GetDepotIndex(depot_tile);
+}
+
+/**
  * Returns the type of platform of a given tile.
  * @param tile Tile to check
  * @return the type of platform (rail station, rail waypoint...)
@@ -46,6 +68,9 @@ static inline PlatformType GetPlatformType(TileIndex tile)
 		case MP_STATION:
 			if (IsRailStation(tile)) return PT_RAIL_STATION;
 			if (IsRailWaypoint(tile)) return PT_RAIL_WAYPOINT;
+			break;
+		case MP_RAILWAY:
+			if (IsBigRailDepotTile(tile)) return PT_RAIL_DEPOT;
 			break;
 		default: break;
 	}
@@ -74,6 +99,8 @@ static inline bool HasPlatformReservation(TileIndex tile)
 		case PT_RAIL_STATION:
 		case PT_RAIL_WAYPOINT:
 			return HasStationReservation(tile);
+		case PT_RAIL_DEPOT:
+			return HasDepotReservation(tile);
 		default: NOT_REACHED();
 	}
 }
@@ -92,13 +119,21 @@ static inline bool IsCompatiblePlatformTile(TileIndex test_tile, TileIndex orig_
 			return IsCompatibleTrainStationTile(test_tile, orig_tile);
 		case PT_RAIL_WAYPOINT:
 			return test_tile == orig_tile;
+		case PT_RAIL_DEPOT:
+			return IsCompatibleTrainDepotTile(test_tile, orig_tile);
 		default: NOT_REACHED();
 	}
 }
 
 void SetPlatformReservation(TileIndex start, DiagDirection dir, bool b);
+void SetPlatformReservation(TileIndex start, bool b);
 
 uint GetPlatformLength(TileIndex tile);
 uint GetPlatformLength(TileIndex tile, DiagDirection dir);
+
+TileIndex GetPlatformExtremeTile(TileIndex tile, DiagDirection dir);
+TileArea GetPlatformTileArea(TileIndex tile);
+
+bool IsAnyStartPlatformTile(TileIndex tile);
 
 #endif /* PLATFORM_FUNC_H */

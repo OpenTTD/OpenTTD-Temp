@@ -12,6 +12,8 @@
 #include "vehicle_func.h"
 #include "newgrf_station.h"
 #include "pathfinder/follow_track.hpp"
+#include "platform_func.h"
+#include "depot_map.h"
 
 #include "safeguards.h"
 
@@ -181,12 +183,12 @@ static PBSTileInfo FollowReservation(Owner o, RailTypes rts, TileIndex tile, Tra
 
 		/* No reservation --> path end found */
 		if (reserved == TRACKDIR_BIT_NONE) {
-			if (ft.m_is_station) {
+			if (ft.m_is_station || ft.m_is_big_depot) {
 				/* Check skipped station tiles as well, maybe our reservation ends inside the station. */
 				TileIndexDiff diff = TileOffsByDiagDir(ft.m_exitdir);
 				while (ft.m_tiles_skipped-- > 0) {
 					ft.m_new_tile -= diff;
-					if (HasStationReservation(ft.m_new_tile)) {
+					if ((ft.m_is_station && HasStationReservation(ft.m_new_tile)) || (ft.m_is_big_depot && HasDepotReservation(ft.m_new_tile))) {
 						tile = ft.m_new_tile;
 						trackdir = DiagDirToDiagTrackdir(ft.m_exitdir);
 						break;
@@ -279,14 +281,14 @@ PBSTileInfo FollowTrainReservation(const Train *v, Vehicle **train_on_res)
 	if (train_on_res != nullptr) {
 		FindVehicleOnPos(ftoti.res.tile, &ftoti, FindTrainOnTrackEnum);
 		if (ftoti.best != nullptr) *train_on_res = ftoti.best->First();
-		if (*train_on_res == nullptr && IsRailStationTile(ftoti.res.tile)) {
-			/* The target tile is a rail station. The track follower
+		if (*train_on_res == nullptr &&  (IsRailStationTile(ftoti.res.tile) || IsBigRailDepotTile(ftoti.res.tile))) {
+			/* The target tile is a rail station or extended depot. The track follower
 			 * has stopped on the last platform tile where we haven't
 			 * found a train. Also check all previous platform tiles
 			 * for a possible train. */
 			TileIndexDiff diff = TileOffsByDiagDir(TrackdirToExitdir(ReverseTrackdir(ftoti.res.trackdir)));
-			for (TileIndex st_tile = ftoti.res.tile + diff; *train_on_res == nullptr && IsCompatibleTrainStationTile(st_tile, ftoti.res.tile); st_tile += diff) {
-				FindVehicleOnPos(st_tile, &ftoti, FindTrainOnTrackEnum);
+			for (TileIndex pt_tile = ftoti.res.tile + diff; *train_on_res == nullptr && IsCompatiblePlatformTile(pt_tile, ftoti.res.tile); pt_tile += diff) {
+				FindVehicleOnPos(pt_tile, &ftoti, FindTrainOnTrackEnum);
 				if (ftoti.best != nullptr) *train_on_res = ftoti.best->First();
 			}
 		}
@@ -327,11 +329,11 @@ Train *GetTrainForReservation(TileIndex tile, Track track)
 		FindVehicleOnPos(ftoti.res.tile, &ftoti, FindTrainOnTrackEnum);
 		if (ftoti.best != nullptr) return ftoti.best;
 
-		/* Special case for stations: check the whole platform for a vehicle. */
-		if (IsRailStationTile(ftoti.res.tile)) {
+		/* Special case for stations and extended depots: check the whole platform for a vehicle. */
+		if (IsRailStationTile(ftoti.res.tile) || IsBigRailDepotTile(ftoti.res.tile)) {
 			TileIndexDiff diff = TileOffsByDiagDir(TrackdirToExitdir(ReverseTrackdir(ftoti.res.trackdir)));
-			for (TileIndex st_tile = ftoti.res.tile + diff; IsCompatibleTrainStationTile(st_tile, ftoti.res.tile); st_tile += diff) {
-				FindVehicleOnPos(st_tile, &ftoti, FindTrainOnTrackEnum);
+			for (TileIndex pt_tile = ftoti.res.tile + diff; IsCompatiblePlatformTile(pt_tile, ftoti.res.tile); pt_tile += diff) {
+				FindVehicleOnPos(pt_tile, &ftoti, FindTrainOnTrackEnum);
 				if (ftoti.best != nullptr) return ftoti.best;
 			}
 		}
