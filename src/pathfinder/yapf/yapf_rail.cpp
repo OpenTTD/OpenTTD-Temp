@@ -638,7 +638,9 @@ bool YapfTrainFindNearestSafeTile(const Train *v, TileIndex tile, Trackdir td, b
 /** if any track changes, this counter is incremented - that will invalidate segment cost cache */
 int CSegmentCostCacheBase::s_rail_change_counter = 0;
 
+extern void FixBigRailDepotSprites(TileIndex tile);
 void YapfNotifyTrackLayoutChange(TileIndex tile, Track track)
 {
+	FixBigRailDepotSprites(tile);
 	CSegmentCostCacheBase::NotifyTrackLayoutChange(tile, track);
 }
