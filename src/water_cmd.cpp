@@ -93,67 +93,72 @@ static void MarkCanalsAndRiversAroundDirty(TileIndex tile)
  * Build a ship depot.
  * @param tile tile where ship depot is built
  * @param flags type of operation
- * @param p1 bit 0 depot orientation (Axis)
- * @param p2 unused
+ * @param p1 bit 0     : depot orientation (Axis)
+ *           bit 1     : allow adjacent depots
+ *           bits  2-15: unused
+ *           bits 16-31: DepotID to join to.
+ * @param p2 end_tile
  * @param text unused
  * @return the cost of this operation or an error
  */
 CommandCost CmdBuildShipDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const std::string &text)
 {
 	Axis axis = Extract<Axis, 0, 1>(p1);
+	bool adjacent = HasBit(p1, 1);
+	DepotID join_to = GB(p1, 16, 16);
 
-	TileIndex tile2 = tile + (axis == AXIS_X ? TileDiffXY(1, 0) : TileDiffXY(0, 1));
+	TileArea complete_area(tile, p2);
+	assert(complete_area.w == 2 || complete_area.h == 2);
 
-	if (!HasTileWaterGround(tile) || !HasTileWaterGround(tile2)) {
-		return_cmd_error(STR_ERROR_MUST_BE_BUILT_ON_WATER);
-	}
+	TileArea northern_tiles(complete_area.tile);
+	northern_tiles.Add(complete_area.tile + (axis == AXIS_X ? TileDiffXY(0, complete_area.h - 1) : TileDiffXY(complete_area.w - 1, 0)));
 
-	if (IsBridgeAbove(tile) || IsBridgeAbove(tile2)) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
-
-	if (!IsTileFlat(tile) || !IsTileFlat(tile2)) {
-		/* Prevent depots on rapids */
-		return_cmd_error(STR_ERROR_SITE_UNSUITABLE);
-	}
-
-	if (!Depot::CanAllocateItem()) return CMD_ERROR;
-
-	WaterClass wc1 = GetWaterClass(tile);
-	WaterClass wc2 = GetWaterClass(tile2);
-	CommandCost cost = CommandCost(EXPENSES_CONSTRUCTION, _price[PR_BUILD_DEPOT_SHIP]);
-
-	bool add_cost = !IsWaterTile(tile);
-	CommandCost ret = DoCommand(tile, 0, 0, flags | DC_AUTO, CMD_LANDSCAPE_CLEAR);
+	/* Create a new depot or find a depot to join to. */
+	Depot *depot = nullptr;
+	CommandCost ret = FindJoiningDepot(complete_area, VEH_SHIP, join_to, depot, adjacent, flags);
 	if (ret.Failed()) return ret;
-	if (add_cost) {
-		cost.AddCost(ret);
-	}
-	add_cost = !IsWaterTile(tile2);
-	ret = DoCommand(tile2, 0, 0, flags | DC_AUTO, CMD_LANDSCAPE_CLEAR);
-	if (ret.Failed()) return ret;
-	if (add_cost) {
-		cost.AddCost(ret);
+
+	/* Get the cost of building all the ship depots. */
+	CommandCost cost = CommandCost(EXPENSES_CONSTRUCTION, _price[PR_BUILD_DEPOT_SHIP] * northern_tiles.w * northern_tiles.h);
+
+	for (TileIndex t : complete_area) {
+		/* Build water depots in water valid tiles... */
+		if (!IsValidTile(t) || !HasTileWaterGround(t)) return_cmd_error(STR_ERROR_MUST_BE_BUILT_ON_WATER);
+
+		/* ... with no bridges above... */
+		if (IsBridgeAbove(t)) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
+
+		/* ... and preventing depots on rapids. */
+		if (!IsTileFlat(t)) return_cmd_error(STR_ERROR_SITE_UNSUITABLE);
+
+		/* Keep original water class before clearing tile. */
+		WaterClass wc = GetWaterClass(t);
+
+		/* Clear the tile. */
+		bool add_cost = !IsWaterTile(t);
+		CommandCost ret = DoCommand(t, 0, 0, flags | DC_AUTO, CMD_LANDSCAPE_CLEAR);
+		if (ret.Failed()) return ret;
+		if (add_cost) cost.AddCost(ret);
+
+		if (flags & DC_EXEC) {
+			if (wc == WATER_CLASS_CANAL) {
+				/* Update infrastructure counts after the unconditional clear earlier. */
+				Company::Get(_current_company)->infrastructure.water++;
+			}
+			DepotPart dp = northern_tiles.Contains(t) ? DEPOT_PART_NORTH : DEPOT_PART_SOUTH;
+			MakeShipDepot(t,  _current_company, depot->index, dp, axis, wc);
+			CheckForDockingTile(t);
+			MarkTileDirtyByTile(t);
+		}
 	}
 
 	if (flags & DC_EXEC) {
-		Depot *depot = new Depot(tile);
-		depot->build_date = _date;
-		depot->company = _current_company;
-		depot->veh_type = VEH_SHIP;
-
-		if (wc1 == WATER_CLASS_CANAL || wc2 == WATER_CLASS_CANAL) {
-			/* Update infrastructure counts after the unconditional clear earlier. */
-			Company::Get(_current_company)->infrastructure.water += wc1 == WATER_CLASS_CANAL && wc2 == WATER_CLASS_CANAL ? 2 : 1;
-		}
-		Company::Get(_current_company)->infrastructure.water += 2 * LOCK_DEPOT_TILE_FACTOR;
+		Company::Get(_current_company)->infrastructure.water += complete_area.w * complete_area.h * LOCK_DEPOT_TILE_FACTOR;
 		DirtyCompanyInfrastructureWindows(_current_company);
 
-		MakeShipDepot(tile,  _current_company, depot->index, DEPOT_PART_NORTH, axis, wc1);
-		MakeShipDepot(tile2, _current_company, depot->index, DEPOT_PART_SOUTH, axis, wc2);
-		CheckForDockingTile(tile);
-		CheckForDockingTile(tile2);
-		MarkTileDirtyByTile(tile);
-		MarkTileDirtyByTile(tile2);
 		MakeDefaultName(depot);
+		depot->AfterAddRemove(complete_area, true);
+		if (join_to == NEW_DEPOT) MakeDefaultName(depot);
 	}
 
 	return cost;
@@ -274,9 +279,8 @@ static CommandCost RemoveShipDepot(TileIndex tile, DoCommandFlag flags)
 	}
 
 	if (flags & DC_EXEC) {
-		delete Depot::GetByTile(tile);
-
-		Company *c = Company::GetIfValid(GetTileOwner(tile));
+		Depot *depot = Depot::GetByTile(tile);
+		Company *c = Company::GetIfValid(depot->company);
 		if (c != nullptr) {
 			c->infrastructure.water -= 2 * LOCK_DEPOT_TILE_FACTOR;
 			DirtyCompanyInfrastructureWindows(c->index);
@@ -284,6 +288,8 @@ static CommandCost RemoveShipDepot(TileIndex tile, DoCommandFlag flags)
 
 		MakeWaterKeepingClass(tile,  GetTileOwner(tile));
 		MakeWaterKeepingClass(tile2, GetTileOwner(tile2));
+
+		depot->AfterAddRemove(TileArea(tile, tile2), false);
 	}
 
 	return CommandCost(EXPENSES_CONSTRUCTION, _price[PR_CLEAR_DEPOT_SHIP]);

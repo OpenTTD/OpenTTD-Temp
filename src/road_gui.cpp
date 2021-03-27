@@ -137,7 +137,11 @@ void CcRoadDepot(const CommandCost &result, TileIndex tile, uint32 p1, uint32 p2
 	DiagDirection dir = (DiagDirection)GB(p1, 0, 2);
 	if (_settings_client.sound.confirm) SndPlayTileFx(SND_1F_CONSTRUCTION_OTHER, tile);
 	if (!_settings_client.gui.persistent_buildingtools) ResetObjectToPlace();
-	ConnectRoadToStructure(tile, dir);
+
+	TileArea ta(tile, p2);
+	for (TileIndex tile : ta) {
+		ConnectRoadToStructure(tile, dir);
+	}
 }
 
 /**
@@ -552,8 +556,8 @@ struct BuildRoadToolbarWindow : Window {
 				break;
 
 			case WID_ROT_DEPOT:
-				DoCommandP(tile, _cur_roadtype << 2 | _road_depot_orientation, 0,
-						CMD_BUILD_ROAD_DEPOT | CMD_MSG(this->rti->strings.err_depot), CcRoadDepot);
+				VpSetPlaceSizingLimit(_settings_game.station.station_spread);
+				VpStartPlaceSizing(tile, (DiagDirToAxis(_road_depot_orientation) == 0) ? VPM_X_LIMITED : VPM_Y_LIMITED, DDSP_BUILD_DEPOT);
 				break;
 
 			case WID_ROT_BUS_STATION:
@@ -703,6 +707,16 @@ struct BuildRoadToolbarWindow : Window {
 						}
 					}
 					break;
+
+				case DDSP_BUILD_DEPOT: {
+					/* Build depot. */
+					CommandContainer cmdcont = {start_tile, (uint32)(_cur_roadtype << 2 | _road_depot_orientation | (_ctrl_pressed << 8) |
+							(INVALID_DEPOT << 16)), end_tile,
+							(uint32)(CMD_BUILD_ROAD_DEPOT | CMD_MSG(this->rti->strings.err_depot)), CcRoadDepot, ""};
+
+					ShowSelectDepotIfNeeded(cmdcont, TileArea(start_tile, end_tile), VEH_ROAD);
+					break;
+				}
 
 				case DDSP_CONVERT_ROAD:
 					DoCommandP(end_tile, start_tile, _cur_roadtype, CMD_CONVERT_ROAD | CMD_MSG(rti->strings.err_convert_road), CcPlaySound_CONSTRUCTION_OTHER);

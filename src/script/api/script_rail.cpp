@@ -141,7 +141,7 @@
 
 	uint entrance_dir = (::TileX(tile) == ::TileX(front)) ? (::TileY(tile) < ::TileY(front) ? 1 : 3) : (::TileX(tile) < ::TileX(front) ? 2 : 0);
 
-	return ScriptObject::DoCommand(tile, ScriptObject::GetRailType() | (entrance_dir << 6), 0, CMD_BUILD_TRAIN_DEPOT);
+	return ScriptObject::DoCommand(tile, ScriptObject::GetRailType() | (entrance_dir << 6) | (NEW_DEPOT << 16), tile, CMD_BUILD_TRAIN_DEPOT);
 }
 
 /* static */ bool ScriptRail::BuildRailStation(TileIndex tile, RailTrack direction, uint num_platforms, uint platform_length, StationID station_id)

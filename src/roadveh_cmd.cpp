@@ -34,6 +34,7 @@
 #include "newgrf.h"
 #include "zoom_func.h"
 #include "framerate_type.h"
+#include "depot_base.h"
 
 #include "table/strings.h"
 
@@ -247,6 +248,34 @@ void RoadVehUpdateCache(RoadVehicle *v, bool same_length)
 	v->vcache.cached_max_speed = (max_speed != 0) ? max_speed * 4 : RoadVehInfo(v->engine_type)->max_speed;
 }
 
+CommandCost FindDepotTileForPlacingEngine(TileIndex &tile, const Engine *e, DoCommandFlag flags)
+{
+	assert(IsRoadDepotTile(tile));
+
+	Depot *dep = Depot:: GetByTile(tile);
+
+	/* Check that the vehicle can drive on some tile of the depot */
+	RoadType rt = e->u.road.roadtype;
+	const RoadTypeInfo *rti = GetRoadTypeInfo(rt);
+	if ((dep->r_types.road_types & rti->powered_roadtypes) == 0) return_cmd_error(STR_ERROR_DEPOT_WRONG_DEPOT_TYPE);
+
+	/* Use same tile if possible when replacing. */
+	if (flags & DC_AUTOREPLACE) {
+		/* Use same tile if possible when replacing. */
+		if (HasTileAnyRoadType(tile, rti->powered_roadtypes)) return CommandCost();
+	}
+
+	TileIndex best_tile = INVALID_TILE;
+	for (std::vector<TileIndex>::iterator it = dep->depot_tiles.begin(); it != dep->depot_tiles.end(); ++it) {
+		tile = *it;
+		if (!HasTileAnyRoadType(tile, rti->powered_roadtypes)) continue;
+		best_tile = *it;
+	}
+
+	tile = best_tile;
+	return CommandCost();
+}
+
 /**
  * Build a road vehicle.
  * @param tile     tile of the depot where road vehicle is built.
@@ -258,10 +287,12 @@ void RoadVehUpdateCache(RoadVehicle *v, bool same_length)
  */
 CommandCost CmdBuildRoadVehicle(TileIndex tile, DoCommandFlag flags, const Engine *e, uint16 data, Vehicle **ret)
 {
-	/* Check that the vehicle can drive on the road in question */
+	assert(IsRoadDepotTile(tile));
 	RoadType rt = e->u.road.roadtype;
 	const RoadTypeInfo *rti = GetRoadTypeInfo(rt);
-	if (!HasTileAnyRoadType(tile, rti->powered_roadtypes)) return_cmd_error(STR_ERROR_DEPOT_WRONG_DEPOT_TYPE);
+
+	CommandCost check = FindDepotTileForPlacingEngine(tile, e, flags);
+	if (check.Failed()) return check;
 
 	if (flags & DC_EXEC) {
 		const RoadVehicleInfo *rvi = &e->u.road;
