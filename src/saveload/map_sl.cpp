@@ -15,6 +15,7 @@
 #include "../map_func.h"
 #include "../core/bitmath_func.hpp"
 #include "../fios.h"
+#include "../rail_map.h"
 #include <array>
 
 #include "../safeguards.h"
@@ -251,6 +252,9 @@ struct MAP5ChunkHandler : ChunkHandler {
 				if (IsTileType(i, MP_WATER)) {
 					SB(_m[i].m5, 6, 1, GB(_m[i].m5, 4, 1));
 					SB(_m[i].m5, 4, 1, 0);
+				}  else if (IsTileType(i, MP_RAILWAY) && GetRailTileType(i) == 3) {
+					/* Change the rail type for depots from old value 3 to new value 2. */
+					SB(_m[i].m5, 6, 2, RAIL_TILE_DEPOT);
 				}
 			}
 		}
