@@ -66,14 +66,23 @@ static inline TileIndex CalcClosestDepotTile(DepotID depot_id, TileIndex tile)
 	}
 
 	TileIndex best_tile = INVALID_TILE;
+	DepotReservation best_found_type = dep->veh_type == VEH_SHIP ? DEPOT_RESERVATION_END : DEPOT_RESERVATION_EMPTY;
 	uint best_distance = UINT_MAX;
 
 	for (std::vector<TileIndex>::const_iterator it = dep->depot_tiles.begin(); it != dep->depot_tiles.end(); ++it) {
 		TileIndex new_tile = *it;
 		uint new_distance = DistanceManhattan(new_tile, tile);
-		if (new_distance < best_distance) {
+		bool check_south_direction = dep->veh_type == VEH_ROAD;
+again:
+		DepotReservation depot_reservation = GetDepotReservation(new_tile, check_south_direction);
+		if (((best_found_type == depot_reservation) && new_distance < best_distance) || (depot_reservation < best_found_type)) {
 			best_tile = new_tile;
 			best_distance = new_distance;
+			best_found_type = depot_reservation;
+		}
+		if (check_south_direction) {
+			check_south_direction = false;
+			goto again;
 		}
 	}
 

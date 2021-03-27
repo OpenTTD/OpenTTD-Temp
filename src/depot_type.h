@@ -18,4 +18,12 @@ struct Depot;
 
 static const uint MAX_LENGTH_DEPOT_NAME_CHARS = 32; ///< The maximum length of a depot name in characters including '\0'
 
+/** Type of reservation of big ship depots. */
+enum DepotReservation {
+	DEPOT_RESERVATION_EMPTY = 0,             ///< No vehicle servicing/stopped on depot tile/platform.
+	DEPOT_RESERVATION_IN_USE = 1,            ///< At least a vehicle is in the depot, but the depot tile is not full of stopped vehicles.
+	DEPOT_RESERVATION_FULL_STOPPED_VEH = 2,  ///< The depot tile/platform is full with stopped vehicles.
+	DEPOT_RESERVATION_END
+};
+
 #endif /* DEPOT_TYPE_H */

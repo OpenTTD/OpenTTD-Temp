@@ -772,6 +772,22 @@ uint32 Vehicle::GetGRFID() const
  */
 void Vehicle::HandlePathfindingResult(bool path_found)
 {
+	if (this->dest_tile != INVALID_TILE && IsDepotTypeTile(this->dest_tile, (TransportType)this->type) && IsDepotFullWithStoppedVehicles(this->dest_tile)) {
+		/* Vehicle cannot find a free depot. */
+		/* Were we already lost? */
+		if (HasBit(this->vehicle_flags, VF_PATHFINDER_LOST)) return;
+
+		/* It is first time the problem occurred, set the "lost" flag. */
+		SetBit(this->vehicle_flags, VF_PATHFINDER_LOST);
+		/* Notify user about the event. */
+		AI::NewEvent(this->owner, new ScriptEventVehicleLost(this->index));
+		if (_settings_client.gui.lost_vehicle_warn && this->owner == _local_company) {
+			SetDParam(0, this->index);
+			AddVehicleAdviceNewsItem(STR_NEWS_VEHICLE_CANNOT_FIND_FREE_DEPOT, this->index);
+		}
+		return;
+	}
+
 	if (path_found) {
 		/* Route found, is the vehicle marked with "lost" flag? */
 		if (!HasBit(this->vehicle_flags, VF_PATHFINDER_LOST)) return;

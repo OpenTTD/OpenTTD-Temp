@@ -52,20 +52,30 @@ Depot::~Depot()
  * Of all the depot parts a depot has, return the best destination for a vehicle.
  * @param v The vehicle.
  * @param dep Depot the vehicle \a v is heading for.
- * @return The closest part of depot to vehicle v.
+ * @return The free and closest (if none is free, just closest) part of depot to vehicle v.
  */
 TileIndex Depot::GetBestDepotTile(Vehicle *v) const
 {
 	assert(this->veh_type == v->type);
 	TileIndex best_depot = INVALID_TILE;
+	DepotReservation best_found_type = DEPOT_RESERVATION_END;
 	uint best_distance = UINT_MAX;
 
 	for (std::vector<TileIndex>::const_iterator it = this->depot_tiles.begin(); it != this->depot_tiles.end(); ++it) {
 		TileIndex tile = *it;
+		bool check_south = v->type == VEH_ROAD;
 		uint new_distance = DistanceManhattan(v->tile, tile);
-		if (new_distance < best_distance) {
+again:
+		DepotReservation depot_reservation = GetDepotReservation(tile, check_south);
+		if (((best_found_type == depot_reservation) && new_distance < best_distance) || (depot_reservation < best_found_type)) {
 			best_depot = tile;
 			best_distance = new_distance;
+			best_found_type = depot_reservation;
+		}
+		if (check_south) {
+			/* For road vehicles, check north direction as well. */
+			check_south = false;
+			goto again;
 		}
 	}
 
