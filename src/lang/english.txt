@@ -4581,6 +4581,14 @@ STR_ERROR_UNABLE_TO_FIND_APPROPRIATE_DEPOT_TILE                 :{WHITE}Unable t
 
 STR_ERROR_DEPOT_TOO_SPREAD_OUT                                  :{WHITE}... depot too spread out
 STR_ERROR_DEPOT_WRONG_DEPOT_TYPE                                :Wrong depot type
+STR_ERROR_CANT_START_PLATFORM_TYPE                              :{WHITE}{VEHICLE} cannot be started because there is no compatible platform in the depot for this type of train
+STR_ERROR_CANT_START_PLATFORM_LONG                              :{WHITE}{VEHICLE} cannot be started because compatible platforms are not long enough
+STR_ERROR_DEPOT_FULL_DEPOT                                      :There is no free depot compatible with this type of vehicle
+STR_ADVICE_PLATFORM_TYPE                                        :{WHITE}{VEHICLE} cannot leave depot because there is no compatible platform for this type of train
+STR_ADVICE_PLATFORM_LONG                                        :{WHITE}{VEHICLE} cannot leave depot because compatible platforms are not long enough
+STR_ADVICE_TRAIN_HAS_NO_POWER                                   :{WHITE}{VEHICLE} cannot leave depot because it has no power in any tile of the depot
+STR_ADVICE_PLATFORM_FREE_PLATFORM                               :{WHITE}{VEHICLE} cannot leave depot because compatible platforms are occupied
+STR_ADVICE_PLATFORM_SIGNALS                                     :{WHITE}{VEHICLE} cannot leave depot because the segments of the compatible free platforms are occupied. Check the signaling of those segments.
 
 # Autoreplace related errors
 STR_ERROR_TRAIN_TOO_LONG_AFTER_REPLACEMENT                      :{WHITE}{VEHICLE} is too long after replacement

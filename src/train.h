@@ -21,6 +21,9 @@
 
 struct Train;
 
+static const byte _vehicle_initial_x_fract[4] = {10, 8, 4,  8};
+static const byte _vehicle_initial_y_fract[4] = { 8, 4, 8, 10};
+
 /** Rail vehicle flags. */
 enum VehicleRailFlags {
 	VRF_REVERSING                     = 0,
@@ -332,5 +335,6 @@ protected: // These functions should not be called outside acceleration code.
 
 bool HasCompatibleDepotTile(TileIndex tile, const Train *t);
 bool HandleTrainEnterDepot(Train *v);
+bool CheckReverseTrain(const Train *v);
 
 #endif /* TRAIN_H */

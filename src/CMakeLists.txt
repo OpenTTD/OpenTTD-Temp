@@ -441,6 +441,8 @@ add_files(
     track_type.h
     train.h
     train_cmd.cpp
+    train_placement.cpp
+    train_placement.h
     train_gui.cpp
     transparency.h
     transparency_gui.cpp

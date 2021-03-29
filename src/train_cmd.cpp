@@ -37,6 +37,7 @@
 #include "depot_base.h"
 #include "platform_func.h"
 #include "depot_map.h"
+#include "train_placement.h"
 
 #include "table/strings.h"
 #include "table/train_cmd.h"
@@ -49,9 +50,6 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse = true); // Also us
 static TileIndex TrainApproachingCrossingTile(const Train *v);
 static void CheckIfTrainNeedsService(Train *v);
 static void CheckNextTrainTile(Train *v);
-
-static const byte _vehicle_initial_x_fract[4] = {10, 8, 4,  8};
-static const byte _vehicle_initial_y_fract[4] = { 8, 4, 8, 10};
 
 template <>
 bool IsValidImageIndex<VEH_TRAIN>(uint8 image_index)
@@ -2304,7 +2302,7 @@ bool HandleTrainEnterDepot(Train *v)
 }
 
 
-static bool CheckReverseTrain(const Train *v)
+bool CheckReverseTrain(const Train *v)
 {
 	if (_settings_game.difficulty.line_reverse_mode != 0 ||
 			v->track == TRACK_BIT_DEPOT || v->track == TRACK_BIT_WORMHOLE ||
