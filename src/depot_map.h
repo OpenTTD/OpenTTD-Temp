@@ -174,4 +174,6 @@ static inline void SetDepotReservation(TileIndex t, DepotReservation reservation
 	SB(_m[t].m4, 6, 2, reservation);
 }
 
+void UpdateExtendedDepotReservation(Vehicle *v, bool state);
+
 #endif /* DEPOT_MAP_H */

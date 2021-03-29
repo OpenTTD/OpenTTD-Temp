@@ -33,7 +33,7 @@ struct Ship FINAL : public SpecializedVehicle<Ship, VEH_SHIP> {
 	/** We don't want GCC to zero our struct! It already is zeroed and has an index! */
 	Ship() : SpecializedVehicleBase() {}
 	/** We want to 'destruct' the right class. */
-	virtual ~Ship() { this->PreDestructor(); }
+	virtual ~Ship();
 
 	void MarkDirty();
 	void UpdateDeltaXY();

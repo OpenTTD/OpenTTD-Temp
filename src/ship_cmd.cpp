@@ -264,6 +264,15 @@ Trackdir Ship::GetVehicleTrackdir() const
 	return TrackDirectionToTrackdir(FindFirstTrack(this->state), this->direction);
 }
 
+Ship::~Ship()
+{
+	if (CleaningPool()) return;
+
+	if (this->IsInDepot()) SetDepotReservation(this->tile, DEPOT_RESERVATION_EMPTY);
+
+	this->PreDestructor();
+}
+
 void Ship::MarkDirty()
 {
 	this->colourmap = PAL_NONE;
@@ -346,6 +355,7 @@ void HandleShipEnterDepot(Ship *v)
 	assert(IsShipDepotTile(v->tile));
 
 	if (IsBigDepot(v->tile)) {
+		SetDepotReservation(v->tile, DEPOT_RESERVATION_IN_USE);
 		v->state |= TRACK_BIT_DEPOT;
 		v->cur_speed = 0;
 		v->UpdateCache();
@@ -374,7 +384,9 @@ static bool CheckShipLeaveDepot(Ship *v)
 	/* Don't leave depot if no destination set */
 	if (v->dest_tile == 0) return true;
 
-	if (!IsBigDepot(v->tile)) {
+	if (IsBigDepot(v->tile)) {
+		SetDepotReservation(v->tile, DEPOT_RESERVATION_EMPTY);
+	} else {
 		/* Don't leave depot if another vehicle is already entering/leaving */
 		/* This helps avoid CPU load if many ships are set to start at the same time */
 		if (HasVehicleOnPos(v->tile, nullptr, &EnsureNoMovingShipProc)) return true;

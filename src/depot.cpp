@@ -159,3 +159,33 @@ void Depot::RescanDepotTiles()
 		InvalidateWindowData(WC_BUILD_VEHICLE, this->index, 0, true);
 	}
 }
+
+/**
+ * Fix tile reservations on big depots and vehicle changes.
+ * @param v Vehicle to be revised.
+ * @param reserve Whether to reserve or free the position v is occupying.
+ */
+void UpdateExtendedDepotReservation(Vehicle *v, bool reserve)
+{
+	assert(v != nullptr);
+	assert(IsBigDepotTile(v->tile));
+	DepotReservation res_type = DEPOT_RESERVATION_EMPTY;
+
+	res_type = (v->vehstatus & VS_STOPPED) ?
+			DEPOT_RESERVATION_FULL_STOPPED_VEH : DEPOT_RESERVATION_IN_USE;
+
+	switch (v->type) {
+		case VEH_ROAD:
+			break;
+
+		case VEH_SHIP:
+			SetDepotReservation(v->tile, res_type);
+			break;
+
+		case VEH_TRAIN:
+			break;
+
+
+		default: NOT_REACHED();
+	}
+}
