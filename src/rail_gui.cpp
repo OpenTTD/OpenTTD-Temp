@@ -296,6 +296,7 @@ void CcBuildRailTunnel(const CommandCost &result, TileIndex tile, uint32 p1, uin
 static void ToggleRailButton_Remove(Window *w)
 {
 	CloseWindowById(WC_SELECT_STATION, 0);
+	CloseWindowById(WC_SELECT_DEPOT, VEH_TRAIN);
 	w->ToggleWidgetLoweredState(WID_RAT_REMOVE);
 	w->SetWidgetDirty(WID_RAT_REMOVE);
 	_remove_button_clicked = w->IsWidgetLowered(WID_RAT_REMOVE);
@@ -313,7 +314,7 @@ static bool RailToolbar_CtrlChanged(Window *w)
 
 	/* allow ctrl to switch remove mode only for these widgets */
 	for (uint i = WID_RAT_BUILD_NS; i <= WID_RAT_BUILD_STATION; i++) {
-		if ((i <= WID_RAT_AUTORAIL || i >= WID_RAT_BUILD_WAYPOINT) && w->IsWidgetLowered(i)) {
+		if ((i <= WID_RAT_AUTORAIL || i >= WID_RAT_BUILD_DEPOT) && w->IsWidgetLowered(i)) {
 			ToggleRailButton_Remove(w);
 			return true;
 		}
@@ -489,6 +490,7 @@ struct BuildRailToolbarWindow : Window {
 			case WID_RAT_BUILD_EW:
 			case WID_RAT_BUILD_Y:
 			case WID_RAT_AUTORAIL:
+			case WID_RAT_BUILD_DEPOT:
 			case WID_RAT_BUILD_WAYPOINT:
 			case WID_RAT_BUILD_STATION:
 			case WID_RAT_BUILD_SIGNALS:
@@ -647,7 +649,7 @@ struct BuildRailToolbarWindow : Window {
 
 			case WID_RAT_BUILD_DEPOT: {
 				ViewportPlaceMethod vpm = (DiagDirToAxis(_build_depot_direction) == 0) ? VPM_X_LIMITED : VPM_Y_LIMITED;
-				VpStartPlaceSizing(tile, vpm, DDSP_BUILD_DEPOT);
+				VpStartPlaceSizing(tile, vpm, _remove_button_clicked ? DDSP_REMOVE_DEPOT : DDSP_BUILD_DEPOT);
 				VpSetPlaceSizingLimit(_settings_game.station.station_spread);
 				break;
 			}
@@ -738,14 +740,17 @@ struct BuildRailToolbarWindow : Window {
 					}
 					break;
 
-				case DDSP_BUILD_DEPOT: {
+				case DDSP_BUILD_DEPOT:
+					if (_remove_button_clicked) {
+						DoCommandP(start_tile, end_tile, 0, CMD_REMOVE_TRAIN_DEPOT | CMD_MSG(STR_ERROR_CAN_T_REMOVE_TRAIN_DEPOT), CcPlaySound_CONSTRUCTION_RAIL);
+					} else {
 						CommandContainer cmdcont = { start_tile, (uint32)(_cur_railtype | (_build_depot_direction << 6) |
 								(_ctrl_pressed << 8) | (INVALID_DEPOT << 16)),
 								end_tile, CMD_BUILD_TRAIN_DEPOT | CMD_MSG(STR_ERROR_CAN_T_BUILD_TRAIN_DEPOT), CcRailDepot, "" };
 
 						ShowSelectDepotIfNeeded(cmdcont, TileArea(start_tile, end_tile), VEH_TRAIN);
+					}
 					break;
-				}
 			}
 		}
 	}
@@ -777,8 +782,11 @@ struct BuildRailToolbarWindow : Window {
 
 	EventState OnCTRLStateChange() override
 	{
-		/* do not toggle Remove button by Ctrl when placing station */
-		if (!this->IsWidgetLowered(WID_RAT_BUILD_STATION) && !this->IsWidgetLowered(WID_RAT_BUILD_WAYPOINT) && RailToolbar_CtrlChanged(this)) return ES_HANDLED;
+		/* do not toggle Remove button by Ctrl when placing station or depot */
+		if (!this->IsWidgetLowered(WID_RAT_BUILD_STATION) &&
+			!this->IsWidgetLowered(WID_RAT_BUILD_WAYPOINT) &&
+			!this->IsWidgetLowered(WID_RAT_BUILD_DEPOT) &&
+			RailToolbar_CtrlChanged(this)) return ES_HANDLED;
 		return ES_NOT_HANDLED;
 	}
 

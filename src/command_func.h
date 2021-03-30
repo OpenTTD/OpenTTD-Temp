@@ -100,6 +100,7 @@ CommandCallback CcTerraform;
 /* rail_gui.cpp */
 CommandCallback CcPlaySound_CONSTRUCTION_RAIL;
 CommandCallback CcRailDepot;
+CommandCallback CcRemoveRailDepot;
 CommandCallback CcStation;
 CommandCallback CcBuildRailTunnel;
 
