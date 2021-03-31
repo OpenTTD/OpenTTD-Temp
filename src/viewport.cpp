@@ -2613,6 +2613,9 @@ void UpdateTileSelection()
 			}
 			_thd.new_pos.x = x1 & ~TILE_UNIT_MASK;
 			_thd.new_pos.y = y1 & ~TILE_UNIT_MASK;
+			if (_thd.select_method == VPM_FIX_Y_LIMITED_X) _thd.new_size.y = (TILE_SIZE * _thd.fixed_size) & ~TILE_UNIT_MASK;
+			if (_thd.select_method == VPM_FIX_X_LIMITED_Y) _thd.new_size.x = (TILE_SIZE * _thd.fixed_size) & ~TILE_UNIT_MASK;
+
 		}
 	}
 
@@ -2705,6 +2708,15 @@ void VpStartDragging(ViewportDragDropSelectionProcess process)
 void VpSetPlaceSizingLimit(int limit)
 {
 	_thd.sizelimit = limit;
+}
+
+void VpSetPlaceFixedSize(byte fixed)
+{
+	_thd.fixed_size = fixed;
+}
+
+void VpResetFixedSize() {
+	VpSetPlaceFixedSize(1);
 }
 
 /**
@@ -3182,28 +3194,33 @@ void VpSelectTilesWithMethod(int x, int y, ViewportPlaceMethod method)
 			}
 			goto calc_heightdiff_single_direction;
 
+		case VPM_FIX_X_LIMITED_Y:
 		case VPM_X_LIMITED: // Drag in X direction (limited size).
 			limit = (_thd.sizelimit - 1) * TILE_SIZE;
 			FALLTHROUGH;
 
 		case VPM_FIX_X: // drag in Y direction
-			x = sx;
+			x = sx + (method == VPM_FIX_X_LIMITED_Y ? (TILE_SIZE * (_thd.fixed_size - 1)) : 0) ;
 			style = HT_DIR_Y;
 			goto calc_heightdiff_single_direction;
 
+		case VPM_FIX_Y_LIMITED_X:
 		case VPM_Y_LIMITED: // Drag in Y direction (limited size).
 			limit = (_thd.sizelimit - 1) * TILE_SIZE;
 			FALLTHROUGH;
 
 		case VPM_FIX_Y: // drag in X direction
-			y = sy;
+			y = sy + (method == VPM_FIX_Y_LIMITED_X ? (TILE_SIZE * (_thd.fixed_size - 1)) : 0) ;
 			style = HT_DIR_X;
 
 calc_heightdiff_single_direction:;
 			if (limit > 0) {
-				x = sx + Clamp(x - sx, -limit, limit);
-				y = sy + Clamp(y - sy, -limit, limit);
+				if (method != VPM_FIX_Y_LIMITED_X) y = sy + Clamp(y - sy, -limit, limit);
+				if (method != VPM_FIX_X_LIMITED_Y) x = sx + Clamp(x - sx, -limit, limit);
 			}
+
+			if (method == VPM_FIX_X_LIMITED_Y || method == VPM_FIX_Y_LIMITED_X) goto measure_area;
+
 			if (_settings_client.gui.measure_tooltip) {
 				TileIndex t0 = TileVirtXY(sx, sy);
 				TileIndex t1 = TileVirtXY(x, y);
@@ -3234,6 +3251,7 @@ calc_heightdiff_single_direction:;
 			FALLTHROUGH;
 
 		case VPM_X_AND_Y: // drag an X by Y area
+measure_area:
 			if (_settings_client.gui.measure_tooltip) {
 				static const StringID measure_strings_area[] = {
 					STR_NULL, STR_NULL, STR_MEASURE_AREA, STR_MEASURE_AREA_HEIGHTDIFF

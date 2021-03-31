@@ -26,6 +26,8 @@ void VpStartDragging(ViewportDragDropSelectionProcess process);
 void VpStartPlaceSizing(TileIndex tile, ViewportPlaceMethod method, ViewportDragDropSelectionProcess process);
 void VpSetPresizeRange(TileIndex from, TileIndex to);
 void VpSetPlaceSizingLimit(int limit);
+void VpSetPlaceFixedSize(byte fixed_size);
+void VpResetFixedSize();
 
 void UpdateTileSelection();
 

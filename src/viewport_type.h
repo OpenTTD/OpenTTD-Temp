@@ -103,6 +103,8 @@ enum ViewportPlaceMethod {
 	VPM_FIX_VERTICAL    =    6, ///< drag only in vertical direction
 	VPM_X_LIMITED       =    7, ///< Drag only in X axis with limited size
 	VPM_Y_LIMITED       =    8, ///< Drag only in Y axis with limited size
+	VPM_FIX_X_LIMITED_Y =    9, ///< Drag only in X axis with limited size and fixed y
+	VPM_FIX_Y_LIMITED_X =   10, ///< Drag only in Y axis with limited size and fixed x
 	VPM_RAILDIRS        = 0x40, ///< all rail directions
 	VPM_SIGNALDIRS      = 0x80, ///< similar to VMP_RAILDIRS, but with different cursor
 };
