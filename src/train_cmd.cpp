@@ -1019,6 +1019,83 @@ static CommandCost CheckNewTrain(Train *original_dst, Train *dst, Train *origina
 }
 
 /**
+ * Check if a train can be placed in a depot tile.
+ * @param train The train.
+ * @param tile The tile to check whether it is possible to place the train.
+ * @return whether it found a depot tile to place the train.
+ */
+bool CheckPlacement(const Train *train, TileIndex tile)
+{
+	assert(train != nullptr);
+	assert(IsRailDepotTile(tile));
+
+	RailType rt = GetRailType(tile);
+	for (const Train *t = train; t != nullptr; t = t->Next()) {
+		RailType rail_type = Engine::Get(t->engine_type)->u.rail.railtype;
+		if (!IsCompatibleRail(rail_type, rt)) return false;
+	}
+
+	return true;
+}
+
+/**
+ * Before placing a train in the rails of a depot, a valid depot tile must
+ * be found. This function finds a tile for placing the train.
+ * @param t The train to place in a rail depot tile.
+ * @return a compatible tile, if any, preferabily the one the first vehicle is or INVALID_TILE if none found.
+ */
+TileIndex LookForTileInDepot(const Train *train)
+{
+	assert(train != nullptr);
+	assert(IsRailDepotTile(train->tile));
+	TileIndex best_tile = INVALID_TILE;
+
+	/* First candidate is the original position of the train. */
+	if (CheckPlacement(train, train->tile)) {
+		if (HasPowerOnRail(train->railtype, GetRailType(train->tile))) return train->tile;
+		best_tile = train->tile;
+	}
+
+	/* Check all depot tiles. */
+	Depot *depot = Depot::GetByTile(train->tile);
+	for (std::vector<TileIndex>::iterator it = depot->depot_tiles.begin(); it != depot->depot_tiles.end(); ++it) {
+		if (CheckPlacement(train, *it)) {
+			if (HasPowerOnRail(train->railtype, GetRailType(*it))) return *it;
+			if (best_tile == INVALID_TILE) best_tile = *it;
+		}
+	}
+
+	return best_tile;
+}
+
+/**
+ * Find an appropriate depot tile for a train and place
+ * all the vehicle chain in the same depot tile.
+ * @param train The train to place.
+ */
+void PlaceOnRailDepot(Train *train)
+{
+	assert(train->First() == train);
+	TileIndex depot_tile = LookForTileInDepot(train);
+
+	if (depot_tile == INVALID_TILE) NOT_REACHED();
+
+	DiagDirection diag_dir = GetRailDepotDirection(depot_tile);
+	int x = TileX(depot_tile) * TILE_SIZE + _vehicle_initial_x_fract[diag_dir];
+	int y = TileY(depot_tile) * TILE_SIZE + _vehicle_initial_y_fract[diag_dir];
+	for (Train *t = train; t != nullptr; t = t->Next()) {
+		t->tile = depot_tile;
+		t->direction = DiagDirToDir(diag_dir);
+		t->vehstatus |= VS_HIDDEN;
+		t->track = TRACK_BIT_DEPOT;
+		t->x_pos = x;
+		t->y_pos = y;
+		t->z_pos = GetSlopePixelZ(x, y);
+		t->UpdatePosition();
+	}
+}
+
+/**
  * Check whether the train parts can be attached.
  * @param t the train to check
  * @return possible error of this command.
@@ -1027,6 +1104,8 @@ static CommandCost CheckTrainAttachment(Train *t)
 {
 	/* No multi-part train, no need to check. */
 	if (t == nullptr || t->Next() == nullptr) return CommandCost();
+
+	if (LookForTileInDepot(t) == INVALID_TILE) return_cmd_error(STR_ERROR_INCOMPATIBLE_RAILTYPES_WITH_DEPOT);
 
 	/* The maximum length for a train. For each part we decrease this by one
 	 * and if the result is negative the train is simply too long. */
@@ -1394,8 +1473,15 @@ CommandCost CmdMoveRailVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 			CheckCargoCapacity(dst_head);
 		}
 
-		if (src_head != nullptr) src_head->First()->MarkDirty();
-		if (dst_head != nullptr) dst_head->First()->MarkDirty();
+		if (src_head != nullptr) {
+			PlaceOnRailDepot(src_head->First());
+			src_head->First()->MarkDirty();
+		}
+
+		if (dst_head != nullptr) {
+			PlaceOnRailDepot(dst_head->First());
+			dst_head->First()->MarkDirty();
+		}
 
 		/* We are undoubtedly changing something in the depot and train list. */
 		InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(src->tile));
