@@ -95,7 +95,8 @@ static void MarkCanalsAndRiversAroundDirty(TileIndex tile)
  * @param flags type of operation
  * @param p1 bit 0     : depot orientation (Axis)
  *           bit 1     : allow adjacent depots
- *           bits  2-15: unused
+ *           bit 2     : 0 for normal depots, 1 for big depots
+ *           bits  3-15: unused
  *           bits 16-31: DepotID to join to.
  * @param p2 end_tile
  * @param text unused
@@ -105,7 +106,12 @@ CommandCost CmdBuildShipDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, ui
 {
 	Axis axis = Extract<Axis, 0, 1>(p1);
 	bool adjacent = HasBit(p1, 1);
+	bool build_big_depot = HasBit(p1, 2);
 	DepotID join_to = GB(p1, 16, 16);
+
+	if (Company::IsValidHumanID(_current_company) && !HasBit(_settings_game.depot.water_depot_types, build_big_depot)) {
+		return_cmd_error(STR_ERROR_DEPOT_TYPE_NOT_AVAILABLE);
+	}
 
 	TileArea complete_area(tile, p2);
 	assert(complete_area.w == 2 || complete_area.h == 2);
@@ -146,7 +152,7 @@ CommandCost CmdBuildShipDepot(TileIndex tile, DoCommandFlag flags, uint32 p1, ui
 				Company::Get(_current_company)->infrastructure.water++;
 			}
 			DepotPart dp = northern_tiles.Contains(t) ? DEPOT_PART_NORTH : DEPOT_PART_SOUTH;
-			MakeShipDepot(t,  _current_company, depot->index, dp, axis, wc);
+			MakeShipDepot(t,  _current_company, depot->index, build_big_depot, dp, axis, wc);
 			CheckForDockingTile(t);
 			MarkTileDirtyByTile(t);
 		}
@@ -976,7 +982,7 @@ static void GetTileDesc_Water(TileIndex tile, TileDesc *td)
 		case WATER_TILE_COAST: td->str = STR_LAI_WATER_DESCRIPTION_COAST_OR_RIVERBANK; break;
 		case WATER_TILE_LOCK : td->str = STR_LAI_WATER_DESCRIPTION_LOCK;               break;
 		case WATER_TILE_DEPOT:
-			td->str = STR_LAI_WATER_DESCRIPTION_SHIP_DEPOT;
+			td->str = IsBigDepot(tile) ? STR_LAI_WATER_DESCRIPTION_SHIP_DEPOT_EXTENDED : STR_LAI_WATER_DESCRIPTION_SHIP_DEPOT;
 			td->build_date = Depot::GetByTile(tile)->build_date;
 			break;
 		default: NOT_REACHED();

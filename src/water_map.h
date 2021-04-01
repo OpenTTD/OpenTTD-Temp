@@ -24,6 +24,8 @@ enum WaterTileTypeBitLayout {
 	WBL_TYPE_LOCK         = 0x1, ///< Lock ('type' bitfield).
 	WBL_TYPE_DEPOT        = 0x2, ///< Depot ('type' bitfield).
 
+	WBL_DEPOT_BIG         = 5,   ///< Bit for the big/small depot flag.
+
 	WBL_COAST_FLAG        = 0,   ///< Flag for coast.
 
 	WBL_LOCK_ORIENT_BEGIN = 0,   ///< Start of lock orientation bitfield.
@@ -237,6 +239,29 @@ static inline bool IsShipDepot(TileIndex t)
 static inline bool IsShipDepotTile(TileIndex t)
 {
 	return IsTileType(t, MP_WATER) && IsShipDepot(t);
+}
+
+/**
+ * Is it a water tile with a big ship depot on it?
+ * @param t Water tile to query.
+ * @return \c true if it is a big ship depot tile.
+ * @pre IsShipDepotTile
+ */
+static inline bool IsBigShipDepot(TileIndex t)
+{
+	assert(IsTileType(t, MP_WATER));
+	assert(IsShipDepot(t));
+	return HasBit(_m[t].m5, WBL_DEPOT_BIG);
+}
+
+/**
+ * Is it a water tile with a big ship depot on it?
+ * @param t Water tile to query.
+ * @return \c true if it is a big ship depot tile.
+ */
+static inline bool IsBigShipDepotTile(TileIndex t)
+{
+	return IsWaterTile(t) && IsShipDepot(t) && IsBigShipDepot(t);
 }
 
 /**
@@ -455,11 +480,12 @@ static inline void MakeCanal(TileIndex t, Owner o, uint8 random_bits)
  * @param t    Tile to place the ship depot section.
  * @param o    Owner of the depot.
  * @param did  Depot ID.
+ * @param big  True if building a big depot.
  * @param part Depot part (either #DEPOT_PART_NORTH or #DEPOT_PART_SOUTH).
  * @param a    Axis of the depot.
  * @param original_water_class Original water class.
  */
-static inline void MakeShipDepot(TileIndex t, Owner o, DepotID did, DepotPart part, Axis a, WaterClass original_water_class)
+static inline void MakeShipDepot(TileIndex t, Owner o, DepotID did, bool big, DepotPart part, Axis a, WaterClass original_water_class)
 {
 	SetTileType(t, MP_WATER);
 	SetTileOwner(t, o);
@@ -468,7 +494,7 @@ static inline void MakeShipDepot(TileIndex t, Owner o, DepotID did, DepotPart pa
 	_m[t].m2 = did;
 	_m[t].m3 = 0;
 	_m[t].m4 = 0;
-	_m[t].m5 = WBL_TYPE_DEPOT << WBL_TYPE_BEGIN | part << WBL_DEPOT_PART | a << WBL_DEPOT_AXIS;
+	_m[t].m5 = WBL_TYPE_DEPOT << WBL_TYPE_BEGIN | big << WBL_DEPOT_BIG | part << WBL_DEPOT_PART | a << WBL_DEPOT_AXIS;
 	SB(_me[t].m6, 2, 4, 0);
 	_me[t].m7 = 0;
 }
