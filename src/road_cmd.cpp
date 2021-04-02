@@ -1467,11 +1467,21 @@ void DrawRoadCatenary(const TileInfo *ti)
 	RoadBits tram = ROAD_NONE;
 
 	if (IsTileType(ti->tile, MP_ROAD)) {
-		if (IsNormalRoad(ti->tile)) {
-			road = GetRoadBits(ti->tile, RTT_ROAD);
-			tram = GetRoadBits(ti->tile, RTT_TRAM);
-		} else if (IsLevelCrossing(ti->tile)) {
-			tram = road = (GetCrossingRailAxis(ti->tile) == AXIS_Y ? ROAD_X : ROAD_Y);
+		switch (GetRoadTileType(ti->tile)) {
+			case ROAD_TILE_NORMAL:
+				road = GetRoadBits(ti->tile, RTT_ROAD);
+				tram = GetRoadBits(ti->tile, RTT_TRAM);
+				break;
+			case ROAD_TILE_CROSSING:
+				tram = road = (GetCrossingRailAxis(ti->tile) == AXIS_Y ? ROAD_X : ROAD_Y);
+				break;
+			case ROAD_TILE_DEPOT: {
+				DiagDirection dir = GetRoadDepotDirection(ti->tile);
+				road = DiagDirToRoadBits(dir);
+				tram = DiagDirToRoadBits(dir);
+				break;
+			}
+			default: NOT_REACHED();
 		}
 	} else if (IsTileType(ti->tile, MP_STATION)) {
 		if (IsRoadStop(ti->tile)) {
@@ -1761,17 +1771,28 @@ static void DrawTile_Road(TileInfo *ti)
 		case ROAD_TILE_DEPOT: {
 			if (ti->tileh != SLOPE_FLAT) DrawFoundation(ti, FOUNDATION_LEVELED);
 
-			PaletteID palette = COMPANY_SPRITE_COLOUR(GetTileOwner(ti->tile));
-
 			RoadType road_rt = GetRoadTypeRoad(ti->tile);
 			RoadType tram_rt = GetRoadTypeTram(ti->tile);
-			const RoadTypeInfo *rti = GetRoadTypeInfo(road_rt == INVALID_ROADTYPE ? tram_rt : road_rt);
+			assert(road_rt != INVALID_ROADTYPE || tram_rt != INVALID_ROADTYPE);
+			const RoadTypeInfo *road_rti = road_rt != INVALID_ROADTYPE ? GetRoadTypeInfo(road_rt) : nullptr;
+			const RoadTypeInfo *tram_rti = tram_rt != INVALID_ROADTYPE ? GetRoadTypeInfo(tram_rt) : nullptr;
+			const RoadTypeInfo *main_rti = tram_rti != nullptr ? tram_rti : road_rti;
 
-			int relocation = GetCustomRoadSprite(rti, ti->tile, ROTSG_DEPOT);
+			DiagDirection dir = GetRoadDepotDirection(ti->tile);
+			uint road_offset = GetRoadSpriteOffset(SLOPE_FLAT, DiagDirToRoadBits(dir));
+			uint tram_offset = GetRoadSpriteOffset(SLOPE_FLAT, DiagDirToRoadBits(dir));
+
+
+			PaletteID pal = PAL_NONE;
+			const DrawTileSprites *dts = &_road_depot[dir];
+			DrawGroundSprite(dts->ground.sprite, pal);
+			DrawRoadOverlays(ti, pal, road_rti, tram_rti, road_offset, tram_offset);
+
+			int relocation = GetCustomRoadSprite(main_rti, ti->tile, ROTSG_DEPOT);
 			bool default_gfx = relocation == 0;
 			if (default_gfx) {
-				if (HasBit(rti->flags, ROTF_CATENARY)) {
-					if (_loaded_newgrf_features.tram == TRAMWAY_REPLACE_DEPOT_WITH_TRACK && road_rt == INVALID_ROADTYPE && !rti->UsesOverlay()) {
+				if (HasBit(main_rti->flags, ROTF_CATENARY)) {
+					if (_loaded_newgrf_features.tram == TRAMWAY_REPLACE_DEPOT_WITH_TRACK && road_rt == INVALID_ROADTYPE && !main_rti->UsesOverlay()) {
 						/* Sprites with track only work for default tram */
 						relocation = SPR_TRAMWAY_DEPOT_WITH_TRACK - SPR_ROAD_DEPOT;
 						default_gfx = false;
@@ -1784,21 +1805,11 @@ static void DrawTile_Road(TileInfo *ti)
 				relocation -= SPR_ROAD_DEPOT;
 			}
 
-			DiagDirection dir = GetRoadDepotDirection(ti->tile);
-			const DrawTileSprites *dts = &_road_depot[dir];
-			DrawGroundSprite(dts->ground.sprite, PAL_NONE);
+			/* Draw road, tram catenary */
+			DrawRoadCatenary(ti);
 
-			if (default_gfx) {
-				uint offset = GetRoadSpriteOffset(SLOPE_FLAT, DiagDirToRoadBits(dir));
-				if (rti->UsesOverlay()) {
-					SpriteID ground = GetCustomRoadSprite(rti, ti->tile, ROTSG_OVERLAY);
-					if (ground != 0) DrawGroundSprite(ground + offset, PAL_NONE);
-				} else if (road_rt == INVALID_ROADTYPE) {
-					DrawGroundSprite(SPR_TRAMWAY_OVERLAY + offset, PAL_NONE);
-				}
-			}
+			DrawRailTileSeq(ti, dts, TO_BUILDINGS, relocation, 0, COMPANY_SPRITE_COLOUR(GetTileOwner(ti->tile)));
 
-			DrawRailTileSeq(ti, dts, TO_BUILDINGS, relocation, 0, palette);
 			break;
 		}
 	}
@@ -1816,7 +1827,9 @@ void DrawRoadDepotSprite(int x, int y, DiagDirection dir, RoadType rt)
 {
 	PaletteID palette = COMPANY_SPRITE_COLOUR(_local_company);
 
+	RoadTramType rtt = GetRoadTramType(rt);
 	const RoadTypeInfo* rti = GetRoadTypeInfo(rt);
+	uint road_offset = GetRoadSpriteOffset(SLOPE_FLAT, DiagDirToRoadBits(dir));
 	int relocation = GetCustomRoadSprite(rti, INVALID_TILE, ROTSG_DEPOT);
 	bool default_gfx = relocation == 0;
 	if (default_gfx) {
@@ -1836,6 +1849,16 @@ void DrawRoadDepotSprite(int x, int y, DiagDirection dir, RoadType rt)
 
 	const DrawTileSprites *dts = &_road_depot[dir];
 	DrawSprite(dts->ground.sprite, PAL_NONE, x, y);
+
+	if (rti->UsesOverlay()) {
+		SpriteID ground = GetCustomRoadSprite(rti, INVALID_TILE, ROTSG_GROUND);
+		DrawSprite(ground + road_offset, PAL_NONE, x, y);
+		ground = GetCustomRoadSprite(rti, INVALID_TILE, ROTSG_OVERLAY);
+		if (ground != 0) DrawSprite(ground + road_offset, PAL_NONE, x, y);
+	} else if (rtt == RTT_TRAM) {
+		DrawSprite(SPR_TRAMWAY_TRAM + road_offset, PAL_NONE, x, y);
+		DrawSprite(SPR_TRAMWAY_OVERLAY + road_offset, PAL_NONE, x, y);
+	}
 
 	if (default_gfx) {
 		uint offset = GetRoadSpriteOffset(SLOPE_FLAT, DiagDirToRoadBits(dir));
