@@ -526,9 +526,20 @@ static CommandCost RemoveRoad(TileIndex tile, DoCommandFlag flags, RoadBits piec
 			return CommandCost(EXPENSES_CONSTRUCTION, RoadClearCost(existing_rt) * 2);
 		}
 
-		default:
-		case ROAD_TILE_DEPOT:
-			return CMD_ERROR;
+		case ROAD_TILE_DEPOT: {
+			if (!HasRoadTypeRoad(tile) || !HasRoadTypeTram(tile)) return CMD_ERROR;
+			if (flags & DC_EXEC) {
+				Company *c = Company::GetIfValid(GetTileOwner(tile));
+				c->infrastructure.road[GetRoadType(tile, rtt)] -= ROAD_DEPOT_TRACKBIT_FACTOR;
+				DirtyCompanyInfrastructureWindows(c->index);
+				SetRoadType(tile, rtt, INVALID_ROADTYPE);
+				Depot::GetByTile(tile)->AfterAddRemove(TileArea(tile), false);
+				MarkTileDirtyByTile(tile);
+			}
+			return CommandCost(EXPENSES_CONSTRUCTION, _price[PR_CLEAR_DEPOT_ROAD]);
+		}
+
+		default: NOT_REACHED();
 	}
 }
 
@@ -721,7 +732,16 @@ CommandCost CmdBuildRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 					break;
 
 				case ROAD_TILE_DEPOT:
-					if ((GetAnyRoadBits(tile, rtt) & pieces) == pieces) return_cmd_error(STR_ERROR_ALREADY_BUILT);
+					if (DiagDirToRoadBits(GetRoadDepotDirection(tile)) == pieces) {
+						/* Check if we can add a new road/tram type if none present. */
+						if (HasTileRoadType(tile, rtt)) {
+							return_cmd_error(STR_ERROR_ALREADY_BUILT);
+						}
+						/* We may add a new road type. */
+						cost.AddCost(_price[PR_BUILD_DEPOT_ROAD]);
+						break;
+					}
+
 					goto do_clear;
 
 				default: NOT_REACHED();
@@ -889,7 +909,12 @@ do_clear:;
 		switch (GetTileType(tile)) {
 			case MP_ROAD: {
 				RoadTileType rttype = GetRoadTileType(tile);
-				if (existing == ROAD_NONE || rttype == ROAD_TILE_CROSSING) {
+				if (rttype == ROAD_TILE_DEPOT) {
+					SetRoadType(tile, rtt, rt);
+					UpdateCompanyRoadInfrastructure(rt, _current_company, ROAD_DEPOT_TRACKBIT_FACTOR);
+					Depot::GetByTile(tile)->AfterAddRemove(TileArea(tile), true);
+					break;
+				} else if (existing == ROAD_NONE || rttype == ROAD_TILE_CROSSING) {
 					SetRoadType(tile, rtt, rt);
 					SetRoadOwner(tile, rtt, company);
 					if (rtt == RTT_ROAD) SetTownIndex(tile, p2);
@@ -1226,14 +1251,19 @@ static CommandCost RemoveRoadDepot(TileIndex tile, DoCommandFlag flags)
 	CommandCost ret = EnsureNoVehicleOnGround(tile);
 	if (ret.Failed()) return ret;
 
+	CommandCost cost(EXPENSES_CONSTRUCTION, _price[PR_CLEAR_DEPOT_ROAD]);
+	RoadType rt = GetRoadTypeRoad(tile);
+	RoadType tt = GetRoadTypeTram(tile);
+	if (rt != INVALID_ROADTYPE && tt != INVALID_ROADTYPE) cost.AddCost(_price[PR_CLEAR_DEPOT_ROAD]);
+
 	if (flags & DC_EXEC) {
 		Depot *depot = Depot::GetByTile(tile);
 		Company *c = Company::GetIfValid(depot->company);
 		if (c != nullptr) {
 			/* A road depot has two road bits. */
 			RoadType rt = GetRoadTypeRoad(tile);
-			if (rt == INVALID_ROADTYPE) rt = GetRoadTypeTram(tile);
-			c->infrastructure.road[rt] -= ROAD_DEPOT_TRACKBIT_FACTOR;
+			if (rt != INVALID_ROADTYPE) c->infrastructure.road[rt] -= ROAD_DEPOT_TRACKBIT_FACTOR;
+			if (tt != INVALID_ROADTYPE) c->infrastructure.road[tt] -= ROAD_DEPOT_TRACKBIT_FACTOR;
 			DirtyCompanyInfrastructureWindows(c->index);
 		}
 
@@ -1241,7 +1271,7 @@ static CommandCost RemoveRoadDepot(TileIndex tile, DoCommandFlag flags)
 		depot->AfterAddRemove(TileArea(tile), false);
 	}
 
-	return CommandCost(EXPENSES_CONSTRUCTION, _price[PR_CLEAR_DEPOT_ROAD]);
+	return cost;
 }
 
 static CommandCost ClearTile_Road(TileIndex tile, DoCommandFlag flags)
