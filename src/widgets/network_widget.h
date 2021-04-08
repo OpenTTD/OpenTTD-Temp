@@ -124,4 +124,5 @@ enum NetworkCompanyPasswordWidgets {
 	WID_NCP_OK,                       ///< Safe the password etc.
 };
 
+
 #endif /* WIDGETS_NETWORK_WIDGET_H */

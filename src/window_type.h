@@ -491,6 +491,12 @@ enum WindowClass {
 	WC_SEND_NETWORK_MSG,
 
 	/**
+	 * Outside player request to join; %Window numbers:
+	 *   - 0 = #SocialJoinRequestWidgets
+	 */
+	WC_SOCIAL_JOIN_REQUEST,
+
+	/**
 	 * Company password query; %Window numbers:
 	 *   - 0 = #NetworkCompanyPasswordWidgets
 	 */

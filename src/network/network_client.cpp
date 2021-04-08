@@ -28,6 +28,7 @@
 #include "network_client.h"
 #include "../core/backup_type.hpp"
 #include "../thread.h"
+#include "social_presence.h"
 
 #include "table/strings.h"
 
@@ -889,6 +890,8 @@ NetworkRecvStatus ClientNetworkGameSocketHandler::Receive_SERVER_MAP_DONE(Packet
 
 	/* Say we received the map and loaded it correctly! */
 	SendMapOk();
+
+	SocialCompleteEnterMultiplayer();
 
 	/* New company/spectator (invalid company) or company we want to join is not active
 	 * Switch local company to spectator and await the server's judgement */

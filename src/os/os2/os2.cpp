@@ -17,6 +17,7 @@
 #include "../../string_func.h"
 #include "../../textbuf_gui.h"
 #include "../../thread.h"
+#include "../../network/social_plugin_api.h"
 
 #include "table/strings.h"
 
@@ -211,4 +212,9 @@ void OSOpenBrowser(const char *url)
 
 void SetCurrentThreadName(const char *)
 {
+}
+
+OpenTTD_SocialPluginInit SocialLoadPlugin()
+{
+	return nullptr;
 }

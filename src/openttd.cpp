@@ -65,6 +65,7 @@
 #include "viewport_sprite_sorter.h"
 #include "framerate_type.h"
 #include "industry.h"
+#include "network/social_presence.h"
 
 #include "linkgraph/linkgraphschedule.h"
 
@@ -305,6 +306,8 @@ static void ShutdownGame()
 {
 	IConsoleFree();
 
+	SocialShutdown();
+
 	if (_network_available) NetworkShutDown(); // Shut down the network and close any open connections
 
 	DriverFactoryBase::ShutdownDrivers();
@@ -397,8 +400,7 @@ void OpenBrowser(const char *url)
 	/* Make sure we only accept urls that are sure to open a browser. */
 	if (strstr(url, "http://") != url && strstr(url, "https://") != url) return;
 
-	extern void OSOpenBrowser(const char *url);
-	OSOpenBrowser(url);
+	SocialOpenBrowser(url);
 }
 
 /** Callback structure of statements to be executed after the NewGRF scan. */
@@ -828,6 +830,7 @@ int openttd_main(int argc, char *argv[])
 
 	GenerateWorld(GWM_EMPTY, 64, 64); // Make the viewport initialization happy
 	LoadIntroGame(false);
+	SocialStartup();
 
 	CheckForMissingGlyphs();
 
@@ -1027,6 +1030,7 @@ void SwitchToMode(SwitchMode new_mode)
 
 	switch (new_mode) {
 		case SM_EDITOR: // Switch to scenario editor
+			SocialExitGameplay();
 			MakeNewEditorWorld();
 			break;
 
@@ -1052,6 +1056,7 @@ void SwitchToMode(SwitchMode new_mode)
 				seprintf(_network_game_info.map_name, lastof(_network_game_info.map_name), "Random Map");
 			}
 			MakeNewGame(false, new_mode == SM_NEWGAME);
+			if (!_networking) SocialEnterSingleplayer();
 			break;
 
 		case SM_LOAD_GAME: { // Load game, Play Scenario
@@ -1066,6 +1071,7 @@ void SwitchToMode(SwitchMode new_mode)
 					/* Reset engine pool to simplify changing engine NewGRFs in scenario editor. */
 					EngineOverrideManager::ResetToCurrentNewGRFConfig();
 				}
+				if (!_networking) SocialEnterSingleplayer();
 				/* Update the local company for a loaded game. It is either always
 				 * company #1 (eg 0) or in the case of a dedicated server a spectator */
 				SetLocalCompany(_network_dedicated ? COMPANY_SPECTATOR : COMPANY_FIRST);
@@ -1086,9 +1092,11 @@ void SwitchToMode(SwitchMode new_mode)
 				seprintf(_network_game_info.map_name, lastof(_network_game_info.map_name), "%s (Heightmap)", _file_to_saveload.title);
 			}
 			MakeNewGame(true, new_mode == SM_START_HEIGHTMAP);
+			if (!_networking) SocialEnterSingleplayer();
 			break;
 
 		case SM_LOAD_HEIGHTMAP: // Load heightmap from scenario editor
+			SocialExitGameplay();
 			SetLocalCompany(OWNER_NONE);
 
 			GenerateWorld(GWM_HEIGHTMAP, 1 << _settings_game.game_creation.map_x, 1 << _settings_game.game_creation.map_y);
@@ -1097,6 +1105,7 @@ void SwitchToMode(SwitchMode new_mode)
 
 		case SM_LOAD_SCENARIO: { // Load scenario from scenario editor
 			if (SafeLoad(_file_to_saveload.name, _file_to_saveload.file_op, _file_to_saveload.detail_ftype, GM_EDITOR, NO_DIRECTORY)) {
+				SocialExitGameplay();
 				SetLocalCompany(OWNER_NONE);
 				_settings_newgame.game_creation.starting_year = _cur_year;
 				/* Cancel the saveload pausing */
@@ -1110,6 +1119,7 @@ void SwitchToMode(SwitchMode new_mode)
 
 		case SM_MENU: // Switch to game intro menu
 			LoadIntroGame();
+			SocialExitGameplay();
 			if (BaseSounds::ini_set.empty() && BaseSounds::GetUsedSet()->fallback && SoundDriver::GetInstance()->HasOutput()) {
 				ShowErrorMessage(STR_WARNING_FALLBACK_SOUNDSET, INVALID_STRING_ID, WL_CRITICAL);
 				BaseSounds::ini_set = BaseSounds::GetUsedSet()->name;
@@ -1474,6 +1484,8 @@ void GameLoop()
 	}
 
 	ProcessAsyncSaveFinish();
+
+	SocialEventLoop();
 
 	/* autosave game? */
 	if (_do_autosave) {

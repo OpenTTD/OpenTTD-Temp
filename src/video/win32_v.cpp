@@ -22,6 +22,7 @@
 #include "../window_gui.h"
 #include "../window_func.h"
 #include "../framerate_type.h"
+#include "../network/social_presence.h"
 #include "win32_v.h"
 #include <windows.h>
 #include <imm.h>

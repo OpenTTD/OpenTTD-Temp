@@ -16,6 +16,7 @@
 #include "../../string_func.h"
 #include "../../fios.h"
 #include "../../thread.h"
+#include "../../network/social_plugin_api.h"
 
 
 #include <dirent.h>
@@ -320,4 +321,9 @@ void SetCurrentThreadName(const char *threadName) {
 #if defined(__APPLE__)
 	MacOSSetThreadName(threadName);
 #endif /* defined(__APPLE__) */
+}
+
+OpenTTD_SocialPluginInit SocialLoadPlugin()
+{
+	return nullptr;
 }

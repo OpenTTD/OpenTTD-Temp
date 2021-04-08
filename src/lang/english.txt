@@ -2279,6 +2279,15 @@ STR_NETWORK_MESSAGE_SERVER_SHUTDOWN                             :{WHITE}The serv
 STR_NETWORK_MESSAGE_SERVER_REBOOT                               :{WHITE}The server is restarting...{}Please wait...
 STR_NETWORK_MESSAGE_KICKED                                      :*** {RAW_STRING} was kicked. Reason: ({RAW_STRING})
 
+# Social presence related messages
+STR_SOCIAL_ERROR_CANNOT_JOIN                                    :{WHITE}Cannot join requested network game, you are already in a game
+STR_SOCIAL_JOIN_REQUEST_CAPTION                                 :{WHITE}Outside request
+STR_SOCIAL_JOIN_REQUEST_TEXT                                    :{BLACK}A friend is asking if they can join this game too.{}Let them in?{}{}{LTBLUE}{RAW_STRING}
+STR_SOCIAL_JOIN_REQUEST_ACCEPT                                  :{BLACK}Accept
+STR_SOCIAL_JOIN_REQUEST_ACCEPT_TOOLTIP                          :{BLACK}The other player will receive the address and port of this server, but not any passwords required.
+STR_SOCIAL_JOIN_REQUEST_REJECT                                  :{BLACK}Reject
+STR_SOCIAL_JOIN_REQUEST_REJECT_TOOLTIP                          :{BLACK}The other player will not be given the address of this server.
+
 # Content downloading window
 STR_CONTENT_TITLE                                               :{WHITE}Content downloading
 STR_CONTENT_TYPE_CAPTION                                        :{BLACK}Type

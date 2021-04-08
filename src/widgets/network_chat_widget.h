@@ -19,4 +19,11 @@ enum NetWorkChatWidgets {
 	WID_NC_SENDBUTTON,  ///< Send button.
 };
 
+/** Widgets of the #NetworkJoinStatusWindow class. */
+enum SocialJoinRequestWidgets {
+	WID_SJR_MESSAGE,     ///< Message area.
+	WID_SJR_ACCEPT,      ///< Accept button.
+	WID_SJR_REJECT,      ///< Reject button.
+};
+
 #endif /* WIDGETS_NETWORK_CHAT_WIDGET_H */

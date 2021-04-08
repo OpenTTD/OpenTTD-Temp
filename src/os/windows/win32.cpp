@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 #include "../../language.h"
 #include "../../thread.h"
+#include "../../network/social_plugin_api.h"
 #include <array>
 
 #include "../../safeguards.h"
@@ -769,3 +770,40 @@ void SetCurrentThreadName(const char *threadName)
 #else
 void SetCurrentThreadName(const char *) {}
 #endif
+
+
+/* * Stuff for social presence implementation * */
+
+std::string _social_launch_command;
+
+OpenTTD_SocialPluginInit SocialLoadPlugin()
+{
+	{
+		TCHAR filename[MAX_PATH];
+		DWORD filename_len = GetModuleFileName(nullptr, filename, lengthof(filename));
+		if (filename_len == lengthof(filename)) return nullptr; // buffer too small
+		_social_launch_command = "\"" + std::string(FS2OTTD(filename)) + "\"";
+	}
+
+	std::string search_dir = FioGetDirectory(SP_BINARY_DIR, BASE_DIR);
+
+	WIN32_FIND_DATAW find_data = {};
+	HANDLE find_handle = FindFirstFileW(OTTD2FS(search_dir + "*.social.dll").c_str(), &find_data);
+	if (find_handle != INVALID_HANDLE_VALUE) {
+		do {
+			std::string library_path = search_dir + FS2OTTD(find_data.cFileName);
+			HMODULE library = LoadLibraryW(OTTD2FS(library_path).c_str());
+			if (library != nullptr) {
+				void *func = GetProcAddress(library, "SocialInit");
+				if (func != nullptr) {
+					FindClose(find_handle);
+					return (OpenTTD_SocialPluginInit)func;
+				}
+				FreeLibrary(library);
+			}
+		} while (FindNextFileW(find_handle, &find_data));
+		FindClose(find_handle);
+	}
+
+	return nullptr;
+}

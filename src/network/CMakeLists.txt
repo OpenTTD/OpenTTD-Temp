@@ -25,4 +25,7 @@ add_files(
     network_type.h
     network_udp.cpp
     network_udp.h
+    social_plugin_api.h
+    social_presence.cpp
+    social_presence.h
 )
