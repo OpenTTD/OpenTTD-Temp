@@ -247,6 +247,7 @@ struct NewsSettings {
 
 /** All settings related to the network. */
 struct NetworkSettings {
+	char   savegame_formats[64];                          ///< how to compress savegames for the network (methods listed first take priority)
 	uint16 sync_freq;                                     ///< how often do we check whether we are still in-sync
 	uint8  frame_freq;                                    ///< how often do we send commands to the clients
 	uint16 commands_per_frame;                            ///< how many commands may be sent each frame_freq frames?

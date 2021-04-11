@@ -1814,7 +1814,7 @@ STR_CONFIG_ERROR_INVALID_GRF_SYSTEM                             :system NewGRF
 STR_CONFIG_ERROR_INVALID_GRF_INCOMPATIBLE                       :incompatible to this version of OpenTTD
 STR_CONFIG_ERROR_INVALID_GRF_UNKNOWN                            :unknown
 STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_LEVEL             :{WHITE}... compression level '{RAW_STRING}' is not valid
-STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_ALGORITHM         :{WHITE}... savegame format '{RAW_STRING}' is not available. Reverting to '{RAW_STRING}'
+STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_ALGORITHM         :{WHITE}... savegame format '{RAW_STRING}' is not available
 STR_CONFIG_ERROR_INVALID_BASE_GRAPHICS_NOT_FOUND                :{WHITE}... ignoring Base Graphics set '{RAW_STRING}': not found
 STR_CONFIG_ERROR_INVALID_BASE_SOUNDS_NOT_FOUND                  :{WHITE}... ignoring Base Sounds set '{RAW_STRING}': not found
 STR_CONFIG_ERROR_INVALID_BASE_MUSIC_NOT_FOUND                   :{WHITE}... ignoring Base Music set '{RAW_STRING}': not found
@@ -2226,6 +2226,7 @@ STR_NETWORK_ERROR_TIMEOUT_PASSWORD                              :{WHITE}You took
 STR_NETWORK_ERROR_TIMEOUT_COMPUTER                              :{WHITE}Your computer is too slow to keep up with the server
 STR_NETWORK_ERROR_TIMEOUT_MAP                                   :{WHITE}Your computer took too long to download the map
 STR_NETWORK_ERROR_TIMEOUT_JOIN                                  :{WHITE}Your computer took too long to join the server
+STR_NETWORK_ERROR_UNSUPPORTED_FORMAT                            :{WHITE}Unsupported savegame format
 
 ############ Leave those lines in this order!!
 STR_NETWORK_ERROR_CLIENT_GENERAL                                :general error
@@ -2248,6 +2249,7 @@ STR_NETWORK_ERROR_CLIENT_TIMEOUT_PASSWORD                       :received no pas
 STR_NETWORK_ERROR_CLIENT_TIMEOUT_COMPUTER                       :general timeout
 STR_NETWORK_ERROR_CLIENT_TIMEOUT_MAP                            :downloading map took too long
 STR_NETWORK_ERROR_CLIENT_TIMEOUT_JOIN                           :processing map took too long
+STR_NETWORK_ERROR_CLIENT_UNSUPPORTED_FORMAT                     :unsupported savegame format
 ############ End of leave-in-this-order
 
 STR_NETWORK_ERROR_CLIENT_GUI_LOST_CONNECTION_CAPTION            :{WHITE}Possible connection loss

@@ -12,6 +12,7 @@
 
 #include "network_internal.h"
 #include "core/tcp_listen.h"
+#include "../saveload/saveload.h"
 
 class ServerNetworkGameSocketHandler;
 /** Make the code look slightly nicer/simpler. */
@@ -69,6 +70,7 @@ public:
 	CommandQueue outgoing_queue; ///< The command-queue awaiting delivery
 	int receive_limit;           ///< Amount of bytes that we can receive at this moment
 
+	SavePreset preset;             ///< Preset to use for the savegame
 	struct PacketWriter *savegame; ///< Writer used to write the savegame.
 	NetworkAddress client_address; ///< IP-address of the client (so he can be banned)
 

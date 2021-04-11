@@ -12,6 +12,8 @@
 
 #include "../fileio_type.h"
 #include "../strings_type.h"
+#include "saveload_filter.h"
+#include <optional>
 #include <string>
 
 /** SaveLoad versions
@@ -360,8 +362,39 @@ enum SavegameType {
 	SGT_INVALID = 0xFF, ///< broken savegame (used internally)
 };
 
+/** Known savegame copmression methods */
+enum class CompressionMethod : uint8 {
+	None = 0u,
+	LZO = 1u,
+	Zlib = 2u,
+	LZMA = 3u,
+};
+
+/** The format for a reader/writer type of a savegame */
+struct SaveLoadFormat {
+	uint8 id;                             ///< unique integer id of this savegame format (olny used for networkking so is not guaranteed to be preserved between versions)
+	const char *name;                     ///< name of the compressor/decompressor (debug-only)
+	uint32 tag;                           ///< the 4-letter tag by which it is identified in the savegame
+
+	LoadFilter *(*init_load)(LoadFilter *chain);                    ///< Constructor for the load filter.
+	SaveFilter *(*init_write)(SaveFilter *chain, byte compression); ///< Constructor for the save filter.
+
+	CompressionMethod method;             ///< compression method used in this format
+	byte min_compression;                 ///< the minimum compression level of this format
+	byte default_compression;             ///< the default compression level of this format
+	byte max_compression;                 ///< the maximum compression level of this format
+};
+
+/** The preset to use for generating savegames */
+struct SavePreset {
+	const SaveLoadFormat *format;  ///< savegame format to use
+	byte compression_level;        ///< compression level to use
+};
+
 extern FileToSaveLoad _file_to_saveload;
 
+std::optional<SavePreset> FindCompatibleSavePreset(const std::string &server_formats, uint8 client_format_flags);
+uint8 GetAvailableLoadFormats();
 void GenerateDefaultSaveName(char *buf, const char *last);
 void SetSaveLoadError(StringID str);
 const char *GetSaveLoadErrorString();
@@ -370,7 +403,7 @@ void WaitTillSaved();
 void ProcessAsyncSaveFinish();
 void DoExitSave();
 
-SaveOrLoadResult SaveWithFilter(struct SaveFilter *writer, bool threaded);
+SaveOrLoadResult SaveWithFilter(struct SaveFilter *writer, bool threaded, SavePreset preset);
 SaveOrLoadResult LoadWithFilter(struct LoadFilter *reader);
 
 typedef void ChunkSaveLoadProc();

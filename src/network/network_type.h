@@ -132,6 +132,7 @@ enum NetworkErrorCode {
 	NETWORK_ERROR_TIMEOUT_COMPUTER,
 	NETWORK_ERROR_TIMEOUT_MAP,
 	NETWORK_ERROR_TIMEOUT_JOIN,
+	NETWORK_ERROR_UNSUPPORTED_FORMAT,  // Couldn't agree with a client on savegame format to use
 
 	NETWORK_ERROR_END,
 };

@@ -45,6 +45,7 @@
 #include "../error.h"
 #include <atomic>
 #include <string>
+#include <sstream>
 #ifdef __EMSCRIPTEN__
 #	include <emscripten.h>
 #endif
@@ -52,7 +53,6 @@
 #include "table/strings.h"
 
 #include "saveload_internal.h"
-#include "saveload_filter.h"
 
 #include "../safeguards.h"
 
@@ -2305,36 +2305,23 @@ struct LZMASaveFilter : SaveFilter {
  ************* END OF CODE *****************
  *******************************************/
 
-/** The format for a reader/writer type of a savegame */
-struct SaveLoadFormat {
-	const char *name;                     ///< name of the compressor/decompressor (debug-only)
-	uint32 tag;                           ///< the 4-letter tag by which it is identified in the savegame
-
-	LoadFilter *(*init_load)(LoadFilter *chain);                    ///< Constructor for the load filter.
-	SaveFilter *(*init_write)(SaveFilter *chain, byte compression); ///< Constructor for the save filter.
-
-	byte min_compression;                 ///< the minimum compression level of this format
-	byte default_compression;             ///< the default compression level of this format
-	byte max_compression;                 ///< the maximum compression level of this format
-};
-
 /** The different saveload formats known/understood by OpenTTD. */
 static const SaveLoadFormat _saveload_formats[] = {
+	/* Roughly 5 times larger at only 1% of the CPU usage over zlib level 6. */
+	{0, "none",   TO_BE32X('OTTN'), CreateLoadFilter<NoCompLoadFilter>, CreateSaveFilter<NoCompSaveFilter>, CompressionMethod::None, 0, 0, 0},
 #if defined(WITH_LZO)
 	/* Roughly 75% larger than zlib level 6 at only ~7% of the CPU usage. */
-	{"lzo",    TO_BE32X('OTTD'), CreateLoadFilter<LZOLoadFilter>,    CreateSaveFilter<LZOSaveFilter>,    0, 0, 0},
+	{1,  "lzo",    TO_BE32X('OTTD'), CreateLoadFilter<LZOLoadFilter>,    CreateSaveFilter<LZOSaveFilter>,    CompressionMethod::LZO, 0, 0, 0},
 #else
-	{"lzo",    TO_BE32X('OTTD'), nullptr,                            nullptr,                            0, 0, 0},
+	{1,  "lzo",    TO_BE32X('OTTD'), nullptr,                            nullptr,                            CompressionMethod::LZO, 0, 0, 0},
 #endif
-	/* Roughly 5 times larger at only 1% of the CPU usage over zlib level 6. */
-	{"none",   TO_BE32X('OTTN'), CreateLoadFilter<NoCompLoadFilter>, CreateSaveFilter<NoCompSaveFilter>, 0, 0, 0},
 #if defined(WITH_ZLIB)
 	/* After level 6 the speed reduction is significant (1.5x to 2.5x slower per level), but the reduction in filesize is
 	 * fairly insignificant (~1% for each step). Lower levels become ~5-10% bigger by each level than level 6 while level
 	 * 1 is "only" 3 times as fast. Level 0 results in uncompressed savegames at about 8 times the cost of "none". */
-	{"zlib",   TO_BE32X('OTTZ'), CreateLoadFilter<ZlibLoadFilter>,   CreateSaveFilter<ZlibSaveFilter>,   0, 6, 9},
+	{2, "zlib",   TO_BE32X('OTTZ'), CreateLoadFilter<ZlibLoadFilter>,   CreateSaveFilter<ZlibSaveFilter>,   CompressionMethod::Zlib, 0, 6, 9},
 #else
-	{"zlib",   TO_BE32X('OTTZ'), nullptr,                            nullptr,                            0, 0, 0},
+	{2, "zlib",   TO_BE32X('OTTZ'), nullptr,                            nullptr,                            CompressionMethod::Zlib, 0, 0, 0},
 #endif
 #if defined(WITH_LIBLZMA)
 	/* Level 2 compression is speed wise as fast as zlib level 6 compression (old default), but results in ~10% smaller saves.
@@ -2342,64 +2329,104 @@ static const SaveLoadFormat _saveload_formats[] = {
 	 * The next significant reduction in file size is at level 4, but that is already 4 times slower. Level 3 is primarily 50%
 	 * slower while not improving the filesize, while level 0 and 1 are faster, but don't reduce savegame size much.
 	 * It's OTTX and not e.g. OTTL because liblzma is part of xz-utils and .tar.xz is preferred over .tar.lzma. */
-	{"lzma",   TO_BE32X('OTTX'), CreateLoadFilter<LZMALoadFilter>,   CreateSaveFilter<LZMASaveFilter>,   0, 2, 9},
+	{3, "lzma",   TO_BE32X('OTTX'), CreateLoadFilter<LZMALoadFilter>,   CreateSaveFilter<LZMASaveFilter>,   CompressionMethod::LZMA, 0, 2, 9},
 #else
-	{"lzma",   TO_BE32X('OTTX'), nullptr,                            nullptr,                            0, 0, 0},
+	{3, "lzma",   TO_BE32X('OTTX'), nullptr,                            nullptr,                            CompressionMethod::LZMA, 0, 0, 0},
 #endif
 };
 
+static const std::string DEFAULT_NETWORK_SAVEGAME_COMPRESSION = "zlib:2 lzma:0 lzo:0";
+
 /**
- * Return the savegameformat of the game. Whether it was created with ZLIB compression
- * uncompressed, or another type
- * @param s Name of the savegame format. If nullptr it picks the first available one
- * @param compression_level Output for telling what compression level we want.
- * @return Pointer to SaveLoadFormat struct giving all characteristics of this type of savegame
+ * Parses the savegame format and compression level string ("format:[compression_level]").
+ * @param str  String to parse
+ * @return Parsest SavePreset or std::nullopt
  */
-static const SaveLoadFormat *GetSavegameFormat(char *s, byte *compression_level)
+static std::optional<SavePreset> ParseSavePreset(const std::string &str)
 {
+	auto delimiter_pos = str.find(':');
+	auto format = (delimiter_pos != std::string::npos ? str.substr(0, delimiter_pos) : str);
+	for (auto &slf : _saveload_formats) {
+		if (slf.init_write != nullptr && format == slf.name) {
+			/* If compression level wasn't specified use the default one */
+			if (delimiter_pos == std::string::npos) return SavePreset{&slf, slf.default_compression};
+
+			auto level_str = str.substr(delimiter_pos + 1);
+			int level;
+			try{
+				level = stoi(level_str);
+			} catch(const std::exception &e) {
+				/* Can't parse compression level, set it out ouf bounds to fail later */
+				level = (int)slf.max_compression + 1;
+			}
+
+			if (level != Clamp<int>(level, slf.min_compression, slf.max_compression)) {
+				/* Invalid compression level, show the error and use default level */
+				SetDParamStr(0, level_str.c_str());
+				ShowErrorMessage(STR_CONFIG_ERROR, STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_LEVEL, WL_CRITICAL);
+				return SavePreset{&slf, slf.default_compression};
+			}
+
+			return SavePreset{&slf, (byte)level};
+		}
+	}
+	SetDParamStr(0, str.c_str());
+	ShowErrorMessage(STR_CONFIG_ERROR, STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_ALGORITHM, WL_CRITICAL);
+	return {};
+}
+
+static_assert(lengthof(_saveload_formats) <= 8);  // uint8 is used for the bitset of format ids
+
+/**
+ * Finds the best savegame preset to use in network game based on server settings and client capabilies.
+ * @param server_formats  String of space-separated format descriptions in form format[:compression_level] acceptable for the server (listed first take priority).
+ * @param client_formats  Bitset of savegame formats available to the client (as returned by GetAvailableLoadFormats)
+ * @return SavePreset that satisfies both server and client or std::nullopt
+ */
+std::optional<SavePreset> FindCompatibleSavePreset(const std::string &server_formats, uint8 client_formats)
+{
+	std::istringstream iss(server_formats.empty() ? DEFAULT_NETWORK_SAVEGAME_COMPRESSION : server_formats);
+	std::string preset_str;
+	while (std::getline(iss, preset_str, ' ')) {
+		auto preset = ParseSavePreset(preset_str);
+		if (!preset) continue;
+		if ((client_formats & (1 << preset->format->id)) != 0) return preset;
+	}
+	return {};
+}
+
+/**
+ * Return the bitset of savegame formats that this game instance can load
+ * @return bitset of available savegame formats
+ */
+uint8 GetAvailableLoadFormats()
+{
+	uint8 res = 0;
+	for(auto &slf : _saveload_formats) {
+		if (slf.init_load != nullptr) {
+			res |= (1 << slf.id);
+		}
+	}
+	return res;
+}
+
+/**
+ * Return the save preset to use for local game saves.
+ * @return SavePreset to use
+ */
+static SavePreset GetLocalSavePreset()
+{
+	if (!StrEmpty(_savegame_format)) {
+		auto config = ParseSavePreset(_savegame_format);
+		if (config) return *config;
+	}
+
 	const SaveLoadFormat *def = lastof(_saveload_formats);
 
 	/* find default savegame format, the highest one with which files can be written */
 	while (!def->init_write) def--;
 
-	if (!StrEmpty(s)) {
-		/* Get the ":..." of the compression level out of the way */
-		char *complevel = strrchr(s, ':');
-		if (complevel != nullptr) *complevel = '\0';
-
-		for (const SaveLoadFormat *slf = &_saveload_formats[0]; slf != endof(_saveload_formats); slf++) {
-			if (slf->init_write != nullptr && strcmp(s, slf->name) == 0) {
-				*compression_level = slf->default_compression;
-				if (complevel != nullptr) {
-					/* There is a compression level in the string.
-					 * First restore the : we removed to do proper name matching,
-					 * then move the the begin of the actual version. */
-					*complevel = ':';
-					complevel++;
-
-					/* Get the version and determine whether all went fine. */
-					char *end;
-					long level = strtol(complevel, &end, 10);
-					if (end == complevel || level != Clamp(level, slf->min_compression, slf->max_compression)) {
-						SetDParamStr(0, complevel);
-						ShowErrorMessage(STR_CONFIG_ERROR, STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_LEVEL, WL_CRITICAL);
-					} else {
-						*compression_level = level;
-					}
-				}
-				return slf;
-			}
-		}
-
-		SetDParamStr(0, s);
-		SetDParamStr(1, def->name);
-		ShowErrorMessage(STR_CONFIG_ERROR, STR_CONFIG_ERROR_INVALID_SAVEGAME_COMPRESSION_ALGORITHM, WL_CRITICAL);
-
-		/* Restore the string by adding the : back */
-		if (complevel != nullptr) *complevel = ':';
-	}
-	*compression_level = def->default_compression;
-	return def;
+	return {def, def->default_compression};
 }
 
 /* actual loader/saver function */
@@ -2493,17 +2520,14 @@ static void SaveFileError()
  * We have written the whole game into memory, _memory_savegame, now find
  * and appropriate compressor and start writing to file.
  */
-static SaveOrLoadResult SaveFileToDisk(bool threaded)
+static SaveOrLoadResult SaveFileToDisk(bool threaded, SavePreset preset)
 {
 	try {
-		byte compression;
-		const SaveLoadFormat *fmt = GetSavegameFormat(_savegame_format, &compression);
-
 		/* We have written our stuff to memory, now write it to file! */
-		uint32 hdr[2] = { fmt->tag, TO_BE32(SAVEGAME_VERSION << 16) };
+		uint32 hdr[2] = { preset.format->tag, TO_BE32(SAVEGAME_VERSION << 16) };
 		_sl.sf->Write((byte*)hdr, sizeof(hdr));
 
-		_sl.sf = fmt->init_write(_sl.sf, compression);
+		_sl.sf = preset.format->init_write(_sl.sf, preset.compression_level);
 		_sl.dumper->Flush(_sl.sf);
 
 		ClearSaveLoadState();
@@ -2551,7 +2575,7 @@ void WaitTillSaved()
  * @param threaded Whether to try to perform the saving asynchronously.
  * @return Return the result of the action. #SL_OK or #SL_ERROR
  */
-static SaveOrLoadResult DoSave(SaveFilter *writer, bool threaded)
+static SaveOrLoadResult DoSave(SaveFilter *writer, bool threaded, SavePreset preset)
 {
 	assert(!_sl.saveinprogress);
 
@@ -2565,10 +2589,10 @@ static SaveOrLoadResult DoSave(SaveFilter *writer, bool threaded)
 
 	SaveFileStart();
 
-	if (!threaded || !StartNewThread(&_save_thread, "ottd:savegame", &SaveFileToDisk, true)) {
+	if (!threaded || !StartNewThread(&_save_thread, "ottd:savegame", &SaveFileToDisk, true, std::move(preset))) {
 		if (threaded) DEBUG(sl, 1, "Cannot create savegame thread, reverting to single-threaded mode...");
 
-		SaveOrLoadResult result = SaveFileToDisk(false);
+		SaveOrLoadResult result = SaveFileToDisk(false, preset);
 		SaveFileDone();
 
 		return result;
@@ -2583,11 +2607,11 @@ static SaveOrLoadResult DoSave(SaveFilter *writer, bool threaded)
  * @param threaded Whether to try to perform the saving asynchronously.
  * @return Return the result of the action. #SL_OK or #SL_ERROR
  */
-SaveOrLoadResult SaveWithFilter(SaveFilter *writer, bool threaded)
+SaveOrLoadResult SaveWithFilter(SaveFilter *writer, bool threaded, SavePreset preset)
 {
 	try {
 		_sl.action = SLA_SAVE;
-		return DoSave(writer, threaded);
+		return DoSave(writer, threaded, preset);
 	} catch (...) {
 		ClearSaveLoadState();
 		return SL_ERROR;
@@ -2828,7 +2852,7 @@ SaveOrLoadResult SaveOrLoad(const std::string &filename, SaveLoadOperation fop, 
 			DEBUG(desync, 1, "save: %08x; %02x; %s", _date, _date_fract, filename.c_str());
 			if (_network_server || !_settings_client.gui.threaded_saves) threaded = false;
 
-			return DoSave(new FileWriter(fh), threaded);
+			return DoSave(new FileWriter(fh), threaded, GetLocalSavePreset());
 		}
 
 		/* LOAD game */
