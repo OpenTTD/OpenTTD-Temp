@@ -383,7 +383,7 @@ void VehicleCargoList::AgeCargo()
 	for (ConstIterator it(this->packets.begin()); it != this->packets.end(); it++) {
 		CargoPacket *cp = *it;
 		/* If we're at the maximum, then we can't increase no more. */
-		if (cp->days_in_transit == 0xFF) continue;
+		if (cp->days_in_transit == UINT16_MAX) continue;
 
 		cp->days_in_transit++;
 		this->cargo_days_in_transit += cp->count;
@@ -860,6 +860,21 @@ uint StationCargoList::Load(uint max_move, VehicleCargoList *dest, TileIndex loa
 uint StationCargoList::Reroute(uint max_move, StationCargoList *dest, StationID avoid, StationID avoid2, const GoodsEntry *ge)
 {
 	return this->ShiftCargo(StationCargoReroute(this, dest, max_move, avoid, avoid2, ge), avoid, false);
+}
+
+/**
+ * Ages all in-flight cargo in this list.
+ */
+void StationCargoList::AgeCargo()
+{
+	for (ConstIterator it(this->packets.begin()); it != this->packets.end(); it++) {
+		CargoPacket *cp = *it;
+		/* Only age cargo that is already in transit. Also, make sure to now overflow. */
+		if (cp->days_in_transit == 0 || cp->days_in_transit == UINT16_MAX) continue;
+
+		cp->days_in_transit++;
+		this->cargo_days_in_transit += cp->count;
+	}
 }
 
 /*

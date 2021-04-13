@@ -43,7 +43,7 @@ struct CargoPacket : CargoPacketPool::PoolItem<&_cargopacket_pool> {
 private:
 	Money feeder_share;     ///< Value of feeder pickup to be paid for on delivery of cargo.
 	uint16 count;           ///< The amount of cargo in this packet.
-	byte days_in_transit;   ///< Amount of days this packet has been in transit.
+	uint16 days_in_transit; ///< Amount of days this packet has been in transit.
 	SourceType source_type; ///< Type of \c source_id.
 	SourceID source_id;     ///< Index of source, INVALID_SOURCE if unknown/invalid.
 	StationID source;       ///< The station where the cargo came from first.
@@ -128,7 +128,7 @@ public:
 	 * it is capped at 255.
 	 * @return Length this cargo has been in transit.
 	 */
-	inline byte DaysInTransit() const
+	inline uint16 DaysInTransit() const
 	{
 		return this->days_in_transit;
 	}
@@ -220,8 +220,8 @@ public:
 	};
 
 protected:
-	uint count;                 ///< Cache for the number of cargo entities.
-	uint cargo_days_in_transit; ///< Cache for the sum of number of days in transit of each entity; comparable to man-hours.
+	uint count;                   ///< Cache for the number of cargo entities.
+	uint64 cargo_days_in_transit; ///< Cache for the sum of number of days in transit of each entity; comparable to man-hours.
 
 	Tcont packets;              ///< The cargo packets in this list.
 
@@ -527,6 +527,8 @@ public:
 	{
 		return this->count + this->reserved_count;
 	}
+
+	void AgeCargo();
 
 	/* Methods for moving cargo around. First parameter is always maximum
 	 * amount of cargo to be moved. Second parameter is destination (if

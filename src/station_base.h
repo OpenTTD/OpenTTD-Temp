@@ -218,6 +218,7 @@ struct GoodsEntry {
 		last_speed(0),
 		last_age(255),
 		amount_fract(0),
+		cargo_age_ctr(1),
 		link_graph(INVALID_LINK_GRAPH),
 		node(INVALID_NODE),
 		max_waiting_cargo(0)
@@ -253,6 +254,7 @@ struct GoodsEntry {
 
 	byte amount_fract;      ///< Fractional part of the amount in the cargo list
 	StationCargoList cargo; ///< The cargo packets of cargo waiting in this station
+	uint16 cargo_age_ctr;   ///< Ticks till cargo is aged next.
 
 	LinkGraphID link_graph; ///< Link graph this station belongs to.
 	NodeID node;            ///< ID of node in link graph referring to this goods entry.

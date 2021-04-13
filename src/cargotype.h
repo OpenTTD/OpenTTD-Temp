@@ -61,6 +61,8 @@ struct CargoSpec {
 	uint16 multiplier;               ///< Capacity multiplier for vehicles. (8 fractional bits)
 	uint16 initial_payment;
 	uint8 transit_days[2];
+	uint16 cargo_station_age_period; ///< Number of ticks before in-transit cargo waiting in a station is aged.
+	uint16 age_time_factor[2];       ///< Upper and lower age time factor bounds.
 
 	bool is_freight;                 ///< Cargo type is considered to be freight (affects train freight multiplier).
 	TownEffect town_effect;          ///< The effect that delivering this cargo type has on towns. Also affects destination of subsidies.

@@ -3027,8 +3027,20 @@ static ChangeInfoResult CargoChangeInfo(uint cid, int numinfo, int prop, ByteRea
 				cs->callback_mask = buf->ReadByte();
 				break;
 
-			case 0x1D: // Vehicle capacity muliplier
+			case 0x1D: // Vehicle capacity multiplier
 				cs->multiplier = std::max<uint16>(1u, buf->ReadWord());
+				break;
+
+			case 0x1E: // Number of ticks before waiting in-transit cargo is aged
+				cs->cargo_station_age_period = buf->ReadWord();
+				break;
+
+			case 0x1F: // Max time factor for payment calculation
+				cs->age_time_factor[0] = buf->ReadWord();
+				break;
+
+			case 0x20: // Min time factor for payment calculation
+				cs->age_time_factor[1] = buf->ReadWord();
 				break;
 
 			default:

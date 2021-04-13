@@ -9,6 +9,7 @@
 
 #include "stdafx.h"
 #include "cargotype.h"
+#include "date_type.h"
 #include "newgrf_cargo.h"
 #include "string_func.h"
 #include "strings_func.h"
@@ -47,6 +48,9 @@ void SetupCargoForClimate(LandscapeID l)
 
 		/* Set defaults for newer properties, which old GRFs do not know */
 		CargoSpec::Get(i)->multiplier = 0x100;
+		CargoSpec::Get(i)->cargo_station_age_period = 4 * CARGO_AGING_TICKS; // 10 days.
+		CargoSpec::Get(i)->age_time_factor[0] = 255;
+		CargoSpec::Get(i)->age_time_factor[1] = 31;
 	}
 
 	_cargo_mask = 0;

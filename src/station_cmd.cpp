@@ -3817,7 +3817,19 @@ static void StationHandleSmallTick(BaseStation *st)
 	if (b >= STATION_RATING_TICKS) b = 0;
 	st->delete_ctr = b;
 
-	if (b == 0) UpdateStationRating(Station::From(st));
+	Station *st2 = Station::From(st);
+	if (b == 0) UpdateStationRating(st2);
+
+	for (CargoID i = 0; i < NUM_CARGO; i++) {
+		const CargoSpec *cs = CargoSpec::Get(i);
+		if (cs->cargo_station_age_period != 0) {
+			st2->goods[i].cargo_age_ctr = std::min(st2->goods[i].cargo_age_ctr, cs->cargo_station_age_period);
+			if (--st2->goods[i].cargo_age_ctr == 0) {
+				st2->goods[i].cargo.AgeCargo();
+				st2->goods[i].cargo_age_ctr = cs->cargo_station_age_period;
+			}
+		}
+	}
 }
 
 void OnTick_Station()

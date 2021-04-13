@@ -963,7 +963,7 @@ Money GetPrice(Price index, uint cost_factor, const GRFFile *grf_file, int shift
 	return cost;
 }
 
-Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, CargoID cargo_type)
+Money GetTransportedGoodsIncome(uint num_pieces, uint dist, uint16 transit_days, CargoID cargo_type)
 {
 	const CargoSpec *cs = CargoSpec::Get(cargo_type);
 	if (!cs->IsValid()) {
@@ -973,7 +973,7 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, C
 
 	/* Use callback to calculate cargo profit, if available */
 	if (HasBit(cs->callback_mask, CBM_CARGO_PROFIT_CALC)) {
-		uint32 var18 = std::min(dist, 0xFFFFu) | (std::min(num_pieces, 0xFFu) << 16) | (transit_days << 24);
+		uint32 var18 = std::min(dist, 0xFFFFu) | (std::min(num_pieces, 0xFFu) << 16) | (std::min<uint16>(transit_days, 0xFFu) << 24);
 		uint16 callback = GetCargoCallback(CBID_CARGO_PROFIT_CALC, 0, var18, cs);
 		if (callback != CALLBACK_FAILED) {
 			int result = GB(callback, 0, 14);
@@ -988,27 +988,35 @@ Money GetTransportedGoodsIncome(uint num_pieces, uint dist, byte transit_days, C
 		}
 	}
 
-	static const int MIN_TIME_FACTOR = 31;
-	static const int MAX_TIME_FACTOR = 255;
+	static const int TIME_FACTOR_FRAC_BITS = 4;
+	static const int TIME_FACTOR_FRAC = 1 << TIME_FACTOR_FRAC_BITS;
 
+	const int max_time_factor = cs->age_time_factor[0];
+	const int min_time_factor = cs->age_time_factor[1];
 	const int days1 = cs->transit_days[0];
 	const int days2 = cs->transit_days[1];
 	const int days_over_days1 = std::max(   transit_days - days1, 0);
 	const int days_over_days2 = std::max(days_over_days1 - days2, 0);
+	const int days_over_max   = transit_days - (max_time_factor - min_time_factor + 2 * days1 + days2) / 2;
 
 	/*
 	 * The time factor is calculated based on the time it took
 	 * (transit_days) compared two cargo-depending values. The
-	 * range is divided into three parts:
+	 * range is divided into four parts:
 	 *
 	 *  - constant for fast transits
 	 *  - linear decreasing with time with a slope of -1 for medium transports
 	 *  - linear decreasing with time with a slope of -2 for slow transports
+	 *  - after hitting MIN_TIME_FACTOR, the time factor will be asymptotically decreased to a limit of 1 with a scaled 1/(x+1) function.
 	 *
 	 */
-	const int time_factor = std::max(MAX_TIME_FACTOR - days_over_days1 - days_over_days2, MIN_TIME_FACTOR);
-
-	return BigMulS(dist * time_factor * num_pieces, cs->current_payment, 21);
+	if (days_over_max > 0) {
+		const int time_factor = std::max(min_time_factor * TIME_FACTOR_FRAC * TIME_FACTOR_FRAC / (days_over_max + TIME_FACTOR_FRAC), 1); // min_time_factor / (x/TIME_FACTOR_FRAC + 1), expressed as fixed point with TIME_FACTOR_FRAC_BITS.
+		return BigMulS(dist * time_factor * num_pieces, cs->current_payment, 21 + TIME_FACTOR_FRAC_BITS);
+	} else {
+		const int time_factor = std::max(max_time_factor - days_over_days1 - days_over_days2, min_time_factor);
+		return BigMulS(dist * time_factor * num_pieces, cs->current_payment, 21);
+	}
 }
 
 /** The industries we've currently brought cargo to. */
@@ -1081,7 +1089,7 @@ static uint DeliverGoodsToIndustry(const Station *st, CargoID cargo_type, uint n
  * @return Revenue for delivering cargo
  * @note The cargo is just added to the stockpile of the industry. It is due to the caller to trigger the industry's production machinery
  */
-static Money DeliverGoods(int num_pieces, CargoID cargo_type, StationID dest, TileIndex source_tile, byte days_in_transit, Company *company, SourceType src_type, SourceID src)
+static Money DeliverGoods(int num_pieces, CargoID cargo_type, StationID dest, TileIndex source_tile, uint16 days_in_transit, Company *company, SourceType src_type, SourceID src)
 {
 	assert(num_pieces > 0);
 

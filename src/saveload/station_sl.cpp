@@ -275,6 +275,7 @@ const SaveLoad *GetGoodsDesc()
 		SLEG_CONDLST(            _packets,             REF_CARGO_PACKET,           SLV_68, SLV_183),
 		SLEG_CONDVAR(            _num_dests,           SLE_UINT32,                SLV_183, SL_MAX_VERSION),
 		 SLE_CONDVAR(GoodsEntry, cargo.reserved_count, SLE_UINT,                  SLV_181, SL_MAX_VERSION),
+		 SLE_CONDVAR(GoodsEntry, cargo_age_ctr,        SLE_UINT16,                SLV_MORE_CARGO_AGE, SL_MAX_VERSION),
 		 SLE_CONDVAR(GoodsEntry, link_graph,           SLE_UINT16,                SLV_183, SL_MAX_VERSION),
 		 SLE_CONDVAR(GoodsEntry, node,                 SLE_UINT16,                SLV_183, SL_MAX_VERSION),
 		SLEG_CONDVAR(            _num_flows,           SLE_UINT32,                SLV_183, SL_MAX_VERSION),

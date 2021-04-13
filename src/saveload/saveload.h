@@ -325,6 +325,7 @@ enum SaveLoadVersion : uint16 {
 	SLV_VEH_MOTION_COUNTER,                 ///< 288  PR#8591 Desync safe motion counter
 	SLV_INDUSTRY_TEXT,                      ///< 289  PR#8576 v1.11.0-RC1  Additional GS text for industries.
 	SLV_MAPGEN_SETTINGS_REVAMP,             ///< 290  PR#8891 v1.11  Revamp of some mapgen settings (snow coverage, desert coverage, heightmap height, custom terrain type).
+	SLV_MORE_CARGO_AGE,                     ///< 291  PR#xxxx More cargo ageing with higher precision.
 
 	SL_MAX_VERSION,                         ///< Highest possible saveload version
 };
