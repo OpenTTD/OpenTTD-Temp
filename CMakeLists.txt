@@ -211,7 +211,12 @@ include_directories(${CMAKE_SOURCE_DIR}/src/3rdparty/squirrel/include)
 
 include(MSVCFilters)
 
-add_executable(openttd WIN32 ${GENERATED_SOURCE_FILES})
+if(NOT TEST)
+    add_executable(openttd WIN32 ${GENERATED_SOURCE_FILES})
+else()
+    add_executable(openttd ${GENERATED_SOURCE_FILES})
+endif()
+
 set_target_properties(openttd PROPERTIES OUTPUT_NAME "${BINARY_NAME}")
 # All other files are added via target_sources()
 

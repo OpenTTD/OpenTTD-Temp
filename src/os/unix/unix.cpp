@@ -240,6 +240,7 @@ void CocoaSetupAutoreleasePool();
 void CocoaReleaseAutoreleasePool();
 #endif
 
+#ifndef TEST
 int CDECL main(int argc, char *argv[])
 {
 	/* Make sure our arguments contain only valid UTF-8 characters. */
@@ -267,6 +268,7 @@ int CDECL main(int argc, char *argv[])
 
 	return ret;
 }
+#endif
 
 #ifndef WITH_COCOA
 bool GetClipboardContents(char *buffer, const char *last)

@@ -45,7 +45,7 @@ jobs:
     - name: Install GCC problem matcher
       uses: ammaraskar/gcc-problem-matcher@master
 
-    - name: Build
+    - name: Build Game
       run: |
         mkdir build
         cd build
@@ -126,7 +126,7 @@ jobs:
     - name: Install GCC problem matcher
       uses: ammaraskar/gcc-problem-matcher@master
 
-    - name: Build
+    - name: Build Game
       run: |
         mkdir build
         cd build
@@ -140,7 +140,7 @@ jobs:
         cmake --build . -j $(nproc)
         echo "::endgroup::"
 
-    - name: Test
+    - name: Regression Test
       run: |
         cd build
         ctest -j $(nproc)
@@ -183,6 +183,7 @@ jobs:
           libpng \
           lzo \
           zlib \
+          catch2 \
           # EOF
 
     - name: Install OpenGFX
@@ -203,7 +204,7 @@ jobs:
     - name: Install GCC problem matcher
       uses: ammaraskar/gcc-problem-matcher@master
 
-    - name: Build
+    - name: Build Game
       run: |
         mkdir build
         cd build
@@ -221,10 +222,41 @@ jobs:
         cmake --build . -j $(sysctl -n hw.logicalcpu)
         echo "::endgroup::"
 
-    - name: Test
+    - name: Regression Test
       run: |
         cd build
         ctest -j $(sysctl -n hw.logicalcpu)
+
+    - name: Build Unit Test
+      run: |
+        mkdir test
+        cd test
+
+        echo "::group::CMake"
+        cmake ${GITHUB_WORKSPACE} \
+          -DCMAKE_OSX_ARCHITECTURES=${{ matrix.full_arch }} \
+          -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-osx \
+          -DCMAKE_TOOLCHAIN_FILE=/usr/local/share/vcpkg/scripts/buildsystems/vcpkg.cmake \
+          -DTEST=True \
+          # EOF
+        echo "::endgroup::"
+
+        echo "::group::Build"
+        echo "Running on $(sysctl -n hw.logicalcpu) cores"
+        cmake --build . -j $(sysctl -n hw.logicalcpu)
+        echo "::endgroup::"
+
+    - name: Unit Test
+      run: |
+        cd test
+        ./openttd --reporter junit --out openttd_test_results.xml
+
+    - name: Upload Unit Test Results Artifact
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: Unit Test Results Mac OS ${{ matrix.full_arch }}
+        path: test/openttd_test_results.xml
 
   windows:
     name: Windows
@@ -266,6 +298,7 @@ jobs:
           libpng \
           lzo \
           zlib \
+          catch2 \
           # EOF
 
     - name: Install OpenGFX
@@ -292,7 +325,7 @@ jobs:
       with:
         arch: ${{ matrix.arch }}
 
-    - name: Build
+    - name: Build Game
       shell: bash
       run: |
         mkdir build
@@ -310,8 +343,40 @@ jobs:
         cmake --build .
         echo "::endgroup::"
 
-    - name: Test
+    - name: Regression Test
       shell: bash
       run: |
         cd ${GITHUB_WORKSPACE}/build
         ctest
+
+    - name: Build Unit Test
+      shell: bash
+      run: |
+        mkdir test
+        cd test
+
+        echo "::group::CMake"
+        cmake .. \
+          -GNinja \
+          -DVCPKG_TARGET_TRIPLET=${{ matrix.arch }}-windows-static \
+          -DCMAKE_TOOLCHAIN_FILE="c:\vcpkg\scripts\buildsystems\vcpkg.cmake" \
+          -DTEST=True \
+          # EOF
+        echo "::endgroup::"
+
+        echo "::group::Build"
+        cmake --build .
+        echo "::endgroup::"
+
+    - name: Unit Test
+      shell: bash
+      run: |
+        cd ${GITHUB_WORKSPACE}/test
+        ./openttd --reporter junit --out openttd_test_results.xml
+
+    - name: Upload Test Results Artifact
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: Unit Test Results ${{ matrix.os }} ${{ matrix.arch }}
+        path: test/openttd_test_results.xml

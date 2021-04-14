@@ -402,6 +402,7 @@ void ShowInfo(const char *str)
 	}
 }
 
+#ifndef TEST
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	int argc;
@@ -439,6 +440,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	free(cmdline);
 	return 0;
 }
+#endif
 
 char *getcwd(char *buf, size_t size)
 {
