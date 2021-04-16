@@ -411,12 +411,24 @@ static void DrawRailCatenaryRailway(const TileInfo *ti)
 		if ((PPPallowed[i] & PPPpreferred[i]) != 0) PPPallowed[i] &= PPPpreferred[i];
 
 		if (IsBridgeAbove(ti->tile)) {
-			Track bridgetrack = GetBridgeAxis(ti->tile) == AXIS_X ? TRACK_X : TRACK_Y;
-			int height = GetBridgeHeight(GetNorthernBridgeEnd(ti->tile));
+			if (GetBridgeAxis(ti->tile) == AXIS_X || GetBridgeAxis(ti->tile) == AXIS_END) {
+				/* Through the X axis */
+				int height = GetBridgeHeight(GetNorthernBridgeEndAtAxis(ti->tile, AXIS_X));
 
-			if ((height <= GetTileMaxZ(ti->tile) + 1) &&
-					(i == PCPpositions[bridgetrack][0] || i == PCPpositions[bridgetrack][1])) {
-				SetBit(OverridePCP, i);
+				if ((height <= GetTileMaxZ(ti->tile) + 1) &&
+					(i == PCPpositions[TRACK_X][0] || i == PCPpositions[TRACK_X][1])) {
+					SetBit(OverridePCP, i);
+				}
+			}
+
+			if (GetBridgeAxis(ti->tile) == AXIS_Y || GetBridgeAxis(ti->tile) == AXIS_END) {
+				/* Through the Y axis */
+				int height = GetBridgeHeight(GetNorthernBridgeEndAtAxis(ti->tile, AXIS_Y));
+
+				if ((height <= GetTileMaxZ(ti->tile) + 1) &&
+					(i == PCPpositions[TRACK_Y][0] || i == PCPpositions[TRACK_Y][1])) {
+					SetBit(OverridePCP, i);
+				}
 			}
 		}
 
@@ -450,8 +462,7 @@ static void DrawRailCatenaryRailway(const TileInfo *ti)
 
 	/* Don't draw a wire under a low bridge */
 	if (IsBridgeAbove(ti->tile) && !IsTransparencySet(TO_BRIDGES)) {
-		int height = GetBridgeHeight(GetNorthernBridgeEnd(ti->tile));
-
+		int height = GetLowestBridgeHeight(ti->tile);
 		if (height <= GetTileMaxZ(ti->tile) + 1) return;
 	}
 
@@ -495,15 +506,15 @@ static void DrawRailCatenaryRailway(const TileInfo *ti)
 }
 
 /**
- * Draws wires on a tunnel tile
+ * Draws wires on a bridge tile
  *
  * DrawTile_TunnelBridge() calls this function to draw the wires on the bridge.
  *
  * @param ti The Tileinfo to draw the tile for
  */
-void DrawRailCatenaryOnBridge(const TileInfo *ti)
+void DrawRailCatenaryOnBridge(const TileInfo *ti, Axis axis)
 {
-	TileIndex end = GetSouthernBridgeEnd(ti->tile);
+	TileIndex end = GetSouthernBridgeEndAtAxis(ti->tile, axis);
 	TileIndex start = GetOtherBridgeEnd(end);
 
 	uint length = GetTunnelBridgeLength(start, end);
@@ -511,7 +522,6 @@ void DrawRailCatenaryOnBridge(const TileInfo *ti)
 	uint height;
 
 	const SortableSpriteStruct *sss;
-	Axis axis = GetBridgeAxis(ti->tile);
 	TLG tlg = GetTLG(ti->tile);
 
 	RailCatenarySprite offset = (RailCatenarySprite)(axis == AXIS_X ? 0 : WIRE_Y_FLAT_BOTH - WIRE_X_FLAT_BOTH);

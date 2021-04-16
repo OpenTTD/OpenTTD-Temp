@@ -34,21 +34,29 @@ static TileIndex GetBridgeEnd(TileIndex tile, DiagDirection dir)
 
 /**
  * Finds the northern end of a bridge starting at a middle tile
- * @param t the bridge tile to find the bridge ramp for
+ * @param t    the bridge tile to find the bridge ramp for
+ * @param axis the axis to find the bridge ramp for
+ * @returns the tile where the bridge head is, or INVALID_TILE if it doesn't exist
  */
-TileIndex GetNorthernBridgeEnd(TileIndex t)
+TileIndex GetNorthernBridgeEndAtAxis(TileIndex t, Axis axis)
 {
-	return GetBridgeEnd(t, ReverseDiagDir(AxisToDiagDir(GetBridgeAxis(t))));
+	Axis bridge_axis = GetBridgeAxis(t);
+	if (bridge_axis != axis && bridge_axis != AXIS_END) return INVALID_TILE;
+	return GetBridgeEnd(t, ReverseDiagDir(AxisToDiagDir(axis)));
 }
 
 
 /**
  * Finds the southern end of a bridge starting at a middle tile
- * @param t the bridge tile to find the bridge ramp for
+ * @param t    the bridge tile to find the bridge ramp for
+ * @param axis the axis to find the bridge ramp for
+ * @returns the tile where the bridge head is, or INVALID_TILE if it doesn't exist
  */
-TileIndex GetSouthernBridgeEnd(TileIndex t)
+TileIndex GetSouthernBridgeEndAtAxis(TileIndex t, Axis axis)
 {
-	return GetBridgeEnd(t, AxisToDiagDir(GetBridgeAxis(t)));
+	Axis bridge_axis = GetBridgeAxis(t);
+	if (bridge_axis != axis && bridge_axis != AXIS_END) return INVALID_TILE;
+	return GetBridgeEnd(t, AxisToDiagDir(axis));
 }
 
 
@@ -60,6 +68,20 @@ TileIndex GetOtherBridgeEnd(TileIndex tile)
 {
 	assert(IsBridgeTile(tile));
 	return GetBridgeEnd(tile, GetTunnelBridgeDirection(tile));
+}
+
+
+/**
+ * Returns the height ('z') of the lowest bridge at a tile
+ * @param tile the tile at which the bridge(s) are
+ * @return the height of the lowest bridge.
+ */
+int GetLowestBridgeHeight(TileIndex tile) {
+	TileIndex north_head_x = GetNorthernBridgeEndAtAxis(tile, AXIS_X);
+	TileIndex north_head_y = GetNorthernBridgeEndAtAxis(tile, AXIS_Y);
+	if (north_head_x == INVALID_TILE) return GetBridgeHeight(north_head_y);
+	else if (north_head_y == INVALID_TILE) return GetBridgeHeight(north_head_x);
+	else return std::min(GetBridgeHeight(north_head_x), GetBridgeHeight(north_head_y));
 }
 
 /**

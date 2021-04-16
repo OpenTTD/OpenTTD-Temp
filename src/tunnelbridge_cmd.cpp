@@ -437,11 +437,13 @@ CommandCost CmdBuildBridge(TileIndex end_tile, DoCommandFlag flags, uint32 p1, u
 		const TileIndex heads[] = {tile_start, tile_end};
 		for (int i = 0; i < 2; i++) {
 			if (IsBridgeAbove(heads[i])) {
-				TileIndex north_head = GetNorthernBridgeEnd(heads[i]);
+				if (GetBridgeAxis(heads[i]) == direction || GetBridgeAxis(heads[i]) == AXIS_END) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
 
-				if (direction == GetBridgeAxis(heads[i])) return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
+				TileIndex north_head_x = GetNorthernBridgeEndAtAxis(heads[i], AXIS_X);
+				TileIndex north_head_y = GetNorthernBridgeEndAtAxis(heads[i], AXIS_Y);
 
-				if (z_start + 1 == GetBridgeHeight(north_head)) {
+				if ((north_head_x != INVALID_TILE && z_start + 1 == GetBridgeHeight(north_head_x))
+					|| (north_head_y != INVALID_TILE && z_start + 1 == GetBridgeHeight(north_head_y))) {
 					return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
 				}
 			}
@@ -462,8 +464,13 @@ CommandCost CmdBuildBridge(TileIndex end_tile, DoCommandFlag flags, uint32 p1, u
 			}
 
 			if (IsBridgeAbove(tile)) {
-				/* Disallow crossing bridges for the time being */
-				return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
+				TileIndex existing_bridge_head = GetNorthernBridgeEndAtAxis(tile, direction == AXIS_X ? AXIS_Y : AXIS_X);
+				int existing_bridge_z_start = GetBridgeHeight(existing_bridge_head);
+
+				if (z_start + 1 == existing_bridge_z_start) {
+					/* Disallow crossing bridges at same elevation */
+					return_cmd_error(STR_ERROR_MUST_DEMOLISH_BRIDGE_FIRST);
+				}
 			}
 
 			switch (GetTileType(tile)) {
@@ -1006,7 +1013,7 @@ static CommandCost DoClearBridge(TileIndex tile, DoCommandFlag flags)
 				int minz = GetTileMaxZ(c) + 3;
 				if (height < minz) SetRoadside(c, ROADSIDE_PAVED);
 			}
-			ClearBridgeMiddle(c);
+			ClearSingleBridgeMiddle(c, DiagDirToAxis(direction));
 			MarkTileDirtyByTile(c, height - TileHeight(c));
 		}
 
@@ -1260,7 +1267,7 @@ static void DrawBridgeRoadBits(TileIndex head_tile, int x, int y, int z, int off
 }
 
 /**
- * Draws a tunnel of bridge tile.
+ * Draws a tunnel or bridge tile.
  * For tunnels, this is rather simple, as you only need to draw the entrance.
  * Bridges are a bit more complex. base_offset is where the sprite selection comes into play
  * and it works a bit like a bitmask.<p> For bridge heads:
@@ -1288,7 +1295,7 @@ static void DrawTile_TunnelBridge(TileInfo *ti)
 		 */
 
 		static const int _tunnel_BB[4][12] = {
-			/*  tunnnel-roof  |  Z-separator  | tram-catenary
+			/*  tunnel-roof  |  Z-separator  | tram-catenary
 			 * w  h  bb_x bb_y| x   y   w   h |bb_x bb_y w h */
 			{  1,  0, -15, -14,  0, 15, 16,  1, 0, 1, 16, 15 }, // NE
 			{  0,  1, -14, -15, 15,  0,  1, 16, 1, 0, 15, 16 }, // SE
@@ -1533,11 +1540,66 @@ static BridgePieces CalcBridgePiece(uint north, uint south)
 	}
 }
 
+
+/** Bridge middle subsprite for overlapping bridges */
+static const int INF = 1000;
+static const SubSprite bridge_subsprite_per_height[8] = {
+	{ -INF, 1 * (int)TILE_HEIGHT, INF, INF },
+	{ -INF, 0 * (int)TILE_HEIGHT, INF, INF },
+	{ -INF, -1 * (int)TILE_HEIGHT, INF, INF },
+	{ -INF, -2 * (int)TILE_HEIGHT, INF, INF },
+	{ -INF, -3 * (int)TILE_HEIGHT, INF, INF },
+	{ -INF, -4 * (int)TILE_HEIGHT, INF, INF },
+	{ -INF, -5 * (int)TILE_HEIGHT, INF, INF },
+	{ -INF, -6 * (int)TILE_HEIGHT, INF, INF },
+};
+
 /**
- * Draw the middle bits of a bridge.
- * @param ti Tile information of the tile to draw it on.
+ * Draws the floor and the far part of bridge.
+ * @param psid the bridge sprite to be drawn
+ * @param a    the given axis
+ * @param x    the x position
+ * @param y    the y position
+ * @param z    the z position
+ * @param sub  the bridge middle subsprite, if needed
  */
-void DrawBridgeMiddle(const TileInfo *ti)
+void DrawBridgeFloor(const PalSpriteID* psid, Axis axis, int x, int y, int z, const SubSprite *sub)
+{
+	if (IsInvisibilitySet(TO_BRIDGES)) return;
+
+	if (axis == AXIS_X) {
+		AddSortableSpriteToDraw(psid->sprite, psid->pal, x, y, 16, 1, 0x28, z, IsTransparencySet(TO_BRIDGES), 0, 0, BRIDGE_Z_START, sub);
+	} else {
+		AddSortableSpriteToDraw(psid->sprite, psid->pal, x, y, 1, 16, 0x28, z, IsTransparencySet(TO_BRIDGES), 0, 0, BRIDGE_Z_START, sub);
+	}
+}
+
+/**
+ * Draws the bridge roof, which is the component which is logically between the vehicle and the camera.
+ * @param psid the bridge sprite to be drawn
+ * @param a    the given axis
+ * @param x    the x position
+ * @param y    the y position
+ * @param z    the z position
+ * @param sub  the bridge middle subsprite, if needed
+ */
+void DrawBridgeRoof(const PalSpriteID *psid, Axis axis, int x, int y, int z, const SubSprite *sub)
+{
+	if (IsInvisibilitySet(TO_BRIDGES)) return;
+
+	if (axis == AXIS_X) {
+		if (psid->sprite & SPRITE_MASK) AddSortableSpriteToDraw(psid->sprite, psid->pal, x, y, 16, 4, 0x28, z, IsTransparencySet(TO_BRIDGES), 0, 3, BRIDGE_Z_START, sub);
+	} else {
+		if (psid->sprite & SPRITE_MASK) AddSortableSpriteToDraw(psid->sprite, psid->pal, x, y, 4, 16, 0x28, z, IsTransparencySet(TO_BRIDGES), 3, 0, BRIDGE_Z_START, sub);
+	}
+}
+
+/**
+ * Draws the middle bits of a bridge that goes through the given axis.
+ * @param ti tile information of the tile to draw it on.
+ * @param a  the given axis
+ */
+void DrawBridgeMiddleAtAxis(const TileInfo *ti, Axis axis)
 {
 	/* Sectional view of bridge bounding boxes:
 	 *
@@ -1555,13 +1617,23 @@ void DrawBridgeMiddle(const TileInfo *ti)
 	 *
 	 */
 
-	if (!IsBridgeAbove(ti->tile)) return;
-
-	TileIndex rampnorth = GetNorthernBridgeEnd(ti->tile);
-	TileIndex rampsouth = GetSouthernBridgeEnd(ti->tile);
+	TileIndex rampnorth = GetNorthernBridgeEndAtAxis(ti->tile, axis);
+	TileIndex rampsouth = GetSouthernBridgeEndAtAxis(ti->tile, axis);
 	TransportType transport_type = GetTunnelBridgeTransportType(rampsouth);
 
-	Axis axis = GetBridgeAxis(ti->tile);
+	/* Check whether there is another bridge above this bridge tile */
+	TileIndex other_bridge_head = GetNorthernBridgeEndAtAxis(ti->tile, axis == AXIS_X ? AXIS_Y : AXIS_X);
+	int bridge_height_diff = other_bridge_head != INVALID_TILE ? GetBridgeHeight(other_bridge_head) - GetBridgeHeight(rampnorth) : -1;
+
+	const SubSprite *sub_floor = nullptr;
+	const SubSprite *sub_roof = nullptr;
+	if (bridge_height_diff > 0) {
+		/* Pick the appropiated subsprite for the given height difference */
+		//TODO: still figuring this out
+		sub_floor = &bridge_subsprite_per_height[std::min(bridge_height_diff, (int)lengthof(bridge_subsprite_per_height)) - 1];
+		sub_roof = &bridge_subsprite_per_height[std::min(bridge_height_diff, (int)lengthof(bridge_subsprite_per_height)) - 1];
+	}
+
 	BridgePieces piece = CalcBridgePiece(
 		GetTunnelBridgeLength(ti->tile, rampnorth) + 1,
 		GetTunnelBridgeLength(ti->tile, rampsouth) + 1
@@ -1570,7 +1642,7 @@ void DrawBridgeMiddle(const TileInfo *ti)
 	const PalSpriteID *psid;
 	bool drawfarpillar;
 	if (transport_type != TRANSPORT_WATER) {
-		BridgeType type =  GetBridgeType(rampsouth);
+		BridgeType type = GetBridgeType(rampsouth);
 		drawfarpillar = !HasBit(GetBridgeSpec(type)->flags, 0);
 
 		uint base_offset;
@@ -1599,14 +1671,8 @@ void DrawBridgeMiddle(const TileInfo *ti)
 	/* Draw Trambits as SpriteCombine */
 	if (transport_type == TRANSPORT_ROAD || transport_type == TRANSPORT_RAIL) StartSpriteCombine();
 
-	/* Draw floor and far part of bridge*/
-	if (!IsInvisibilitySet(TO_BRIDGES)) {
-		if (axis == AXIS_X) {
-			AddSortableSpriteToDraw(psid->sprite, psid->pal, x, y, 16, 1, 0x28, z, IsTransparencySet(TO_BRIDGES), 0, 0, BRIDGE_Z_START);
-		} else {
-			AddSortableSpriteToDraw(psid->sprite, psid->pal, x, y, 1, 16, 0x28, z, IsTransparencySet(TO_BRIDGES), 0, 0, BRIDGE_Z_START);
-		}
-	}
+	/* Draw floor and far part of bridge */
+	DrawBridgeFloor(psid, axis, x, y, z, sub_floor);
 
 	psid++;
 
@@ -1634,20 +1700,18 @@ void DrawBridgeMiddle(const TileInfo *ti)
 		EndSpriteCombine();
 
 		if (HasRailCatenaryDrawn(GetRailType(rampsouth))) {
-			DrawRailCatenaryOnBridge(ti);
+			DrawRailCatenaryOnBridge(ti, axis);
 		}
 	}
 
-	/* draw roof, the component of the bridge which is logically between the vehicle and the camera */
-	if (!IsInvisibilitySet(TO_BRIDGES)) {
-		if (axis == AXIS_X) {
-			y += 12;
-			if (psid->sprite & SPRITE_MASK) AddSortableSpriteToDraw(psid->sprite, psid->pal, x, y, 16, 4, 0x28, z, IsTransparencySet(TO_BRIDGES), 0, 3, BRIDGE_Z_START);
-		} else {
-			x += 12;
-			if (psid->sprite & SPRITE_MASK) AddSortableSpriteToDraw(psid->sprite, psid->pal, x, y, 4, 16, 0x28, z, IsTransparencySet(TO_BRIDGES), 3, 0, BRIDGE_Z_START);
-		}
+	if (axis == AXIS_X) {
+		y += 12;
+	} else {
+		x += 12;
 	}
+
+	/* draw roof, the component of the bridge which is logically between the vehicle and the camera */
+	DrawBridgeRoof(psid, axis, x, y, z, sub_roof);
 
 	/* Draw TramFront as SpriteCombine */
 	if (transport_type == TRANSPORT_ROAD) EndSpriteCombine();
@@ -1657,6 +1721,35 @@ void DrawBridgeMiddle(const TileInfo *ti)
 
 	psid++;
 	DrawBridgePillars(psid, ti, axis, drawfarpillar, x, y, z);
+}
+
+/**
+ * Draw the middle bits of a bridge.
+ * @param ti Tile information of the tile to draw it on.
+ */
+void DrawBridgeMiddle(const TileInfo *ti)
+{
+	if (!IsBridgeAbove(ti->tile)) return;
+
+	TileIndex rampnorth_x = GetNorthernBridgeEndAtAxis(ti->tile, AXIS_X);
+	TileIndex rampnorth_y = GetNorthernBridgeEndAtAxis(ti->tile, AXIS_Y);
+
+	if (rampnorth_x != INVALID_TILE && rampnorth_y != INVALID_TILE) {
+		/* This tile has two crossing bridges so draw the lowest one first */
+		int height_x = TileHeight(rampnorth_x);
+		int height_y = TileHeight(rampnorth_y);
+		if (height_x < height_y) {
+			DrawBridgeMiddleAtAxis(ti, AXIS_X);
+			DrawBridgeMiddleAtAxis(ti, AXIS_Y);
+		} else {
+			DrawBridgeMiddleAtAxis(ti, AXIS_Y);
+			DrawBridgeMiddleAtAxis(ti, AXIS_X);
+		}
+	} else {
+		/* There is a single bridge to draw */
+		if (rampnorth_x != INVALID_TILE) DrawBridgeMiddleAtAxis(ti, AXIS_X);
+		if (rampnorth_y != INVALID_TILE) DrawBridgeMiddleAtAxis(ti, AXIS_Y);
+	}
 }
 
 

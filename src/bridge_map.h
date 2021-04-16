@@ -71,11 +71,13 @@ static inline Axis GetBridgeAxis(TileIndex t)
 	return (Axis)(GB(_m[t].type, 2, 2) - 1);
 }
 
-TileIndex GetNorthernBridgeEnd(TileIndex t);
-TileIndex GetSouthernBridgeEnd(TileIndex t);
+TileIndex GetNorthernBridgeEndAtAxis(TileIndex t, Axis axis);
+TileIndex GetSouthernBridgeEndAtAxis(TileIndex t, Axis axis);
 TileIndex GetOtherBridgeEnd(TileIndex t);
 
+int GetLowestBridgeHeight(TileIndex tile);
 int GetBridgeHeight(TileIndex tile);
+
 /**
  * Get the height ('z') of a bridge in pixels.
  * @param tile the bridge ramp tile to get the bridge height from
@@ -84,6 +86,16 @@ int GetBridgeHeight(TileIndex tile);
 static inline int GetBridgePixelHeight(TileIndex tile)
 {
 	return GetBridgeHeight(tile) * TILE_HEIGHT;
+}
+
+/**
+ * Get the height ('z') of the lowest bridge in pixels.
+ * @param tile the tile at which the bridge(s) are
+ * @return the height of the bridge in pixels
+ */
+static inline int GetLowestBridgePixelHeight(TileIndex tile)
+{
+	return GetLowestBridgeHeight(tile) * TILE_HEIGHT;
 }
 
 /**
