@@ -731,7 +731,7 @@ public:
 		/* Position scrollbar to selected group */
 		for (uint i = 0; i < this->rows; i++) {
 			if (this->groups[i]->index == sel) {
-				this->vscroll->SetPosition(Clamp(i - this->vscroll->GetCapacity() / 2, 0, std::max(this->vscroll->GetCount() - this->vscroll->GetCapacity(), 0)));
+				this->vscroll->SetPosition(Clamp(i - this->vscroll->GetCapacity() / 2, 0, std::max<int>(this->vscroll->GetCount() - this->vscroll->GetCapacity(), 0)));
 				break;
 			}
 		}

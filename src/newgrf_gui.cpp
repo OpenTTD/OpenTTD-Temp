@@ -1331,12 +1331,12 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 
 			case WKC_PAGEUP:
 				/* scroll up a page */
-				this->avail_pos = (this->avail_pos < this->vscroll2->GetCapacity()) ? 0 : this->avail_pos - this->vscroll2->GetCapacity();
+				this->avail_pos = (this->avail_pos < (int)this->vscroll2->GetCapacity()) ? 0 : this->avail_pos - this->vscroll2->GetCapacity();
 				break;
 
 			case WKC_PAGEDOWN:
 				/* scroll down a page */
-				this->avail_pos = std::min(this->avail_pos + this->vscroll2->GetCapacity(), (int)this->avails.size() - 1);
+				this->avail_pos = std::min<int>(this->avail_pos + this->vscroll2->GetCapacity(), this->avails.size() - 1);
 				break;
 
 			case WKC_HOME:
@@ -1388,7 +1388,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 				for (from_prev = &this->actives; *from_prev != this->active_sel; from_prev = &(*from_prev)->next, from_pos++) {}
 
 				/* Gets the drag-and-drop destination offset. Ignore the last dummy line. */
-				int to_pos = std::min(this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_NS_FILE_LIST), this->vscroll->GetCount() - 2);
+				int to_pos = std::min(this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_NS_FILE_LIST), (int)this->vscroll->GetCount() - 2);
 				if (to_pos != from_pos) { // Don't move NewGRF file over itself.
 					/* Get pointer to destination position. */
 					GRFConfig **to_prev = &this->actives;
@@ -1406,7 +1406,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 					this->InvalidateData();
 				}
 			} else if (this->avail_sel != nullptr) {
-				int to_pos = std::min(this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_NS_FILE_LIST), this->vscroll->GetCount() - 1);
+				int to_pos = std::min(this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_NS_FILE_LIST), (int)this->vscroll->GetCount() - 1);
 				this->AddGRFToActive(to_pos);
 			}
 		} else if (widget == WID_NS_AVAIL_LIST && this->active_sel != nullptr) {
@@ -1432,7 +1432,7 @@ struct NewGRFWindow : public Window, NewGRFScanCallback {
 			/* An NewGRF file is dragged over the active list. */
 			int to_pos = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_NS_FILE_LIST);
 			/* Skip the last dummy line if the source is from the active list. */
-			to_pos = std::min(to_pos, this->vscroll->GetCount() - (this->active_sel != nullptr ? 2 : 1));
+			to_pos = std::min(to_pos, (int)this->vscroll->GetCount() - (this->active_sel != nullptr ? 2 : 1));
 
 			if (to_pos != this->active_over) {
 				this->active_over = to_pos;

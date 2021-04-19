@@ -789,7 +789,7 @@ public:
 				break;
 
 			case WID_TD_LIST: {
-				int n = 0;
+				uint32 n = 0;
 				int y = r.top + WD_FRAMERECT_TOP;
 				if (this->towns.size() == 0) { // No towns available.
 					DrawString(r.left + WD_FRAMERECT_LEFT, r.right, y, STR_TOWN_DIRECTORY_NONE);

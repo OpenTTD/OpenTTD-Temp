@@ -405,7 +405,7 @@ struct NewGRFInspectWindow : Window {
 		va_end(va);
 
 		offset -= this->vscroll->GetPosition();
-		if (offset < 0 || offset >= this->vscroll->GetCapacity()) return;
+		if (offset < 0 || offset >= (int)this->vscroll->GetCapacity()) return;
 
 		::DrawString(r.left + LEFT_OFFSET, r.right - RIGHT_OFFSET, r.top + TOP_OFFSET + (offset * this->resize.step_height), buf, TC_BLACK);
 	}

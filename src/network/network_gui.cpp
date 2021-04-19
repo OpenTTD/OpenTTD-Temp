@@ -547,9 +547,9 @@ public:
 			case WID_NG_MATRIX: {
 				uint16 y = r.top;
 
-				const int max = std::min(this->vscroll->GetPosition() + this->vscroll->GetCapacity(), (int)this->servers.size());
+				const uint32 max = std::min<uint32>(this->vscroll->GetPosition() + this->vscroll->GetCapacity(), this->servers.size());
 
-				for (int i = this->vscroll->GetPosition(); i < max; ++i) {
+				for (uint32 i = this->vscroll->GetPosition(); i < max; ++i) {
 					const NetworkGameList *ngl = this->servers[i];
 					this->DrawServerLine(ngl, y, ngl == this->server);
 					y += this->resize.step_height;
@@ -814,7 +814,7 @@ public:
 				case WKC_PAGEDOWN:
 					/* scroll down a page */
 					if (this->list_pos == SLP_INVALID) return ES_HANDLED;
-					this->list_pos = std::min(this->list_pos + this->vscroll->GetCapacity(), (int)this->servers.size() - 1);
+					this->list_pos = std::min<uint32>(this->list_pos + this->vscroll->GetCapacity(), this->servers.size() - 1);
 					break;
 				case WKC_HOME:
 					/* jump to beginning */
@@ -1433,7 +1433,7 @@ struct NetworkLobbyWindow : public Window {
 
 		int y = r.top;
 		/* Draw company list */
-		int pos = this->vscroll->GetPosition();
+		uint32 pos = this->vscroll->GetPosition();
 		while (pos < this->server->info.companies_on) {
 			byte company = NetworkLobbyFindCompanyIndex(pos);
 			bool income = false;

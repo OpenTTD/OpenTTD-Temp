@@ -483,7 +483,7 @@ public:
 				break;
 
 			case WID_AP_AIRPORT_LIST: {
-				int num_clicked = this->vscroll->GetPosition() + (pt.y - this->nested_array[widget]->pos_y) / this->line_height;
+				uint32 num_clicked = this->vscroll->GetPosition() + ((pt.y - this->nested_array[widget]->pos_y) / this->line_height);
 				if (num_clicked >= this->vscroll->GetCount()) break;
 				const AirportSpec *as = AirportClass::Get(_selected_airport_class)->GetSpec(num_clicked);
 				if (as->IsAvailable()) this->SelectOtherAirport(num_clicked);

@@ -2440,9 +2440,9 @@ static void HandleScrollbarScrolling(Window *w)
 	}
 
 	/* Find the item we want to move to and make sure it's inside bounds. */
-	int pos = std::min(RoundDivSU(std::max(0, i + _scrollbar_start_pos) * sb->GetCount(), _scrollbar_size), std::max(0, sb->GetCount() - sb->GetCapacity()));
-	if (rtl) pos = std::max(0, sb->GetCount() - sb->GetCapacity() - pos);
-	if (pos != sb->GetPosition()) {
+	int pos = std::min<int>(RoundDivSU(std::max(0, i + _scrollbar_start_pos) * sb->GetCount(), _scrollbar_size), std::max<int>(0, sb->GetCount() - sb->GetCapacity()));
+	if (rtl) pos = std::max<int>(0, sb->GetCount() - sb->GetCapacity() - pos);
+	if (pos != (int)sb->GetPosition()) {
 		sb->SetPosition(pos);
 		w->SetDirty();
 	}

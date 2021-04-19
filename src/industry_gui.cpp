@@ -521,7 +521,7 @@ public:
 
 				for (byte i = 0; i < this->vscroll->GetCapacity() && i + this->vscroll->GetPosition() < this->count; i++) {
 					int y = r.top + WD_MATRIX_TOP + i * this->resize.step_height;
-					bool selected = this->selected_index == i + this->vscroll->GetPosition();
+					bool selected = this->selected_index == i + (int)this->vscroll->GetPosition();
 
 					if (this->index[i + this->vscroll->GetPosition()] == INVALID_INDUSTRYTYPE) {
 						DrawString(text_left, text_right, y, STR_FUND_INDUSTRY_MANY_RANDOM_INDUSTRIES, selected ? TC_WHITE : TC_ORANGE);
@@ -1592,7 +1592,7 @@ public:
 				break;
 
 			case WID_ID_INDUSTRY_LIST: {
-				int n = 0;
+				uint32 n = 0;
 				int y = r.top + WD_FRAMERECT_TOP;
 				if (this->industries.size() == 0) {
 					DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_INDUSTRY_DIRECTORY_NONE);

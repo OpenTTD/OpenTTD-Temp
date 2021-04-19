@@ -874,11 +874,11 @@ public:
 				break;
 			case WKC_PAGEUP:
 				/* scroll up a page */
-				this->list_pos = (this->list_pos < this->vscroll->GetCapacity()) ? 0 : this->list_pos - this->vscroll->GetCapacity();
+				this->list_pos = (this->list_pos < (int)this->vscroll->GetCapacity()) ? 0 : this->list_pos - this->vscroll->GetCapacity();
 				break;
 			case WKC_PAGEDOWN:
 				/* scroll down a page */
-				this->list_pos = std::min(this->list_pos + this->vscroll->GetCapacity(), (int)this->content.size() - 1);
+				this->list_pos = std::min<int>(this->list_pos + this->vscroll->GetCapacity(), this->content.size() - 1);
 				break;
 			case WKC_HOME:
 				/* jump to beginning */

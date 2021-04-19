@@ -236,7 +236,7 @@ struct AIListWindow : public Window {
 		this->vscroll->SetCount((int)this->info_list->size() + 1);
 
 		/* selected goes from -1 .. length of ai list - 1. */
-		this->selected = std::min(this->selected, this->vscroll->GetCount() - 2);
+		this->selected = std::min(this->selected, (int)this->vscroll->GetCount() - 2);
 	}
 };
 
@@ -1006,7 +1006,7 @@ struct AIDebugWindow : public Window {
 
 	static CompanyID ai_debug_company;                     ///< The AI that is (was last) being debugged.
 	int redraw_timer;                                      ///< Timer for redrawing the window, otherwise it'll happen every tick.
-	int last_vscroll_pos;                                  ///< Last position of the scrolling.
+	uint32 last_vscroll_pos;                               ///< Last position of the scrolling.
 	bool autoscroll;                                       ///< Whether automatically scrolling should be enabled or not.
 	bool show_break_box;                                   ///< Whether the break/debug box is visible.
 	static bool break_check_enabled;                       ///< Stop an AI when it prints a matching string
@@ -1160,7 +1160,7 @@ struct AIDebugWindow : public Window {
 
 		ScriptLog::LogData *log = this->GetLogPointer();
 
-		int scroll_count = (log == nullptr) ? 0 : log->used;
+		uint32 scroll_count = (log == nullptr) ? 0 : log->used;
 		if (this->vscroll->GetCount() != scroll_count) {
 			this->vscroll->SetCount(scroll_count);
 
@@ -1176,7 +1176,7 @@ struct AIDebugWindow : public Window {
 			this->autoscroll = this->vscroll->GetPosition() >= log->used - this->vscroll->GetCapacity();
 		}
 		if (this->autoscroll) {
-			int scroll_pos = std::max(0, log->used - this->vscroll->GetCapacity());
+			uint32 scroll_pos = std::max(0, log->used - (int)this->vscroll->GetCapacity());
 			if (scroll_pos != this->vscroll->GetPosition()) {
 				this->vscroll->SetPosition(scroll_pos);
 

@@ -598,9 +598,9 @@ public:
 class Scrollbar {
 private:
 	const bool is_vertical; ///< Scrollbar has vertical orientation.
-	uint16 count;           ///< Number of elements in the list.
-	uint16 cap;             ///< Number of visible elements of the scroll bar.
-	uint16 pos;             ///< Index of first visible item of the list.
+	uint32 count;           ///< Number of elements in the list.
+	uint32 cap;             ///< Number of visible elements of the scroll bar.
+	uint32 pos;             ///< Index of first visible item of the list.
 	uint16 stepsize;        ///< Distance to scroll, when pressing the buttons or using the wheel.
 
 public:
@@ -619,7 +619,7 @@ public:
 	 * Gets the number of elements in the list
 	 * @return the number of elements
 	 */
-	inline uint16 GetCount() const
+	inline uint32 GetCount() const
 	{
 		return this->count;
 	}
@@ -628,7 +628,7 @@ public:
 	 * Gets the number of visible elements of the scrollbar
 	 * @return the number of visible elements
 	 */
-	inline uint16 GetCapacity() const
+	inline uint32 GetCapacity() const
 	{
 		return this->cap;
 	}
@@ -637,7 +637,7 @@ public:
 	 * Gets the position of the first visible element in the list
 	 * @return the position of the element
 	 */
-	inline uint16 GetPosition() const
+	inline uint32 GetPosition() const
 	{
 		return this->pos;
 	}
@@ -647,7 +647,7 @@ public:
 	 * @param item to check
 	 * @return true iff the item is visible
 	 */
-	inline bool IsVisible(uint16 item) const
+	inline bool IsVisible(int item) const
 	{
 		return IsInsideBS(item, this->GetPosition(), this->GetCapacity());
 	}
@@ -679,12 +679,11 @@ public:
 	void SetCount(int num)
 	{
 		assert(num >= 0);
-		assert(num <= MAX_UVALUE(uint16));
 
 		this->count = num;
 		num -= this->cap;
 		if (num < 0) num = 0;
-		if (num < this->pos) this->pos = num;
+		if ((uint32)num < this->pos) this->pos = num;
 	}
 
 	/**
@@ -695,10 +694,9 @@ public:
 	void SetCapacity(int capacity)
 	{
 		assert(capacity > 0);
-		assert(capacity <= MAX_UVALUE(uint16));
 
 		this->cap = capacity;
-		if (this->cap + this->pos > this->count) this->pos = std::max(0, this->count - this->cap);
+		if (this->cap + this->pos > this->count) this->pos = std::max<int>(0, this->count - this->cap);
 	}
 
 	void SetCapacityFromWidget(Window *w, int widget, int padding = 0);
@@ -728,7 +726,7 @@ public:
 			case SS_BIG:   difference *= this->cap; break;
 			default: break;
 		}
-		this->SetPosition(Clamp(this->pos + difference, 0, std::max(this->count - this->cap, 0)));
+		this->SetPosition(Clamp(this->pos + difference, 0, std::max<int>(this->count - this->cap, 0)));
 	}
 
 	/**
@@ -737,7 +735,7 @@ public:
 	 * the window depending on where in the list it was.
 	 * @param position the position to scroll towards.
 	 */
-	void ScrollTowards(int position)
+	void ScrollTowards(uint32 position)
 	{
 		if (position < this->GetPosition()) {
 			/* scroll up to the item */

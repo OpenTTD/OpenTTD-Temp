@@ -288,7 +288,7 @@ struct DropdownWindow : Window {
 		this->scrolling_timer.SetInterval(MILLISECONDS_PER_TICK);
 
 		if (this->scrolling != 0) {
-			int pos = this->vscroll->GetPosition();
+			uint32 pos = this->vscroll->GetPosition();
 
 			this->vscroll->UpdatePosition(this->scrolling);
 			this->scrolling = 0;
