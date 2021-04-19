@@ -189,6 +189,8 @@ add_files(
     guitimer_func.h
     heightmap.cpp
     heightmap.h
+    help_gui.cpp
+    help_gui.h
     highscore.cpp
     highscore.h
     highscore_gui.cpp

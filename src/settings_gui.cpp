@@ -114,7 +114,7 @@ struct BaseSetTextfileWindow : public TextfileWindow {
 
 	BaseSetTextfileWindow(TextfileType file_type, const TBaseSet* baseset, StringID content_type) : TextfileWindow(file_type), baseset(baseset), content_type(content_type)
 	{
-		const char *textfile = this->baseset->GetTextfile(file_type);
+		const char *textfile = this->baseset->GetTextfile(file_type, &this->text_direction);
 		this->LoadTextfile(textfile, BASESET_DIR);
 	}
 

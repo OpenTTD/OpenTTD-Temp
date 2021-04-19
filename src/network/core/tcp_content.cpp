@@ -98,7 +98,7 @@ bool ContentInfo::IsValid() const
  * @param type The type of the textfile to search for.
  * @return The filename for the textfile, \c nullptr otherwise.
  */
-const char *ContentInfo::GetTextfile(TextfileType type) const
+const char *ContentInfo::GetTextfile(TextfileType type, TextDirection *text_dir) const
 {
 	if (this->state == INVALID) return nullptr;
 	const char *tmp;
@@ -137,7 +137,7 @@ const char *ContentInfo::GetTextfile(TextfileType type) const
 			break;
 	}
 	if (tmp == nullptr) return nullptr;
-	return ::GetTextfile(type, GetContentInfoSubDir(this->type), tmp);
+	return ::GetTextfile(type, GetContentInfoSubDir(this->type), tmp, text_dir);
 }
 #endif /* OPENTTD_MSU */
 

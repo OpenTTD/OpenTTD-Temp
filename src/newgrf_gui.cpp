@@ -544,7 +544,7 @@ struct NewGRFTextfileWindow : public TextfileWindow {
 
 	NewGRFTextfileWindow(TextfileType file_type, const GRFConfig *c) : TextfileWindow(file_type), grf_config(c)
 	{
-		const char *textfile = this->grf_config->GetTextfile(file_type);
+		const char *textfile = this->grf_config->GetTextfile(file_type, &this->text_direction);
 		this->LoadTextfile(textfile, NEWGRF_DIR);
 	}
 

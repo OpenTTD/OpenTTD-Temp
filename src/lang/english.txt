@@ -482,6 +482,7 @@ STR_NEWS_MENU_DELETE_ALL_MESSAGES                               :Delete all mess
 
 ############ range for about menu starts
 STR_ABOUT_MENU_LAND_BLOCK_INFO                                  :Land area information
+STR_ABOUT_MENU_HELP                                             :Help and manuals
 STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :Toggle console
 STR_ABOUT_MENU_AI_DEBUG                                         :AI/Game script debug
@@ -1837,6 +1838,7 @@ STR_INTRO_MULTIPLAYER                                           :{BLACK}Multipla
 
 STR_INTRO_GAME_OPTIONS                                          :{BLACK}Game Options
 STR_INTRO_HIGHSCORE                                             :{BLACK}Highscore Table
+STR_INTRO_HELP                                                  :{BLACK}Help and manuals
 STR_INTRO_CONFIG_SETTINGS_TREE                                  :{BLACK}Settings
 STR_INTRO_NEWGRF_SETTINGS                                       :{BLACK}NewGRF Settings
 STR_INTRO_ONLINE_CONTENT                                        :{BLACK}Check Online Content
@@ -1857,6 +1859,7 @@ STR_INTRO_TOOLTIP_TOYLAND_LANDSCAPE                             :{BLACK}Select '
 
 STR_INTRO_TOOLTIP_GAME_OPTIONS                                  :{BLACK}Display game options
 STR_INTRO_TOOLTIP_HIGHSCORE                                     :{BLACK}Display highscore table
+STR_INTRO_TOOLTIP_HELP                                          :{BLACK}Get access to documentation and online resources
 STR_INTRO_TOOLTIP_CONFIG_SETTINGS_TREE                          :{BLACK}Display settings
 STR_INTRO_TOOLTIP_NEWGRF_SETTINGS                               :{BLACK}Display NewGRF settings
 STR_INTRO_TOOLTIP_ONLINE_CONTENT                                :{BLACK}Check for new and updated content to download
@@ -1876,6 +1879,17 @@ STR_QUIT_NO                                                     :{BLACK}No
 STR_ABANDON_GAME_CAPTION                                        :{WHITE}Abandon Game
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}Are you sure you want to abandon this game?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Are you sure you want to abandon this scenario?
+
+# Help window
+STR_HELPWIN_CAPTION                                             :{WHITE}Help and manuals
+STR_HELPWIN_README                                              :{BLACK}Readme
+STR_HELPWIN_CHANGELOG                                           :{BLACK}Changelog
+STR_HELPWIN_KNOWN_BUGS                                          :{BLACK}Known bugs
+STR_HELPWIN_LICENSE                                             :{BLACK}License
+STR_HELPWIN_WEBSITE                                             :{BLACK}Website
+STR_HELPWIN_WIKI                                                :{BLACK}Manual/wiki
+STR_HELPWIN_BUGTRACKER                                          :{BLACK}Report a bug
+STR_HELPWIN_COMMUNITY_CONTACT                                   :{BLACK}Community
 
 # Cheat window
 STR_CHEATS                                                      :{WHITE}Cheats
@@ -4292,6 +4306,12 @@ STR_AI_SETTINGS_START_DELAY                                     :Number of days 
 STR_TEXTFILE_README_CAPTION                                     :{WHITE}{STRING} readme of {RAW_STRING}
 STR_TEXTFILE_CHANGELOG_CAPTION                                  :{WHITE}{STRING} changelog of {RAW_STRING}
 STR_TEXTFILE_LICENCE_CAPTION                                    :{WHITE}{STRING} licence of {RAW_STRING}
+STR_TEXTFILE_GAME_MANUAL_CAPTION                                :{WHITE}OpenTTD manual '{RAW_STRING}'
+STR_TEXTFILE_JUMPLIST                                           :{WHITE}Table of contents
+STR_TEXTFILE_JUMPLIST_TOOLTIP                                   :{WHITE}Quickly jump to a section in the displayed file via this list
+STR_TEXTFILE_JUMPLIST_ITEM                                      :{WHITE}{RAW_STRING}
+STR_TEXTFILE_NAVBACK_TOOLTIP                                    :{BLACK}Go back in navigation history
+STR_TEXTFILE_NAVFORWARD_TOOLTIP                                 :{BLACK}Return forward in navigation history
 STR_TEXTFILE_WRAP_TEXT                                          :{WHITE}Wrap text
 STR_TEXTFILE_WRAP_TEXT_TOOLTIP                                  :{BLACK}Wrap the text of the window so it all fits without having to scroll
 STR_TEXTFILE_VIEW_README                                        :{BLACK}View readme

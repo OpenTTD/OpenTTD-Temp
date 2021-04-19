@@ -14,6 +14,10 @@
 #include "gfx_func.h"
 #include "string_func.h"
 #include "textfile_gui.h"
+#include "widgets/dropdown_type.h"
+#include "gfx_layout.h"
+#include "debug.h"
+#include <algorithm>
 
 #include "widgets/misc_widget.h"
 
@@ -33,10 +37,13 @@
 static const NWidgetPart _nested_textfile_widgets[] = {
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_CLOSEBOX, COLOUR_MAUVE),
+		NWidget(WWT_PUSHARROWBTN, COLOUR_MAUVE, WID_TF_NAVBACK), SetFill(0, 1), SetMinimalSize(15, 1), SetDataTip(AWV_DECREASE, STR_TEXTFILE_NAVBACK_TOOLTIP),
+		NWidget(WWT_PUSHARROWBTN, COLOUR_MAUVE, WID_TF_NAVFORWARD), SetFill(0, 1), SetMinimalSize(15, 1), SetDataTip(AWV_INCREASE, STR_TEXTFILE_NAVFORWARD_TOOLTIP),
 		NWidget(WWT_CAPTION, COLOUR_MAUVE, WID_TF_CAPTION), SetDataTip(STR_NULL, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
 		NWidget(WWT_TEXTBTN, COLOUR_MAUVE, WID_TF_WRAPTEXT), SetDataTip(STR_TEXTFILE_WRAP_TEXT, STR_TEXTFILE_WRAP_TEXT_TOOLTIP),
 		NWidget(WWT_DEFSIZEBOX, COLOUR_MAUVE),
 	EndContainer(),
+	NWidget(WWT_DROPDOWN, COLOUR_MAUVE, WID_TF_JUMPLIST), SetDataTip(STR_TEXTFILE_JUMPLIST, STR_TEXTFILE_JUMPLIST_TOOLTIP), SetResize(1, 0),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_PANEL, COLOUR_MAUVE, WID_TF_BACKGROUND), SetMinimalSize(200, 125), SetResize(1, 12), SetScrollbar(WID_TF_VSCROLLBAR),
 		EndContainer(),
@@ -58,7 +65,7 @@ static WindowDesc _textfile_desc(
 	_nested_textfile_widgets, lengthof(_nested_textfile_widgets)
 );
 
-TextfileWindow::TextfileWindow(TextfileType file_type) : Window(&_textfile_desc), file_type(file_type)
+TextfileWindow::TextfileWindow(TextfileType file_type) : Window(&_textfile_desc), file_type(file_type), text_direction(TD_LTR), text(nullptr), search_iterator(0)
 {
 	this->CreateNestedTree();
 	this->vscroll = this->GetScrollbar(WID_TF_VSCROLLBAR);
@@ -85,7 +92,8 @@ uint TextfileWindow::GetContentHeight()
 
 	uint height = 0;
 	for (uint i = 0; i < this->lines.size(); i++) {
-		height += GetStringHeight(this->lines[i], max_width, FS_MONO);
+		this->lines[i].wrapped_top = height;
+		height += GetStringHeight(this->lines[i].text, max_width, FS_MONO);
 	}
 
 	return height;
@@ -100,6 +108,19 @@ uint TextfileWindow::GetContentHeight()
 			size->height = 4 * resize->height + TOP_SPACING + BOTTOM_SPACING; // At least 4 lines are visible.
 			size->width = std::max(200u, size->width); // At least 200 pixels wide.
 			break;
+
+		case WID_TF_JUMPLIST:
+			if (this->jumplist.empty()) {
+				size->height = 0;
+			} else {
+				size->height = FONT_HEIGHT_NORMAL + WD_DROPDOWNTEXT_TOP + WD_DROPDOWNTEXT_BOTTOM;
+			}
+			break;
+
+		case WID_TF_NAVBACK:
+		case WID_TF_NAVFORWARD:
+			if (this->file_type != TFT_GAME_MANUAL) size->width = 0;
+			break;
 	}
 }
 
@@ -112,13 +133,61 @@ void TextfileWindow::SetupScrollbars()
 	} else {
 		uint max_length = 0;
 		for (uint i = 0; i < this->lines.size(); i++) {
-			max_length = std::max(max_length, GetStringBoundingBox(this->lines[i], FS_MONO).width);
+			max_length = std::max(max_length, GetStringBoundingBox(this->lines[i].text, FS_MONO).width);
 		}
 		this->vscroll->SetCount((uint)this->lines.size() * FONT_HEIGHT_MONO);
 		this->hscroll->SetCount(max_length + WD_FRAMETEXT_LEFT + WD_FRAMETEXT_RIGHT);
 	}
 
 	this->SetWidgetDisabledState(WID_TF_HSCROLLBAR, IsWidgetLowered(WID_TF_WRAPTEXT));
+}
+
+void TextfileWindow::CheckHyperlinkClick(Point pt)
+{
+	if (this->links.empty()) return;
+
+	/* Which line was clicked */
+	const int y = this->GetRowFromWidget(pt.y, WID_TF_BACKGROUND, WD_FRAMETEXT_TOP, 1) + this->GetScrollbar(WID_TF_VSCROLLBAR)->GetPosition();
+	int line;
+	int subline;
+	if (IsWidgetLowered(WID_TF_WRAPTEXT)) {
+		auto it = std::lower_bound(this->lines.cbegin(), this->lines.cend(), y, [](const Line &l, int y) { return l.wrapped_top <= y; });
+		if (it == this->lines.cend()) return;
+		--it; // lower_bound has found the first line past the one clicked, so take one step back
+		line = it - this->lines.cbegin();
+		subline = (y - it->wrapped_top) / FONT_HEIGHT_MONO;
+		DEBUG(misc, 2, "TextfileWindow check hyperlink: line=%d y=%d, line.wrapped_top=%d, subline=%d", line, y, it->wrapped_top, subline);
+	} else {
+		line = y / FONT_HEIGHT_MONO;
+		subline = 0;
+	}
+
+	/* Find hyperlinks in this line */
+	std::vector<Hyperlink> found_links;
+	for (const auto &link : this->links) {
+		if (link.line == (size_t)line) found_links.push_back(link);
+	}
+	if (found_links.empty()) return;
+
+	/* Build line layout to figure out character position that was clicked */
+	uint window_width = IsWidgetLowered(WID_TF_WRAPTEXT) ? this->GetWidget<NWidgetCore>(WID_TF_BACKGROUND)->current_x - WD_FRAMETEXT_LEFT - WD_FRAMETEXT_RIGHT : INT_MAX;
+	Layouter layout(this->lines[line].text, window_width, this->lines[line].colour, FS_MONO);
+	assert(subline >= 0);
+	assert((size_t)subline < layout.size());
+	const char *found_pos = layout.GetCharAtPosition(pt.x - WD_FRAMETEXT_LEFT, subline);
+	if (found_pos == nullptr) return;
+	ptrdiff_t char_index = found_pos - this->lines[line].text;
+	assert(char_index >= 0);
+	DEBUG(misc, 2, "TextfileWindow check hyperlink click: line=%d, subline=%d, char_index=%d", line, subline, (int)char_index);
+
+	/* Found character index in line, check if any links are at that position */
+	for (const auto &link : found_links) {
+		DEBUG(misc, 2, "Checking link from char " PRINTF_SIZE " to " PRINTF_SIZE, link.begin, link.end);
+		if ((size_t)char_index >= link.begin && (size_t)char_index < link.end) {
+			this->OnHyperlinkClick(link);
+			return;
+		}
+	}
 }
 
 /* virtual */ void TextfileWindow::OnClick(Point pt, int widget, int click_count)
@@ -128,6 +197,21 @@ void TextfileWindow::SetupScrollbars()
 			this->ToggleWidgetLoweredState(WID_TF_WRAPTEXT);
 			this->SetupScrollbars();
 			this->InvalidateData();
+			break;
+
+		case WID_TF_JUMPLIST: {
+			DropDownList list;
+			for (size_t line : this->jumplist) {
+				DropDownListCharStringItem *item = new DropDownListCharStringItem(this->lines[line].text, (int)line, false);
+				item->string = STR_TEXTFILE_JUMPLIST_ITEM;
+				list.emplace_back(item);
+			}
+			ShowDropDownList(this, std::move(list), -1, widget);
+			break;
+		}
+
+		case WID_TF_BACKGROUND:
+			CheckHyperlinkClick(pt);
 			break;
 	}
 }
@@ -150,15 +234,24 @@ void TextfileWindow::SetupScrollbars()
 	int line_height = FONT_HEIGHT_MONO;
 	int y_offset = -this->vscroll->GetPosition();
 
+	TextDirection old_text_dir = _current_text_dir;
+	_current_text_dir = this->text_direction;
+
 	for (uint i = 0; i < this->lines.size(); i++) {
+		const Line &line = this->lines[i];
 		if (IsWidgetLowered(WID_TF_WRAPTEXT)) {
-			y_offset = DrawStringMultiLine(0, right - x, y_offset, bottom - y, this->lines[i], TC_WHITE, SA_TOP | SA_LEFT, false, FS_MONO);
+			/* Check that line is visible before trying to draw */
+			if (i < this->lines.size() - 1 && this->lines[i + 1].wrapped_top <= -y_offset) continue;
+			if (line.wrapped_top >= bottom - y - y_offset) break;
+			/* Draw the line */
+			DrawStringMultiLine(0, right - x, line.wrapped_top + y_offset, bottom - y, line.text, line.colour, SA_TOP | SA_LEFT, false, FS_MONO);
 		} else {
-			DrawString(-this->hscroll->GetPosition(), right - x, y_offset, this->lines[i], TC_WHITE, SA_TOP | SA_LEFT, false, FS_MONO);
+			DrawString(-this->hscroll->GetPosition(), right - x, y_offset, line.text, line.colour, SA_TOP | SA_LEFT, false, FS_MONO);
 			y_offset += line_height; // margin to previous element
 		}
 	}
 
+	_current_text_dir = old_text_dir;
 	_cur_dpi = old_dpi;
 }
 
@@ -168,6 +261,26 @@ void TextfileWindow::SetupScrollbars()
 	this->hscroll->SetCapacityFromWidget(this, WID_TF_BACKGROUND);
 
 	this->SetupScrollbars();
+}
+
+void TextfileWindow::OnDropdownSelect(int widget, int index)
+{
+	if (widget != WID_TF_JUMPLIST) return;
+
+	this->ScrollToLine(index);
+}
+
+void TextfileWindow::ScrollToLine(size_t line)
+{
+	Scrollbar *sb = this->GetScrollbar(WID_TF_VSCROLLBAR);
+	int newpos;
+	if (this->IsWidgetLowered(WID_TF_WRAPTEXT)) {
+		newpos = this->lines[line].wrapped_top;
+	} else {
+		newpos = (int)line * FONT_HEIGHT_MONO;
+	}
+	sb->SetPosition(std::min(newpos, sb->GetCount() - sb->GetCapacity()));
+	this->SetDirty();
 }
 
 /* virtual */ void TextfileWindow::Reset()
@@ -184,7 +297,7 @@ void TextfileWindow::SetupScrollbars()
 {
 	if (this->search_iterator >= this->lines.size()) return nullptr;
 
-	return this->lines[this->search_iterator++];
+	return this->lines[this->search_iterator++].text;
 }
 
 /* virtual */ bool TextfileWindow::Monospace()
@@ -319,6 +432,7 @@ static void Xunzip(byte **bufp, size_t *sizep)
 	if (textfile == nullptr) return;
 
 	this->lines.clear();
+	this->jumplist.clear();
 
 	/* Get text from file */
 	size_t filesize;
@@ -333,17 +447,18 @@ static void Xunzip(byte **bufp, size_t *sizep)
 
 #if defined(WITH_ZLIB) || defined(WITH_LIBLZMA)
 	const char *suffix = strrchr(textfile, '.');
-	if (suffix == nullptr) return;
-#endif
+	if (suffix != nullptr) {
 
-#if defined(WITH_ZLIB)
-	/* In-place gunzip */
-	if (strcmp(suffix, ".gz") == 0) Gunzip((byte**)&this->text, &filesize);
-#endif
+# if defined(WITH_ZLIB)
+		/* In-place gunzip */
+		if (strcmp(suffix, ".gz") == 0) Gunzip((byte **)&this->text, &filesize);
+# endif
 
-#if defined(WITH_LIBLZMA)
-	/* In-place xunzip */
-	if (strcmp(suffix, ".xz") == 0) Xunzip((byte**)&this->text, &filesize);
+# if defined(WITH_LIBLZMA)
+		/* In-place xunzip */
+		if (strcmp(suffix, ".xz") == 0) Xunzip((byte **)&this->text, &filesize);
+# endif
+	}
 #endif
 
 	if (!this->text) return;
@@ -372,6 +487,8 @@ static void Xunzip(byte **bufp, size_t *sizep)
 		}
 	}
 
+	this->FillJumplist();
+
 	CheckForMissingGlyphs(true, this);
 }
 
@@ -382,12 +499,13 @@ static void Xunzip(byte **bufp, size_t *sizep)
  * @param filename The filename of the content to look for.
  * @return The path to the textfile, \c nullptr otherwise.
  */
-const char *GetTextfile(TextfileType type, Subdirectory dir, const char *filename)
+const char *GetTextfile(TextfileType type, Subdirectory dir, const char *filename, TextDirection *text_dir)
 {
 	static const char * const prefixes[] = {
 		"readme",
 		"changelog",
 		"license",
+		"", // game manual, should not be used with this function
 	};
 	static_assert(lengthof(prefixes) == TFT_END);
 
@@ -412,12 +530,14 @@ const char *GetTextfile(TextfileType type, Subdirectory dir, const char *filenam
 	};
 
 	for (size_t i = 0; i < lengthof(exts); i++) {
+		if (text_dir != nullptr) *text_dir = _current_text_dir;
 		seprintf(slash + 1, lastof(file_path), "%s_%s.%s", prefix, GetCurrentLanguageIsoCode(), exts[i]);
 		if (FioCheckFileExists(file_path, dir)) return file_path;
 
 		seprintf(slash + 1, lastof(file_path), "%s_%.2s.%s", prefix, GetCurrentLanguageIsoCode(), exts[i]);
 		if (FioCheckFileExists(file_path, dir)) return file_path;
 
+		if (text_dir != nullptr) *text_dir = TD_LTR;
 		seprintf(slash + 1, lastof(file_path), "%s.%s", prefix, exts[i]);
 		if (FioCheckFileExists(file_path, dir)) return file_path;
 	}

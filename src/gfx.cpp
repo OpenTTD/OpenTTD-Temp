@@ -885,7 +885,7 @@ const char *GetCharAtPosition(const char *str, int x, FontSize start_fontsize)
 	if (x < 0) return nullptr;
 
 	Layouter layout(str, INT32_MAX, TC_FROMSTRING, start_fontsize);
-	return layout.GetCharAtPosition(x);
+	return layout.GetCharAtPosition(x, 1);
 }
 
 /**

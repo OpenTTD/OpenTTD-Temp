@@ -42,7 +42,7 @@ struct ContentTextfileWindow : public TextfileWindow {
 
 	ContentTextfileWindow(TextfileType file_type, const ContentInfo *ci) : TextfileWindow(file_type), ci(ci)
 	{
-		const char *textfile = this->ci->GetTextfile(file_type);
+		const char *textfile = this->ci->GetTextfile(file_type, &this->text_direction);
 		this->LoadTextfile(textfile, GetContentInfoSubDir(this->ci->type));
 	}
 

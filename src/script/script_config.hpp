@@ -183,7 +183,7 @@ public:
 	 * @param slot #CompanyID to check status of.
 	 * @return The filename for the textfile, \c nullptr otherwise.
 	 */
-	const char *GetTextfile(TextfileType type, CompanyID slot) const;
+	const char *GetTextfile(TextfileType type, CompanyID slot, TextDirection *text_dir = nullptr) const;
 
 protected:
 	const char *name;                  ///< Name of the Script

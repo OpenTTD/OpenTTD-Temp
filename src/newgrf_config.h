@@ -178,7 +178,7 @@ struct GRFConfig : ZeroedMemoryAllocator {
 
 	void CopyParams(const GRFConfig &src);
 
-	const char *GetTextfile(TextfileType type) const;
+	const char *GetTextfile(TextfileType type, TextDirection *text_dir = nullptr) const;
 	const char *GetName() const;
 	const char *GetDescription() const;
 	const char *GetURL() const;

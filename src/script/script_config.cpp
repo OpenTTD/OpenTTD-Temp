@@ -225,9 +225,9 @@ void ScriptConfig::SettingsToString(char *string, const char *last) const
 	if (s != string) s[-1] = '\0';
 }
 
-const char *ScriptConfig::GetTextfile(TextfileType type, CompanyID slot) const
+const char *ScriptConfig::GetTextfile(TextfileType type, CompanyID slot, TextDirection *text_dir) const
 {
 	if (slot == INVALID_COMPANY || this->GetInfo() == nullptr) return nullptr;
 
-	return ::GetTextfile(type, (slot == OWNER_DEITY) ? GAME_DIR : AI_DIR, this->GetInfo()->GetMainScript());
+	return ::GetTextfile(type, (slot == OWNER_DEITY) ? GAME_DIR : AI_DIR, this->GetInfo()->GetMainScript(), text_dir);
 }

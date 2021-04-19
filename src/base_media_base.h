@@ -144,10 +144,10 @@ struct BaseSet {
 	 * @param type The type of the textfile to search for.
 	 * @return The filename for the textfile, \c nullptr otherwise.
 	 */
-	const char *GetTextfile(TextfileType type) const
+	const char *GetTextfile(TextfileType type, TextDirection *text_dir = nullptr) const
 	{
 		for (uint i = 0; i < NUM_FILES; i++) {
-			const char *textfile = ::GetTextfile(type, BASESET_DIR, this->files[i].filename);
+			const char *textfile = ::GetTextfile(type, BASESET_DIR, this->files[i].filename, text_dir);
 			if (textfile != nullptr) {
 				return textfile;
 			}

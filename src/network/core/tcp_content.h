@@ -88,7 +88,7 @@ struct ContentInfo {
 	bool IsSelected() const;
 	bool IsValid() const;
 #ifndef OPENTTD_MSU
-	const char *GetTextfile(TextfileType type) const;
+	const char *GetTextfile(TextfileType type, TextDirection *text_dir = nullptr) const;
 #endif /* OPENTTD_MSU */
 };
 

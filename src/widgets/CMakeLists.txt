@@ -23,6 +23,7 @@ add_files(
     goal_widget.h
     graph_widget.h
     group_widget.h
+    help_widget.h
     highscore_widget.h
     industry_widget.h
     intro_widget.h

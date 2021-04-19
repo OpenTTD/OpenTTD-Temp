@@ -653,7 +653,7 @@ struct ScriptTextfileWindow : public TextfileWindow {
 
 	void OnInvalidateData(int data = 0, bool gui_scope = true) override
 	{
-		const char *textfile = GetConfig(slot)->GetTextfile(file_type, slot);
+		const char *textfile = GetConfig(slot)->GetTextfile(file_type, slot, &this->text_direction);
 		if (textfile == nullptr) {
 			delete this;
 		} else {

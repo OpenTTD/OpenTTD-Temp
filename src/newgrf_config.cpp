@@ -842,7 +842,7 @@ static const uint32 OPENTTD_GRAPHICS_BASE_GRF_ID = BSWAP32(0xFF4F5400);
  * @param type The type of the textfile to search for.
  * @return The filename for the textfile, \c nullptr otherwise.
  */
-const char *GRFConfig::GetTextfile(TextfileType type) const
+const char *GRFConfig::GetTextfile(TextfileType type, TextDirection *text_dir) const
 {
-	return ::GetTextfile(type, NEWGRF_DIR, this->filename);
+	return ::GetTextfile(type, NEWGRF_DIR, this->filename, text_dir);
 }

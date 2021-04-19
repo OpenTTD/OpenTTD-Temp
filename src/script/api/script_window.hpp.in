@@ -36,6 +36,7 @@
 #include "../../widgets/graph_widget.h"
 #include "../../widgets/group_widget.h"
 #include "../../widgets/highscore_widget.h"
+#include "../../widgets/help_widget.h"
 #include "../../widgets/industry_widget.h"
 #include "../../widgets/intro_widget.h"
 #include "../../widgets/main_widget.h"

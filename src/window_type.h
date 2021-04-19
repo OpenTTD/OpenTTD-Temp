@@ -697,6 +697,12 @@ enum WindowClass {
 	 */
 	WC_SCREENSHOT,
 
+	/*
+	 * Help and manuals window; %Window numbers:
+	 *   - 0 = #HelpWindowWidgets
+	 */
+	WC_HELPWIN,
+
 	WC_INVALID = 0xFFFF, ///< Invalid window.
 };
 
