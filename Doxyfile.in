@@ -290,6 +290,7 @@ INCLUDE_FILE_PATTERNS  =
 PREDEFINED             = WITH_ZLIB \
                          WITH_LZO \
                          WITH_LIBLZMA \
+                         WITH_ZSTD \
                          WITH_SDL \
                          WITH_PNG \
                          WITH_FONTCONFIG \

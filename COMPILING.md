@@ -8,6 +8,7 @@ The following libraries are used by OpenTTD for:
    heightmaps
 - liblzo2: (de)compressing of old (pre 0.3.0) savegames
 - liblzma: (de)compressing of savegames (1.1.0 and later)
+- libzstd: (de)compressing of savegames (1.11.0 and later)
 - libpng: making screenshots and loading heightmaps
 - libfreetype: loading generic fonts and rendering them
 - libfontconfig: searching for fonts, resolving font names to actual fonts
@@ -45,6 +46,7 @@ After this, you can install the dependencies OpenTTD needs. We advise to use
 the `static` versions, and OpenTTD currently needs the following dependencies:
 
 - liblzma
+- libzstd
 - libpng
 - lzo
 - zlib
@@ -52,8 +54,8 @@ the `static` versions, and OpenTTD currently needs the following dependencies:
 To install both the x64 (64bit) and x86 (32bit) variants (though only one is necessary), you can use:
 
 ```ps
-.\vcpkg install liblzma:x64-windows-static libpng:x64-windows-static lzo:x64-windows-static zlib:x64-windows-static
-.\vcpkg install liblzma:x86-windows-static libpng:x86-windows-static lzo:x86-windows-static zlib:x86-windows-static
+.\vcpkg install liblzma:x64-windows-static zstd:x64-windows-static libpng:x64-windows-static lzo:x64-windows-static zlib:x64-windows-static
+.\vcpkg install liblzma:x86-windows-static zstd:x86-windows-static libpng:x86-windows-static lzo:x86-windows-static zlib:x86-windows-static
 ```
 
 You can open the folder (as a CMake project). CMake will be detected, and you can compile from there.

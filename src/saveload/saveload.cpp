@@ -2301,6 +2301,119 @@ struct LZMASaveFilter : SaveFilter {
 
 #endif /* WITH_LIBLZMA */
 
+/********************************************
+ ********** START OF ZSTD CODE **************
+ ********************************************/
+
+#if defined(WITH_ZSTD)
+#include <zstd.h>
+
+
+/** Filter using ZSTD compression. */
+struct ZSTDLoadFilter : LoadFilter {
+	ZSTD_DCtx *zstd;  ///< ZSTD decompression context
+	byte fread_buf[MEMORY_CHUNK_SIZE];  ///< Buffer for reading from the file
+	ZSTD_inBuffer input;  ///< ZSTD input buffer for fread_buf
+
+	/**
+	 * Initialise this filter.
+	 * @param chain The next filter in this chain.
+	 */
+	ZSTDLoadFilter(LoadFilter *chain) : LoadFilter(chain)
+	{
+		this->zstd = ZSTD_createDCtx();
+		if (!this->zstd) SlError(STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR, "cannot initialize compressor");
+		this->input = {this->fread_buf, 0, 0};
+	}
+
+	/** Clean everything up. */
+	~ZSTDLoadFilter()
+	{
+		ZSTD_freeDCtx(this->zstd);
+	}
+
+	size_t Read(byte *buf, size_t size) override
+	{
+		ZSTD_outBuffer output{buf, size, 0};
+
+		do {
+			/* read more bytes from the file? */
+			if (this->input.pos == this->input.size) {
+				this->input.size = this->chain->Read(this->fread_buf, sizeof(this->fread_buf));
+				this->input.pos = 0;
+			}
+
+			size_t ret = ZSTD_decompressStream(this->zstd, &output, &this->input);
+			if (ZSTD_isError(ret)) SlError(STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR, "libzstd returned error code");
+			if (ret == 0) break;
+		} while (output.pos < output.size);
+
+		return output.pos;
+	}
+};
+
+/** Filter using ZSTD compression. */
+struct ZSTDSaveFilter : SaveFilter {
+	ZSTD_CCtx *zstd;  ///< ZSTD compression context
+
+	/**
+	 * Initialise this filter.
+	 * @param chain             The next filter in this chain.
+	 * @param compression_level The requested level of compression.
+	 */
+	ZSTDSaveFilter(SaveFilter *chain, byte compression_level) : SaveFilter(chain)
+	{
+		this->zstd = ZSTD_createCCtx();
+		if (!this->zstd) SlError(STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR, "cannot initialize compressor");
+		if (ZSTD_isError(ZSTD_CCtx_setParameter(this->zstd, ZSTD_c_compressionLevel, (int)compression_level - 100))) {
+			ZSTD_freeCCtx(this->zstd);
+			SlError(STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR, "invalid compresison level");
+		}
+	}
+
+	/** Clean up what we allocated. */
+	~ZSTDSaveFilter()
+	{
+		ZSTD_freeCCtx(this->zstd);
+	}
+
+	/**
+	 * Helper loop for writing the data.
+	 * @param p      The bytes to write.
+	 * @param len    Amount of bytes to write.
+	 * @param mode   Mode for ZSTD_compressStream2.
+	 */
+	void WriteLoop(byte *p, size_t len, ZSTD_EndDirective mode)
+	{
+		byte buf[MEMORY_CHUNK_SIZE]; // output buffer
+		ZSTD_inBuffer input{p, len, 0};
+
+		bool finished;
+		do {
+			ZSTD_outBuffer output{buf, sizeof(buf), 0};
+			size_t remaining = ZSTD_compressStream2(this->zstd, &output, &input, mode);
+			if (ZSTD_isError(remaining)) SlError(STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR, "libzstd returned error code");
+
+			if (output.pos != 0) this->chain->Write(buf, output.pos);
+
+			finished = (mode == ZSTD_e_end ? (remaining == 0) : (input.pos == input.size));
+		} while (!finished);
+	}
+
+	void Write(byte *buf, size_t size) override
+	{
+		this->WriteLoop(buf, size, ZSTD_e_continue);
+	}
+
+	void Finish() override
+	{
+		this->WriteLoop(nullptr, 0, ZSTD_e_end);
+		this->chain->Finish();
+	}
+};
+
+#endif /* WITH_LIBZSTD */
+
 /*******************************************
  ************* END OF CODE *****************
  *******************************************/
@@ -2335,6 +2448,17 @@ static const SaveLoadFormat _saveload_formats[] = {
 	{"zlib",   TO_BE32X('OTTZ'), CreateLoadFilter<ZlibLoadFilter>,   CreateSaveFilter<ZlibSaveFilter>,   0, 6, 9},
 #else
 	{"zlib",   TO_BE32X('OTTZ'), nullptr,                            nullptr,                            0, 0, 0},
+#endif
+#if defined(WITH_ZSTD)
+	/* Zstd provides a decent compression rate at a very high compression/decompression speed. Compared to lzma level 2
+	 * zstd saves are about 40% larger (on level 1) but it has about 30x faster compression and 5x decompression making it
+	 * a good choice for multiplayer servers. And zstd level 1 seems to be the optimal one for client connection speed
+	 * (compress + 10 MB/s download + decompress time), about 3x faster than lzma:2 and 1.5x than zlib:2 and lzo.
+	 * As zstd has negative compression levels the values were increased by 100 moving zstd level range -100..22 into
+	 * openttd 0..122. Also note that value 100 mathes zstd level 0 which is a special value for default level 3 (openttd 103) */
+	{"zstd",   TO_BE32X('OTTS'), CreateLoadFilter<ZSTDLoadFilter>,   CreateSaveFilter<ZSTDSaveFilter>,   0, 101, 122},
+#else
+	{"zstd",   TO_BE32X('OTTS'), nullptr,                            nullptr,                            0, 0, 0},
 #endif
 #if defined(WITH_LIBLZMA)
 	/* Level 2 compression is speed wise as fast as zlib level 6 compression (old default), but results in ~10% smaller saves.

@@ -56,6 +56,9 @@
 #ifdef WITH_LIBLZMA
 #	include <lzma.h>
 #endif
+#ifdef WITH_ZSTD
+#include <zstd.h>
+#endif
 #ifdef WITH_LZO
 #include <lzo/lzo1x.h>
 #endif
@@ -253,6 +256,10 @@ char *CrashLog::LogLibraries(char *buffer, const char *last) const
 
 #ifdef WITH_LIBLZMA
 	buffer += seprintf(buffer, last, " LZMA:       %s\n", lzma_version_string());
+#endif
+
+#ifdef WITH_ZSTD
+	buffer += seprintf(buffer, last, " ZSTD:       %s\n", ZSTD_versionString());
 #endif
 
 #ifdef WITH_LZO
