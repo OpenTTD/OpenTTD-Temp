@@ -49,7 +49,7 @@ public:
 			SetNonBlocking(s); // XXX error handling?
 
 			NetworkAddress address(sin, sin_len);
-			DEBUG(net, 1, "[%s] Client connected from %s on frame %d", Tsocket::GetName(), address.GetHostname(), _frame_counter);
+			DEBUG(net, 2, "[%s] Client connected from %s on frame %d", Tsocket::GetName(), address.GetHostname(), _frame_counter);
 
 			SetNoDelay(s); // XXX error handling?
 
