@@ -208,6 +208,8 @@ ServerNetworkGameSocketHandler::ServerNetworkGameSocketHandler(SOCKET s, Network
 	 * each Socket will be associated with at most one Info object. As
 	 * such if the Socket was allocated the Info object can as well. */
 	static_assert(NetworkClientSocketPool::MAX_SIZE == NetworkClientInfoPool::MAX_SIZE);
+
+	DEBUG(net, 1, "[%s] Accepting client #%d connection from %s", ServerNetworkGameSocketHandler::GetName(), this->client_id, this->client_address.GetHostname());
 }
 
 /**
@@ -276,7 +278,7 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::CloseConnection(NetworkRecvSta
 	}
 
 	NetworkAdminClientError(this->client_id, NETWORK_ERROR_CONNECTION_LOST);
-	DEBUG(net, 1, "Closed client connection %d", this->client_id);
+	DEBUG(net, 1, "[%s] Closed client #%d connection from %s", ServerNetworkGameSocketHandler::GetName(), this->client_id, this->client_address.GetHostname());
 
 	/* We just lost one client :( */
 	if (this->status >= STATUS_AUTHORIZED) _network_game_info.clients_on--;
