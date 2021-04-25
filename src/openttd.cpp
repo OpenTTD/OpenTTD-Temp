@@ -86,6 +86,7 @@ void ResetMusic();
 void CallWindowGameTickEvent();
 bool HandleBootstrap();
 
+extern void ReadIntroGameViewportCommands();
 extern Company *DoStartupNewCompany(bool is_ai, CompanyID company = INVALID_COMPANY);
 extern void ShowOSErrorBox(const char *buf, bool system);
 extern std::string _config_file;
@@ -350,6 +351,7 @@ static void LoadIntroGame(bool load_newgrfs = true)
 		SetLocalCompany(COMPANY_SPECTATOR);
 	} else {
 		SetLocalCompany(COMPANY_FIRST);
+		ReadIntroGameViewportCommands();
 	}
 
 	FixTitleGameZoom();

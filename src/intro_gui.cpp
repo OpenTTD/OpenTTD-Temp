@@ -11,12 +11,14 @@
 #include "error.h"
 #include "gui.h"
 #include "window_gui.h"
+#include "window_func.h"
 #include "textbuf_gui.h"
 #include "network/network.h"
 #include "genworld.h"
 #include "network/network_gui.h"
 #include "network/network_content.h"
 #include "landscape_type.h"
+#include "landscape.h"
 #include "strings_func.h"
 #include "fios.h"
 #include "ai/ai_gui.hpp"
@@ -25,6 +27,10 @@
 #include "language.h"
 #include "rev.h"
 #include "highscore.h"
+#include "signs_base.h"
+#include "viewport_func.h"
+#include "vehicle_base.h"
+#include <regex>
 
 #include "widgets/intro_widget.h"
 
@@ -33,13 +39,152 @@
 
 #include "safeguards.h"
 
+
+struct IntroGameViewportCommand {
+	enum AlignmentH : byte {
+		LEFT,
+		CENTRE,
+		RIGHT,
+	};
+	enum AlignmentV : byte {
+		TOP,
+		MIDDLE,
+		BOTTOM,
+	};
+
+	int command_index;
+	Point position;
+	VehicleID vehicle;
+	uint delay;
+	int zoom_adjust;
+	bool pan_to_next;
+	AlignmentH align_h;
+	AlignmentV align_v;
+
+	IntroGameViewportCommand() : command_index(0), vehicle(INVALID_VEHICLE), delay(0), zoom_adjust(0), pan_to_next(false), align_h(CENTRE), align_v(MIDDLE)
+	{
+	}
+
+	Point PositionForViewport(const Viewport *vp)
+	{
+		if (this->vehicle != INVALID_VEHICLE) {
+			const Vehicle *v = Vehicle::Get(this->vehicle);
+			this->position = RemapCoords(v->x_pos, v->y_pos, v->z_pos);
+		}
+
+		Point p;
+		switch (this->align_h) {
+			case LEFT: p.x = this->position.x; break;
+			case CENTRE: p.x = this->position.x - vp->virtual_width / 2; break;
+			case RIGHT: p.x = this->position.x - vp->virtual_width; break;
+		}
+		switch (this->align_v) {
+			case TOP: p.y = this->position.y; break;
+			case MIDDLE: p.y = this->position.y - vp->virtual_height / 2; break;
+			case RIGHT: p.y = this->position.y - vp->virtual_height; break;
+		}
+		return p;
+	}
+};
+static std::vector<IntroGameViewportCommand> _intro_viewport_commands;
+
+
+void ReadIntroGameViewportCommands()
+{
+	_intro_viewport_commands.clear();
+
+	const char *sign_langauge = "^T\\s*([0-9]+)\\s*([-+TMBLCRP]+)\\s*([0-9]+)";
+	std::regex re(sign_langauge, std::regex_constants::icase);
+
+	std::vector<SignID> signs_to_delete;
+
+	for (const Sign *sign : Sign::Iterate()) {
+		std::smatch match;
+		if (std::regex_search(sign->name, match, re)) {
+			IntroGameViewportCommand vc;
+			vc.command_index = std::stoi(match[1].str());
+			vc.position = RemapCoords(sign->x, sign->y, sign->z);
+			vc.delay = std::stoi(match[3].str()) * 1000; // milliseconds
+
+			for (char c : match[2].str()) {
+				switch (toupper(c)) {
+					case '-': vc.zoom_adjust = +1; break;
+					case '+': vc.zoom_adjust = -1; break;
+					case 'T': vc.align_v = IntroGameViewportCommand::TOP; break;
+					case 'M': vc.align_v = IntroGameViewportCommand::MIDDLE; break;
+					case 'B': vc.align_v = IntroGameViewportCommand::BOTTOM; break;
+					case 'L': vc.align_h = IntroGameViewportCommand::LEFT; break;
+					case 'C': vc.align_h = IntroGameViewportCommand::CENTRE; break;
+					case 'R': vc.align_h = IntroGameViewportCommand::RIGHT; break;
+					case 'P': vc.pan_to_next = true; break;
+				}
+			}
+
+			_intro_viewport_commands.push_back(vc);
+			signs_to_delete.push_back(sign->index);
+		}
+	}
+
+	std::sort(_intro_viewport_commands.begin(), _intro_viewport_commands.end(), [](const IntroGameViewportCommand &a, const IntroGameViewportCommand &b) { return a.command_index < b.command_index; });
+}
+
+
 struct SelectGameWindow : public Window {
+	size_t cur_viewport_command_index;
+	uint cur_viewport_command_time;
 
 	SelectGameWindow(WindowDesc *desc) : Window(desc)
 	{
 		this->CreateNestedTree();
 		this->FinishInitNested(0);
 		this->OnInvalidateData();
+
+		this->cur_viewport_command_index = (size_t)-1;
+		this->cur_viewport_command_time = 0;
+	}
+
+	void OnRealtimeTick(uint delta_ms) override
+	{
+		if (_intro_viewport_commands.empty()) return;
+
+		bool changed_command = false;
+		if (this->cur_viewport_command_index >= _intro_viewport_commands.size()) {
+			this->cur_viewport_command_index = 0;
+			changed_command = true;
+		} else {
+			this->cur_viewport_command_time += delta_ms;
+			if (this->cur_viewport_command_time >= _intro_viewport_commands[this->cur_viewport_command_index].delay) {
+				this->cur_viewport_command_index = (this->cur_viewport_command_index + 1) % _intro_viewport_commands.size();
+				this->cur_viewport_command_time = 0;
+				changed_command = true;
+			}
+		}
+
+		IntroGameViewportCommand &vc = _intro_viewport_commands[this->cur_viewport_command_index];
+		Window *mw = FindWindowByClass(WC_MAIN_WINDOW);
+		Viewport *vp = mw->viewport;
+
+		if (!changed_command && !vc.pan_to_next && vc.vehicle == INVALID_VEHICLE) return;
+
+		if (changed_command) FixTitleGameZoom(vc.zoom_adjust);
+
+		Point pos = vc.PositionForViewport(vp);
+
+		if (vc.pan_to_next) {
+			size_t next_command_index = (this->cur_viewport_command_index + 1) % _intro_viewport_commands.size();
+			IntroGameViewportCommand &nvc = _intro_viewport_commands[next_command_index];
+			Point pos2 = nvc.PositionForViewport(vp);
+			double progress = this->cur_viewport_command_time / (double)vc.delay;
+			pos.x = pos.x + (int)(progress * (pos2.x - pos.x));
+			pos.y = pos.y + (int)(progress * (pos2.y - pos.y));
+		}
+
+		mw->viewport->dest_scrollpos_x = mw->viewport->scrollpos_x = pos.x;
+		mw->viewport->dest_scrollpos_y = mw->viewport->scrollpos_y = pos.y;
+		UpdateViewportPosition(mw);
+
+		/* If there is only one command, we just executed it and don't need to do any more */
+		if (_intro_viewport_commands.size() == 1 && vc.vehicle == INVALID_VEHICLE) _intro_viewport_commands.clear();
 	}
 
 	/**
