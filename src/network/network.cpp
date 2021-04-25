@@ -522,8 +522,7 @@ void ParseGameConnectionString(const char **company, const char **port, char *co
 	/* Register the login */
 	_network_clients_connected++;
 
-	ServerNetworkGameSocketHandler *cs = new ServerNetworkGameSocketHandler(s);
-	cs->client_address = address; // Save the IP of the client
+	new ServerNetworkGameSocketHandler(s, address);
 
 	InvalidateWindowData(WC_CLIENT_LIST, 0);
 }

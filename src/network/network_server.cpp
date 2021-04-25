@@ -202,12 +202,8 @@ struct PacketWriter : SaveFilter {
  * Create a new socket for the server side of the game connection.
  * @param s The socket to connect with.
  */
-ServerNetworkGameSocketHandler::ServerNetworkGameSocketHandler(SOCKET s) : NetworkGameSocketHandler(s)
+ServerNetworkGameSocketHandler::ServerNetworkGameSocketHandler(SOCKET s, NetworkAddress client_address) : NetworkGameSocketHandler(s, _network_client_id++), status(STATUS_INACTIVE), receive_limit(_settings_client.network.bytes_per_frame_burst), client_address(client_address)
 {
-	this->status = STATUS_INACTIVE;
-	this->client_id = _network_client_id++;
-	this->receive_limit = _settings_client.network.bytes_per_frame_burst;
-
 	/* The Socket and Info pools need to be the same in size. After all,
 	 * each Socket will be associated with at most one Info object. As
 	 * such if the Socket was allocated the Info object can as well. */
