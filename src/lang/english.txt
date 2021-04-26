@@ -2280,6 +2280,8 @@ STR_CONTENT_TYPE_CAPTION                                        :{BLACK}Type
 STR_CONTENT_TYPE_CAPTION_TOOLTIP                                :{BLACK}Type of the content
 STR_CONTENT_NAME_CAPTION                                        :{BLACK}Name
 STR_CONTENT_NAME_CAPTION_TOOLTIP                                :{BLACK}Name of the content
+STR_CONTENT_UPLOAD_DATE_CAPTION                                 :{BLACK}Upload date
+STR_CONTENT_UPLOAD_DATE_CAPTION_TOOLTIP                         :{BLACK}Latest upload date of the content
 STR_CONTENT_MATRIX_TOOLTIP                                      :{BLACK}Click on a line to see the details{}Click on the checkbox to select it for downloading
 STR_CONTENT_SELECT_ALL_CAPTION                                  :{BLACK}Select all
 STR_CONTENT_SELECT_ALL_CAPTION_TOOLTIP                          :{BLACK}Mark all content to be downloaded
@@ -2310,6 +2312,7 @@ STR_CONTENT_DETAIL_DESCRIPTION                                  :{SILVER}Descrip
 STR_CONTENT_DETAIL_URL                                          :{SILVER}URL: {WHITE}{RAW_STRING}
 STR_CONTENT_DETAIL_TYPE                                         :{SILVER}Type: {WHITE}{STRING}
 STR_CONTENT_DETAIL_FILESIZE                                     :{SILVER}Download size: {WHITE}{BYTES}
+STR_CONTENT_DETAIL_UPLOAD_DATE                                  :{SILVER}Upload date: {WHITE}{RAW_STRING}
 STR_CONTENT_DETAIL_SELECTED_BECAUSE_OF                          :{SILVER}Selected because of: {WHITE}{RAW_STRING}
 STR_CONTENT_DETAIL_DEPENDENCIES                                 :{SILVER}Dependencies: {WHITE}{RAW_STRING}
 STR_CONTENT_DETAIL_TAGS                                         :{SILVER}Tags: {WHITE}{RAW_STRING}

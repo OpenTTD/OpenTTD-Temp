@@ -299,7 +299,8 @@ class NetworkContentListWindow : public Window, ContentCallback {
 	/** List with content infos. */
 	typedef GUIList<const ContentInfo *, ContentListFilterData &> GUIContentList;
 
-	static const uint EDITBOX_MAX_SIZE   =  50; ///< Maximum size of the editbox in characters.
+	static const uint EDITBOX_MAX_SIZE     = 50;           ///< Maximum size of the editbox in characters.
+	static const uint UPLOAD_DATE_MAX_SIZE = 32;           ///< Maximum size of the formatted upload date.
 
 	static Listing last_sorting;     ///< The last sorting setting.
 	static Filtering last_filtering; ///< The last filtering setting.
@@ -418,6 +419,12 @@ class NetworkContentListWindow : public Window, ContentCallback {
 		}
 		if (r == 0) return NameSorter(a, b);
 		return r < 0;
+	}
+
+	/** Sort content by upload date. */
+	static bool UploadDateSorter(const ContentInfo * const &a, const ContentInfo * const &b)
+	{
+		return a->upload_date < b->upload_date; // Sort by upload date.
 	}
 
 	/** Sort content by state. */
@@ -575,6 +582,15 @@ public:
 				break;
 			}
 
+			case WID_NCL_UPLOAD_DATE: {
+				Dimension d = *size;
+				/* Make sure that the caption of the upload date column is not
+				 * trimmed, and the text doesn't overlap with the arrow itself */
+				d = maxdim(d, GetStringBoundingBox(STR_CONTENT_UPLOAD_DATE_CAPTION));
+				size->width = d.width + SortButtonWidth() * 2 + WD_MATRIX_RIGHT + WD_MATRIX_LEFT;
+				break;
+			}
+
 			case WID_NCL_MATRIX:
 				resize->height = std::max(this->checkbox_size.height, (uint)FONT_HEIGHT_NORMAL) + WD_MATRIX_TOP + WD_MATRIX_BOTTOM;
 				size->height = 10 * resize->height;
@@ -611,9 +627,10 @@ public:
 		this->DrawWidgets();
 
 		switch (this->content.SortType()) {
-			case WID_NCL_CHECKBOX - WID_NCL_CHECKBOX: this->DrawSortButtonState(WID_NCL_CHECKBOX, arrow); break;
-			case WID_NCL_TYPE     - WID_NCL_CHECKBOX: this->DrawSortButtonState(WID_NCL_TYPE,     arrow); break;
-			case WID_NCL_NAME     - WID_NCL_CHECKBOX: this->DrawSortButtonState(WID_NCL_NAME,     arrow); break;
+			case WID_NCL_CHECKBOX    - WID_NCL_CHECKBOX: this->DrawSortButtonState(WID_NCL_CHECKBOX,    arrow); break;
+			case WID_NCL_TYPE        - WID_NCL_CHECKBOX: this->DrawSortButtonState(WID_NCL_TYPE,        arrow); break;
+			case WID_NCL_NAME        - WID_NCL_CHECKBOX: this->DrawSortButtonState(WID_NCL_NAME,        arrow); break;
+			case WID_NCL_UPLOAD_DATE - WID_NCL_CHECKBOX: this->DrawSortButtonState(WID_NCL_UPLOAD_DATE, arrow); break;
 		}
 	}
 
@@ -625,7 +642,8 @@ public:
 	{
 		const NWidgetBase *nwi_checkbox = this->GetWidget<NWidgetBase>(WID_NCL_CHECKBOX);
 		const NWidgetBase *nwi_name = this->GetWidget<NWidgetBase>(WID_NCL_NAME);
-		const NWidgetBase *nwi_type = this->GetWidget<NWidgetBase>(WID_NCL_TYPE);
+		const NWidgetBase* nwi_type = this->GetWidget<NWidgetBase>(WID_NCL_TYPE);
+		const NWidgetBase* nwi_upload_date = this->GetWidget<NWidgetBase>(WID_NCL_UPLOAD_DATE);
 
 		int line_height = std::max(this->checkbox_size.height, (uint)FONT_HEIGHT_NORMAL);
 
@@ -659,6 +677,12 @@ public:
 			DrawString(nwi_type->pos_x, nwi_type->pos_x + nwi_type->current_x - 1, y + text_y_offset, str, TC_BLACK, SA_HOR_CENTER);
 
 			DrawString(nwi_name->pos_x + WD_FRAMERECT_LEFT, nwi_name->pos_x + nwi_name->current_x - WD_FRAMERECT_RIGHT, y + text_y_offset, ci->name, TC_BLACK);
+
+			char buffer[UPLOAD_DATE_MAX_SIZE];
+			time_t upload_date = ci->upload_date;
+			strftime(buffer, sizeof(buffer), "%Y-%m-%d", localtime(&upload_date));
+			DrawString(nwi_upload_date->pos_x, nwi_upload_date->pos_x + nwi_upload_date->current_x - 1, y + text_y_offset, buffer, TC_BLACK, SA_HOR_CENTER);
+
 			y += this->resize.step_height;
 		}
 	}
@@ -723,6 +747,14 @@ public:
 		y += WD_PAR_VSEP_WIDE;
 		SetDParam(0, this->selected->filesize);
 		y = DrawStringMultiLine(r.left + DETAIL_LEFT, r.right - DETAIL_RIGHT, y, max_y, STR_CONTENT_DETAIL_FILESIZE);
+
+		if (this->selected->upload_date != 0) {
+			char buffer[UPLOAD_DATE_MAX_SIZE];
+			time_t upload_date = this->selected->upload_date;
+			strftime(buffer, sizeof(buffer), "%Y-%m-%d", localtime(&upload_date));
+			SetDParamStr(0, buffer);
+			y = DrawStringMultiLine(r.left + DETAIL_LEFT, r.right - DETAIL_RIGHT, y, max_y, STR_CONTENT_DETAIL_UPLOAD_DATE);
+		}
 
 		if (this->selected->dependency_count != 0) {
 			/* List dependencies */
@@ -809,6 +841,7 @@ public:
 			case WID_NCL_CHECKBOX:
 			case WID_NCL_TYPE:
 			case WID_NCL_NAME:
+			case WID_NCL_UPLOAD_DATE:
 				if (this->content.SortType() == widget - WID_NCL_CHECKBOX) {
 					this->content.ToggleSortOrder();
 					if (this->content.size() > 0) this->list_pos = (int)this->content.size() - this->list_pos - 1;
@@ -1000,6 +1033,7 @@ NetworkContentListWindow::GUIContentList::SortFunction * const NetworkContentLis
 	&StateSorter,
 	&TypeSorter,
 	&NameSorter,
+	&UploadDateSorter,
 };
 
 NetworkContentListWindow::GUIContentList::FilterFunction * const NetworkContentListWindow::filter_funcs[] = {
@@ -1046,6 +1080,8 @@ static const NWidgetPart _nested_network_content_list_widgets[] = {
 											SetDataTip(STR_CONTENT_TYPE_CAPTION, STR_CONTENT_TYPE_CAPTION_TOOLTIP),
 							NWidget(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NCL_NAME), SetResize(1, 0), SetFill(1, 0),
 											SetDataTip(STR_CONTENT_NAME_CAPTION, STR_CONTENT_NAME_CAPTION_TOOLTIP),
+							NWidget(WWT_PUSHTXTBTN, COLOUR_WHITE, WID_NCL_UPLOAD_DATE),
+											SetDataTip(STR_CONTENT_UPLOAD_DATE_CAPTION, STR_CONTENT_UPLOAD_DATE_CAPTION_TOOLTIP),
 						EndContainer(),
 						NWidget(WWT_MATRIX, COLOUR_LIGHT_BLUE, WID_NCL_MATRIX), SetResize(1, 14), SetFill(1, 1), SetScrollbar(WID_NCL_SCROLLBAR), SetMatrixDataTip(1, 0, STR_CONTENT_MATRIX_TOOLTIP),
 					EndContainer(),
@@ -1098,7 +1134,7 @@ static const NWidgetPart _nested_network_content_list_widgets[] = {
 
 /** Window description of the content list */
 static WindowDesc _network_content_list_desc(
-	WDP_CENTER, "list_content", 630, 460,
+	WDP_CENTER, "list_content", 680, 460,
 	WC_NETWORK_WINDOW, WC_NONE,
 	0,
 	_nested_network_content_list_widgets, lengthof(_nested_network_content_list_widgets)

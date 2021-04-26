@@ -74,6 +74,8 @@ bool ClientNetworkContentSocketHandler::Receive_SERVER_INFO(Packet *p)
 	ci->tags = MallocT<char[32]>(ci->tag_count);
 	for (uint i = 0; i < ci->tag_count; i++) p->Recv_string(ci->tags[i], lengthof(*ci->tags));
 
+	ci->upload_date = p->Recv_uint32();
+
 	if (!ci->IsValid()) {
 		delete ci;
 		this->Close();

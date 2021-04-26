@@ -76,6 +76,7 @@ struct ContentInfo {
 	ContentID *dependencies; ///< Malloced array of dependencies (unique server side ids)
 	uint8 tag_count;         ///< Number of tags
 	char (*tags)[32];        ///< Malloced array of tags (strings)
+	uint32 upload_date;      ///< Upload date as epoch timestamp
 	State state;             ///< Whether the content info is selected (for download)
 	bool upgrade;            ///< This item is an upgrade
 

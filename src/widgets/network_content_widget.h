@@ -28,6 +28,7 @@ enum NetworkContentListWidgets {
 	WID_NCL_CHECKBOX,       ///< Button above checkboxes.
 	WID_NCL_TYPE,           ///< 'Type' button.
 	WID_NCL_NAME,           ///< 'Name' button.
+	WID_NCL_UPLOAD_DATE,    ///< 'Upload date' button.
 
 	WID_NCL_MATRIX,         ///< Panel with list of content.
 	WID_NCL_SCROLLBAR,      ///< Scrollbar of matrix.
