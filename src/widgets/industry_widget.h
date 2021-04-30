@@ -29,6 +29,7 @@ enum IndustryViewWidgets {
 	WID_IV_INFO,     ///< Info of the industry.
 	WID_IV_GOTO,     ///< Goto button.
 	WID_IV_DISPLAY,  ///< Display chain button.
+	WID_IV_GRAPH,    ///< Production history button.
 };
 
 /** Widgets of the #IndustryDirectoryWindow class. */

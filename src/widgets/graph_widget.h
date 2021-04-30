@@ -40,15 +40,15 @@ enum PerformanceHistoryGraphWidgets {
 
 /** Widget of the #PaymentRatesGraphWindow class. */
 enum CargoPaymentRatesWidgets {
-	WID_CPR_BACKGROUND,      ///< Background of the window.
-	WID_CPR_HEADER,          ///< Header.
-	WID_CPR_GRAPH,           ///< Graph itself.
-	WID_CPR_RESIZE,          ///< Resize button.
-	WID_CPR_FOOTER,          ///< Footer.
-	WID_CPR_ENABLE_CARGOES,  ///< Enable cargoes button.
-	WID_CPR_DISABLE_CARGOES, ///< Disable cargoes button.
-	WID_CPR_MATRIX,          ///< Cargo list.
-	WID_CPR_MATRIX_SCROLLBAR,///< Cargo list scrollbar.
+	WID_CPR_BACKGROUND,       ///< Background of the window.
+	WID_CPR_HEADER,           ///< Header.
+	WID_CPR_GRAPH,            ///< Graph itself.
+	WID_CPR_RESIZE,           ///< Resize button.
+	WID_CPR_FOOTER,           ///< Footer.
+	WID_CPR_ENABLE_CARGOES,   ///< Enable cargoes button.
+	WID_CPR_DISABLE_CARGOES,  ///< Disable cargoes button.
+	WID_CPR_MATRIX,           ///< Cargo list.
+	WID_CPR_MATRIX_SCROLLBAR, ///< Cargo list scrollbar.
 };
 
 /** Widget of the #CompanyLeagueWindow class. */
@@ -63,6 +63,18 @@ enum PerformanceRatingDetailsWidgets {
 
 	WID_PRD_COMPANY_FIRST, ///< First company.
 	WID_PRD_COMPANY_LAST  = WID_PRD_COMPANY_FIRST + MAX_COMPANIES - 1, ///< Last company.
+};
+
+/** Widget of the #IndustryProductionGraphWindow class. */
+enum IndustryProductionGraphWidgets {
+	WID_IP_BACKGROUND,       ///< Background of the window.
+	WID_IP_GRAPH,            ///< Graph itself.
+	WID_IP_RESIZE,           ///< Resize button.
+	WID_IP_CAPTION,          ///< Caption.
+	WID_IP_ENABLE_CARGOES,   ///< Enable cargoes button.
+	WID_IP_DISABLE_CARGOES,  ///< Disable cargoes button.
+	WID_IP_MATRIX,           ///< Cargo list.
+	WID_IP_MATRIX_SCROLLBAR, ///< Cargo list scrollbar.
 };
 
 #endif /* WIDGETS_GRAPH_WIDGET_H */

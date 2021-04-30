@@ -75,9 +75,9 @@ struct Industry : IndustryPool::PoolItem<&_industry_pool> {
 	CargoID accepts_cargo[INDUSTRY_NUM_INPUTS];            ///< 16 input cargo slots
 	uint16 this_month_production[INDUSTRY_NUM_OUTPUTS];    ///< stats of this month's production per cargo
 	uint16 this_month_transported[INDUSTRY_NUM_OUTPUTS];   ///< stats of this month's transport per cargo
-	byte last_month_pct_transported[INDUSTRY_NUM_OUTPUTS]; ///< percentage transported per cargo in the last full month
-	uint16 last_month_production[INDUSTRY_NUM_OUTPUTS];    ///< total units produced per cargo in the last full month
-	uint16 last_month_transported[INDUSTRY_NUM_OUTPUTS];   ///< total units transported per cargo in the last full month
+	byte past_pct_transported[24][INDUSTRY_NUM_OUTPUTS];   ///< percentage transported per cargo in the last 24 months
+	uint16 past_production[24][INDUSTRY_NUM_OUTPUTS];      ///< total units produced per cargo in the last 24 months
+	uint16 past_transported[24][INDUSTRY_NUM_OUTPUTS];     ///< total units transported per cargo in the last 24 months
 	uint16 counter;                                        ///< used for animation and/or production (if available cargo)
 
 	IndustryType type;             ///< type of industry.

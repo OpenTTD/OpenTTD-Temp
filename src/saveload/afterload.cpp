@@ -3002,9 +3002,9 @@ bool AfterLoadGame()
 				i->produced_cargo[ci] = CT_INVALID;
 				i->produced_cargo_waiting[ci] = 0;
 				i->production_rate[ci] = 0;
-				i->last_month_production[ci] = 0;
-				i->last_month_transported[ci] = 0;
-				i->last_month_pct_transported[ci] = 0;
+				i->past_production[0][ci] = 0;
+				i->past_transported[0][ci] = 0;
+				i->past_pct_transported[0][ci] = 0;
 				i->this_month_production[ci] = 0;
 				i->this_month_transported[ci] = 0;
 			}

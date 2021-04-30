@@ -1135,8 +1135,8 @@ static void ProduceIndustryGoods(Industry *i)
 	if ((i->counter & 0x3F) == 0) {
 		uint32 r;
 		if (Chance16R(1, 14, r) && indsp->number_of_sounds != 0 && _settings_client.sound.ambient) {
-			for (size_t j = 0; j < lengthof(i->last_month_production); j++) {
-				if (i->last_month_production[j] > 0) {
+			for (size_t j = 0; j < lengthof(i->past_production[0]); j++) {
+				if (i->past_production[0][j] > 0) {
 					/* Play sound since last month had production */
 					SndPlayTileFx(
 						(SoundFx)(indsp->random_sounds[((r >> 16) * indsp->number_of_sounds) >> 16]),
@@ -1737,8 +1737,9 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 	MemSetT(i->produced_cargo_waiting,     0, lengthof(i->produced_cargo_waiting));
 	MemSetT(i->this_month_production,      0, lengthof(i->this_month_production));
 	MemSetT(i->this_month_transported,     0, lengthof(i->this_month_transported));
-	MemSetT(i->last_month_pct_transported, 0, lengthof(i->last_month_pct_transported));
-	MemSetT(i->last_month_transported,     0, lengthof(i->last_month_transported));
+	MemSetT(i->past_production,            0, lengthof(i->past_production));
+	MemSetT(i->past_pct_transported,       0, lengthof(i->past_pct_transported));
+	MemSetT(i->past_transported,           0, lengthof(i->past_transported));
 	MemSetT(i->incoming_cargo_waiting,     0, lengthof(i->incoming_cargo_waiting));
 	MemSetT(i->last_cargo_accepted_at,     0, lengthof(i->last_cargo_accepted_at));
 
@@ -1792,14 +1793,14 @@ static void DoCreateNewIndustry(Industry *i, TileIndex tile, IndustryType type, 
 	if (_generating_world) {
 		if (HasBit(indspec->callback_mask, CBM_IND_PRODUCTION_256_TICKS)) {
 			IndustryProductionCallback(i, 1);
-			for (size_t ci = 0; ci < lengthof(i->last_month_production); ci++) {
-				i->last_month_production[ci] = i->produced_cargo_waiting[ci] * 8;
+			for (size_t ci = 0; ci < lengthof(i->past_production[0]); ci++) {
+				i->past_production[0][ci] = i->produced_cargo_waiting[ci] * 8;
 				i->produced_cargo_waiting[ci] = 0;
 			}
 		}
 
-		for (size_t ci = 0; ci < lengthof(i->last_month_production); ci++) {
-			i->last_month_production[ci] += i->production_rate[ci] * 8;
+		for (size_t ci = 0; ci < lengthof(i->past_production[0]); ci++) {
+			i->past_production[0][ci] += i->production_rate[ci] * 8;
 		}
 	}
 
@@ -2361,12 +2362,21 @@ static void UpdateIndustryStatistics(Industry *i)
 				i->last_prod_year = _cur_year;
 				pct = std::min(i->this_month_transported[j] * 256 / i->this_month_production[j], 255);
 			}
-			i->last_month_pct_transported[j] = pct;
+			for (size_t k = lengthof(i->past_pct_transported) - 1; k >= 1; k--){
+				i->past_pct_transported[k][j] = i->past_pct_transported[k-1][j];
+			}
+			i->past_pct_transported[0][j] = pct;
 
-			i->last_month_production[j] = i->this_month_production[j];
+			for (size_t k = lengthof(i->past_production) - 1; k >= 1; k--){
+				i->past_production[k][j] = i->past_production[k-1][j];
+			}
+			i->past_production[0][j] = i->this_month_production[j];
 			i->this_month_production[j] = 0;
 
-			i->last_month_transported[j] = i->this_month_transported[j];
+			for (size_t k = lengthof(i->past_transported) - 1; k >= 1; k--){
+				i->past_transported[k][j] = i->past_transported[k-1][j];
+			}
+			i->past_transported[0][j] = i->this_month_transported[j];
 			i->this_month_transported[j] = 0;
 		}
 	}
@@ -2726,7 +2736,7 @@ static void ChangeIndustryProduction(Industry *i, bool monthly)
 		if (original_economy) {
 			if (only_decrease || Chance16(1, 3)) {
 				/* If more than 60% transported, 66% chance of increase, else 33% chance of increase */
-				if (!only_decrease && (i->last_month_pct_transported[0] > PERCENT_TRANSPORTED_60) != Chance16(1, 3)) {
+				if (!only_decrease && (i->past_pct_transported[0][0] > PERCENT_TRANSPORTED_60) != Chance16(1, 3)) {
 					mul = 1; // Increase production
 				} else {
 					div = 1; // Decrease production
@@ -2739,7 +2749,7 @@ static void ChangeIndustryProduction(Industry *i, bool monthly)
 				uint32 r = Random();
 				int old_prod, new_prod, percent;
 				/* If over 60% is transported, mult is 1, else mult is -1. */
-				int mult = (i->last_month_pct_transported[j] > PERCENT_TRANSPORTED_60) ? 1 : -1;
+				int mult = (i->past_pct_transported[0][j] > PERCENT_TRANSPORTED_60) ? 1 : -1;
 
 				new_prod = old_prod = i->production_rate[j];
 
@@ -2749,7 +2759,7 @@ static void ChangeIndustryProduction(Industry *i, bool monthly)
 					mult = -1;
 				/* For normal industries, if over 60% is transported, 33% chance for decrease.
 				 * Bonus for very high station ratings (over 80%): 16% chance for decrease. */
-				} else if (Chance16I(1, ((i->last_month_pct_transported[j] > PERCENT_TRANSPORTED_80) ? 6 : 3), r)) {
+				} else if (Chance16I(1, ((i->past_pct_transported[0][j] > PERCENT_TRANSPORTED_80) ? 6 : 3), r)) {
 					mult *= -1;
 				}
 

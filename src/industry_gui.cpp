@@ -38,6 +38,7 @@
 #include "widgets/dropdown_type.h"
 #include "widgets/industry_widget.h"
 #include "clear_map.h"
+#include "graph_gui.h"
 
 #include "table/strings.h"
 
@@ -822,7 +823,22 @@ public:
 		NWidgetViewport *nvp = this->GetWidget<NWidgetViewport>(WID_IV_VIEWPORT);
 		nvp->InitializeViewport(this, Industry::Get(window_number)->location.GetCenterTile(), ZOOM_LVL_INDUSTRY);
 
+		int count = 0;
+		const Industry *i = Industry::Get(window_number);
+		for (size_t j = 0; j < INDUSTRY_NUM_OUTPUTS; j++) {
+			if (!IsCargoIDValid(i->produced_cargo[j])) continue;
+			count++;
+		}
+		if (count < 1) {
+			this->DisableWidget(WID_IV_GRAPH);
+		}
+
 		this->InvalidateData();
+	}
+
+	~IndustryViewWindow()
+	{
+		DeleteWindowById(WC_INDUSTRY_PRODUCTION, this->window_number, false);
 	}
 
 	void OnPaint() override
@@ -913,11 +929,12 @@ public:
 			}
 
 			SetDParam(0, i->produced_cargo[j]);
-			SetDParam(1, i->last_month_production[j]);
+			SetDParam(1, i->past_production[0][j]);
 			SetDParamStr(2, cargo_suffix[j].text);
-			SetDParam(3, ToPercent8(i->last_month_pct_transported[j]));
+			SetDParam(3, ToPercent8(i->past_pct_transported[0][j]));
 			uint x = left + WD_FRAMETEXT_LEFT + (this->editable == EA_RATE ? SETTING_BUTTON_WIDTH + 10 : 0);
 			DrawString(x, right - WD_FRAMERECT_RIGHT, y, STR_INDUSTRY_VIEW_TRANSPORTED);
+
 			/* Let's put out those buttons.. */
 			if (this->editable == EA_RATE) {
 				DrawArrowButtons(left + WD_FRAMETEXT_LEFT, y, COLOUR_YELLOW, (this->clicked_line == IL_RATE1 + j) ? this->clicked_button : 0,
@@ -1081,6 +1098,10 @@ public:
 				ShowIndustryCargoesWindow(i->type);
 				break;
 			}
+
+			case WID_IV_GRAPH:
+				ShowIndustryProductionGraph(this->window_number);
+				break;
 		}
 	}
 
@@ -1157,7 +1178,7 @@ static void UpdateIndustryProduction(Industry *i)
 
 	for (byte j = 0; j < lengthof(i->produced_cargo); j++) {
 		if (i->produced_cargo[j] != CT_INVALID) {
-			i->last_month_production[j] = 8 * i->production_rate[j];
+			i->past_production[0][j] = 8 * i->production_rate[j];
 		}
 	}
 }
@@ -1182,6 +1203,7 @@ static const NWidgetPart _nested_industry_view_widgets[] = {
 	EndContainer(),
 	NWidget(NWID_HORIZONTAL),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_CREAM, WID_IV_DISPLAY), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_INDUSTRY_DISPLAY_CHAIN, STR_INDUSTRY_DISPLAY_CHAIN_TOOLTIP),
+		NWidget(WWT_PUSHTXTBTN, COLOUR_CREAM, WID_IV_GRAPH), SetFill(1, 0), SetResize(1, 0), SetDataTip(STR_INDUSTRY_VIEW_PRODUCTION_GRAPH, STR_INDUSTRY_VIEW_PRODUCTION_GRAPH_TOOLTIP),
 		NWidget(WWT_RESIZEBOX, COLOUR_CREAM),
 	EndContainer(),
 };
@@ -1418,7 +1440,7 @@ protected:
 		assert(id < lengthof(i->produced_cargo));
 
 		if (i->produced_cargo[id] == CT_INVALID) return 101;
-		return ToPercent8(i->last_month_pct_transported[id]);
+		return ToPercent8(i->past_pct_transported[0][id]);
 	}
 
 	/**
@@ -1462,8 +1484,8 @@ protected:
 	{
 		uint prod_a = 0, prod_b = 0;
 		for (uint i = 0; i < lengthof(a->produced_cargo); i++) {
-			if (a->produced_cargo[i] != CT_INVALID) prod_a += a->last_month_production[i];
-			if (b->produced_cargo[i] != CT_INVALID) prod_b += b->last_month_production[i];
+			if (a->produced_cargo[i] != CT_INVALID) prod_a += a->past_production[0][i];
+			if (b->produced_cargo[i] != CT_INVALID) prod_b += b->past_production[0][i];
 		}
 		int r = prod_a - prod_b;
 
@@ -1499,7 +1521,7 @@ protected:
 
 		for (byte j = 0; j < lengthof(i->produced_cargo); j++) {
 			if (i->produced_cargo[j] == CT_INVALID) continue;
-			cargos.emplace_back(i->produced_cargo[j], i->last_month_production[j], cargo_suffix[j].text, ToPercent8(i->last_month_pct_transported[j]));
+			cargos.emplace_back(i->produced_cargo[j], i->past_production[0][j], cargo_suffix[j].text, ToPercent8(i->past_pct_transported[0][j]));
 		}
 
 		/* Sort by descending production, then descending transported */

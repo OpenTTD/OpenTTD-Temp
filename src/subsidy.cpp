@@ -402,8 +402,8 @@ bool FindSubsidyIndustryCargoRoute()
 	}
 	assert(cargo_num == 0); // indicates loop didn't break as intended
 	cid = src_ind->produced_cargo[cargo_index];
-	trans = src_ind->last_month_pct_transported[cargo_index];
-	total = src_ind->last_month_production[cargo_index];
+	trans = src_ind->past_pct_transported[0][cargo_index];
+	total = src_ind->past_production[0][cargo_index];
 
 	/* Quit if no production in this industry
 	 * or if the pct transported is already large enough

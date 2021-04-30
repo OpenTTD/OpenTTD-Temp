@@ -318,10 +318,10 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 				case 0x69: return this->industry->produced_cargo_waiting[index];
 				case 0x6A: return this->industry->this_month_production[index];
 				case 0x6B: return this->industry->this_month_transported[index];
-				case 0x6C: return this->industry->last_month_production[index];
-				case 0x6D: return this->industry->last_month_transported[index];
+				case 0x6C: return this->industry->past_production[0][index];
+				case 0x6D: return this->industry->past_transported[0][index];
 				case 0x70: return this->industry->production_rate[index];
-				case 0x71: return this->industry->last_month_pct_transported[index];
+				case 0x71: return this->industry->past_pct_transported[0][index];
 				default: NOT_REACHED();
 			}
 		}
@@ -376,17 +376,17 @@ static uint32 GetCountAndDistanceOfClosestInstance(byte param_setID, byte layout
 		case 0x9B: return GB(this->industry->this_month_transported[1], 8, 8);
 		/* fraction of cargo transported LAST month. */
 		case 0x9C:
-		case 0x9D: return this->industry->last_month_pct_transported[variable - 0x9C];
+		case 0x9D: return this->industry->past_pct_transported[0][variable - 0x9C];
 		/* amount of cargo produced LAST month. */
-		case 0x9E: return this->industry->last_month_production[0];
-		case 0x9F: return GB(this->industry->last_month_production[0], 8, 8);
-		case 0xA0: return this->industry->last_month_production[1];
-		case 0xA1: return GB(this->industry->last_month_production[1], 8, 8);
+		case 0x9E: return this->industry->past_production[0][0];
+		case 0x9F: return GB(this->industry->past_production[0][0], 8, 8);
+		case 0xA0: return this->industry->past_production[0][1];
+		case 0xA1: return GB(this->industry->past_production[0][1], 8, 8);
 		/* amount of cargo transported last month. */
-		case 0xA2: return this->industry->last_month_transported[0];
-		case 0xA3: return GB(this->industry->last_month_transported[0], 8, 8);
-		case 0xA4: return this->industry->last_month_transported[1];
-		case 0xA5: return GB(this->industry->last_month_transported[1], 8, 8);
+		case 0xA2: return this->industry->past_transported[0][0];
+		case 0xA3: return GB(this->industry->past_transported[0][0], 8, 8);
+		case 0xA4: return this->industry->past_transported[0][1];
+		case 0xA5: return GB(this->industry->past_transported[0][1], 8, 8);
 
 		case 0xA6: return indspec->grf_prop.local_id;
 		case 0xA7: return this->industry->founder;

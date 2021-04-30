@@ -558,6 +558,12 @@ enum WindowClass {
 	WC_PERFORMANCE_DETAIL,
 
 	/**
+	 * Industry production history graph; %Window numbers:
+	 *   - #IndustryID = #IndustryProductionGraphWidgets
+	 */
+	WC_INDUSTRY_PRODUCTION,
+
+	/**
 	 * Company infrastructure overview; %Window numbers:
 	 *   - #CompanyID = #CompanyInfrastructureWidgets
 	 */
