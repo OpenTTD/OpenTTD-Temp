@@ -1567,11 +1567,23 @@ void VehicleEnterDepot(Vehicle *v)
 			}
 		}
 
+		/* Handle the ODTFB_PART_OF_ORDERS case. If there is a timetabled wait time, hold the train, otherwise skip to the next order.
+		Note that if there is a only a travel_time, but no wait_time defined for the order, and the train arrives to the depot sooner as sche
+		he doesn't wait in it, as it would in stations. Thus, the original behaviour is maintained if there's no defined wait_time.*/
+		
 		if (v->current_order.GetDepotOrderType() & ODTFB_PART_OF_ORDERS) {
-			/* Part of orders */
+			
 			v->DeleteUnreachedImplicitOrders();
 			UpdateVehicleTimetable(v, true);
-			v->IncrementImplicitOrderIndex();
+			//v->IncrementImplicitOrderIndex();
+			if (v->current_order.IsWaitTimetabled()) {
+				v->current_order.MakeWaiting();
+				v->current_order.SetNonStopType(ONSF_NO_STOP_AT_ANY_STATION);
+				return;
+			}
+			else {
+				v->IncrementImplicitOrderIndex();
+			}
 		}
 		if (v->current_order.GetDepotActionType() & ODATFB_HALT) {
 			/* Vehicles are always stopped on entering depots. Do not restart this one. */
@@ -2333,6 +2345,56 @@ void Vehicle::HandleLoading(bool mode)
 }
 
 /**
+ * Handle the waiting time everywhere else as in stations (basically in depot but, eventually, also elsewhere ?)
+ * Function is called when order's wait_time is defined.
+ * @param stop_waiting should we stop waiting (or definitely avoid) even if there is still time left to wait ?
+ */
+void Vehicle::HandleWaiting(bool stop_waiting)
+{
+	switch (this->current_order.GetType()) {
+	case OT_WAITING: {
+		uint wait_time = std::max(this->current_order.GetTimetabledWait() - this->lateness_counter, 0);
+		/* Vehicles holds on until waiting Timetabled time expires. */
+		if (!stop_waiting && this->current_order_time < wait_time) {
+			return;
+		}
+
+		
+		/*
+		 * if timetabled and we haven't started yet, wait here until then.
+		 */
+		if(this->current_order.IsWaitTimetabled())
+		{
+			bool just_started = !HasBit(vehicle_flags, VF_TIMETABLE_STARTED) && cur_real_order_index == 0;
+			
+			int to_start = (this->timetable_start - _date);
+
+			// if we haven't started the timetable yet, we need to update it to trigger it if its time.
+			if(just_started)
+			{
+				UpdateVehicleTimetable(this, false);
+				break;
+			}
+			
+			if (to_start > 0)
+			{
+				break;
+			}
+		}
+			
+		/* When wait_time is expired, we move on. */
+		UpdateVehicleTimetable(this, false);
+		this->IncrementImplicitOrderIndex();
+		this->current_order.MakeDummy();
+
+		break;
+	}
+
+	default: return;
+	}
+}
+
+/*
  * Get a map of cargoes and free capacities in the consist.
  * @param capacities Map to be filled with cargoes and capacities.
  */

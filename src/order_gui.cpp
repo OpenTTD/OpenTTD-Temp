@@ -314,6 +314,13 @@ void DrawOrderString(const Vehicle *v, const Order *order, int order_index, int 
 				SetDParam(5, (order->GetDepotActionType() & ODATFB_HALT) ? STR_ORDER_REFIT_STOP_ORDER : STR_ORDER_REFIT_ORDER);
 				SetDParam(6, CargoSpec::Get(order->GetRefitCargo())->name);
 			}
+			
+			if (timetable) {
+				if (order->GetWaitTime() > 0) {
+					SetDParam(5, order->IsWaitTimetabled() ? STR_TIMETABLE_STAY_FOR : STR_TIMETABLE_STAY_FOR_ESTIMATED);
+					SetTimetableParams(6, 7, order->GetWaitTime());					
+				}				
+			}
 			break;
 
 		case OT_GOTO_WAYPOINT:

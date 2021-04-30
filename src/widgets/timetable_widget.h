@@ -29,6 +29,8 @@ enum VehicleTimetableWidgets {
 	WID_VT_EXPECTED_SELECTION,          ///< Disable/hide the expected selection button.
 	WID_VT_CHANGE_SPEED,                ///< Change speed limit button.
 	WID_VT_CLEAR_SPEED,                 ///< Clear speed limit button.
+	WID_VT_MUL,
+	WID_VT_ADD,
 };
 
 #endif /* WIDGETS_TIMETABLE_WIDGET_H */

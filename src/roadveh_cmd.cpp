@@ -790,7 +790,7 @@ static bool CheckRoadBlockedForOvertaking(OvertakeData *od)
 	if (!HasBit(trackdirbits, od->trackdir) || (trackbits & ~TRACK_BIT_CROSS) || (red_signals != TRACKDIR_BIT_NONE)) return true;
 
 	/* Are there more vehicles on the tile except the two vehicles involved in overtaking */
-	return HasVehicleOnPos(od->tile, od, EnumFindVehBlockingOvertake);
+	return false;// HasVehicleOnPos(od->tile, od, EnumFindVehBlockingOvertake);
 }
 
 static void RoadVehCheckOvertake(RoadVehicle *v, RoadVehicle *u)
@@ -804,7 +804,7 @@ static void RoadVehCheckOvertake(RoadVehicle *v, RoadVehicle *u)
 	if (RoadTypeIsTram(v->roadtype)) return;
 
 	/* Don't overtake in stations */
-	if (IsTileType(v->tile, MP_STATION) || IsTileType(u->tile, MP_STATION)) return;
+	//if (IsTileType(v->tile, MP_STATION) || IsTileType(u->tile, MP_STATION)) return;
 
 	/* For now, articulated road vehicles can't overtake anything. */
 	if (v->HasArticulatedPart()) return;
@@ -813,7 +813,8 @@ static void RoadVehCheckOvertake(RoadVehicle *v, RoadVehicle *u)
 	if (v->direction != u->direction || !(v->direction & 1)) return;
 
 	/* Check if vehicle is in a road stop, depot, tunnel or bridge or not on a straight road */
-	if (v->state >= RVSB_IN_ROAD_STOP || !IsStraightRoadTrackdir((Trackdir)(v->state & RVSB_TRACKDIR_MASK))) return;
+	//if (v->state >= RVSB_IN_ROAD_STOP || !IsStraightRoadTrackdir((Trackdir)(v->state & RVSB_TRACKDIR_MASK))) return;
+	if (!IsStraightRoadTrackdir((Trackdir)(v->state & RVSB_TRACKDIR_MASK))) return;
 
 	/* Can't overtake a vehicle that is moving faster than us. If the vehicle in front is
 	 * accelerating, take the maximum speed for the comparison, else the current speed.
@@ -1136,10 +1137,9 @@ static bool CanBuildTramTrackOnTile(CompanyID c, TileIndex t, RoadType rt, RoadB
 bool IndividualRoadVehicleController(RoadVehicle *v, const RoadVehicle *prev)
 {
 	if (v->overtaking != 0)  {
-		if (IsTileType(v->tile, MP_STATION)) {
-			/* Force us to be not overtaking! */
+		/*if (IsTileType(v->tile, MP_STATION)) {
 			v->overtaking = 0;
-		} else if (++v->overtaking_ctr >= RV_OVERTAKE_TIMEOUT) {
+		} else */if (++v->overtaking_ctr >= RV_OVERTAKE_TIMEOUT) {
 			/* If overtaking just aborts at a random moment, we can have a out-of-bound problem,
 			 *  if the vehicle started a corner. To protect that, only allow an abort of
 			 *  overtake if we are on straight roads */
@@ -1580,6 +1580,8 @@ static bool RoadVehController(RoadVehicle *v)
 	v->HandleLoading();
 
 	if (v->current_order.IsType(OT_LOADING)) return true;
+	v->HandleWaiting(false);
+	if (v->current_order.IsType(OT_WAITING)) return true;
 
 	if (v->IsInDepot() && RoadVehLeaveDepot(v, true)) return true;
 

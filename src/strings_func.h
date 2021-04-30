@@ -163,6 +163,12 @@ public:
 		this->data[n] = v;
 	}
 
+	void SetParam(uint n, float v)
+	{
+		assert(n < this->num_param);
+		this->data[n] = (uint64)(v*1000);
+	}
+
 	uint64 GetParam(uint n) const
 	{
 		assert(n < this->num_param);

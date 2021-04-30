@@ -360,6 +360,8 @@ public:
 
 	void HandleLoading(bool mode = false);
 
+	void HandleWaiting(bool stop_waiting = false);
+	
 	void GetConsistFreeCapacities(SmallMap<CargoID, uint> &capacities) const;
 
 	uint GetConsistTotalCapacity() const;

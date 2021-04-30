@@ -140,7 +140,8 @@ CommandCost CmdChangeTimetable(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 			case OT_GOTO_STATION:
 				if (order->GetNonStopType() & ONSF_NO_STOP_AT_DESTINATION_STATION) return_cmd_error(STR_ERROR_TIMETABLE_NOT_STOPPING_HERE);
 				break;
-
+			case OT_GOTO_DEPOT:
+				break;
 			case OT_CONDITIONAL:
 				break;
 
@@ -219,6 +220,18 @@ CommandCost CmdSetVehicleOnTime(TileIndex tile, DoCommandFlag flags, uint32 p1, 
  */
 static bool VehicleTimetableSorter(Vehicle * const &a, Vehicle * const &b)
 {
+
+	/*
+	 * If first order is a goto depot, just order by unit number.
+	 */
+	if(a->GetFirstOrder() != nullptr)
+	{
+		if(a->GetFirstOrder()->GetType() == OT_GOTO_DEPOT)
+		{
+			return b->unitnumber > a->unitnumber;
+		}
+	}
+	
 	VehicleOrderID a_order = a->cur_real_order_index;
 	VehicleOrderID b_order = b->cur_real_order_index;
 	int j = (int)b_order - (int)a_order;
@@ -300,6 +313,21 @@ CommandCost CmdSetTimetableStart(TileIndex tile, DoCommandFlag flags, uint32 p1,
 			ClrBit(w->vehicle_flags, VF_TIMETABLE_STARTED);
 			/* Do multiplication, then division to reduce rounding errors. */
 			w->timetable_start = start_date + idx * total_duration / num_vehs / DAY_TICKS;
+
+			// send to start to wait if first order is a depot...
+			if(w->orders.list != nullptr)
+			{
+				Order* order = w->orders.list->GetFirstOrder();
+
+				if(order->GetType() == OT_GOTO_DEPOT)
+				{
+					w->cur_implicit_order_index = 0;
+					w->cur_real_order_index = 0;
+
+				}
+				
+			}
+			
 			SetWindowDirty(WC_VEHICLE_TIMETABLE, w->index);
 			++idx;
 		}
@@ -386,7 +414,34 @@ void UpdateVehicleTimetable(Vehicle *v, bool travelling)
 	}
 
 	bool just_started = false;
+	bool wait_at_depot = false;
 
+	// if we are waiting in a depot to start the timetable...
+	if (v->cur_real_order_index == first_manual_order && !travelling) {
+		Order* order = v->GetFirstOrder();
+		just_started = !HasBit(v->vehicle_flags, VF_TIMETABLE_STARTED) && order->GetType() == OT_GOTO_DEPOT && v->timetable_start != 0;
+
+		if (just_started)
+		{
+		
+			if (order->GetType() == OT_GOTO_DEPOT && v->timetable_start != 0 && _date < v->timetable_start)
+			{
+				wait_at_depot = true;
+
+			}
+
+			if (v->timetable_start != 0 && !wait_at_depot) {
+				v->lateness_counter = (_date - v->timetable_start) * DAY_TICKS + _date_fract;
+				v->timetable_start = 0;
+			}
+			
+			if (!wait_at_depot)
+				SetBit(v->vehicle_flags, VF_TIMETABLE_STARTED);
+
+			SetWindowDirty(WC_VEHICLE_TIMETABLE, v->index);
+		}
+	}
+	
 	/* This vehicle is arriving at the first destination in the timetable. */
 	if (v->cur_real_order_index == first_manual_order && travelling) {
 		/* If the start date hasn't been set, or it was set automatically when
@@ -395,12 +450,26 @@ void UpdateVehicleTimetable(Vehicle *v, bool travelling)
 		 * the vehicle should have arrived. */
 		just_started = !HasBit(v->vehicle_flags, VF_TIMETABLE_STARTED);
 
-		if (v->timetable_start != 0) {
+		// if first order is depot and on first order, don't start the timetable as soon as we enter depot.
+		if (just_started)
+		{
+			Order* order = v->GetFirstOrder();
+
+			if (order->GetType() == OT_GOTO_DEPOT && v->timetable_start != 0 && _date < v->timetable_start)
+			{
+				wait_at_depot = true;
+
+			}
+
+		}
+		if (v->timetable_start != 0 && !wait_at_depot) {
 			v->lateness_counter = (_date - v->timetable_start) * DAY_TICKS + _date_fract;
 			v->timetable_start = 0;
 		}
 
-		SetBit(v->vehicle_flags, VF_TIMETABLE_STARTED);
+		if(!wait_at_depot)
+			SetBit(v->vehicle_flags, VF_TIMETABLE_STARTED);
+		
 		SetWindowDirty(WC_VEHICLE_TIMETABLE, v->index);
 	}
 
@@ -418,6 +487,8 @@ void UpdateVehicleTimetable(Vehicle *v, bool travelling)
 
 	if (just_started) return;
 
+
+	
 	/* Before modifying waiting times, check whether we want to preserve bigger ones. */
 	if (!real_current_order->IsType(OT_CONDITIONAL) &&
 			(travelling || time_taken > real_current_order->GetWaitTime() || remeasure_wait_time)) {

@@ -76,7 +76,7 @@ public:
 	void MakeDummy();
 	void MakeConditional(VehicleOrderID order);
 	void MakeImplicit(StationID destination);
-
+	void MakeWaiting();
 	/**
 	 * Is this a 'goto' order with a real destination?
 	 * @return True if the type is either #OT_GOTO_WAYPOINT, #OT_GOTO_DEPOT or #OT_GOTO_STATION.

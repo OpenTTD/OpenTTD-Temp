@@ -156,6 +156,12 @@ void Order::MakeImplicit(StationID destination)
 	this->dest = destination;
 }
 
+void Order::MakeWaiting()
+{
+	this->type = OT_WAITING;
+}
+
+
 /**
  * Make this depot/station order also a refit order.
  * @param cargo   the cargo type to change to.
@@ -1129,6 +1135,7 @@ CommandCost CmdSkipToOrder(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 
 	if (flags & DC_EXEC) {
 		if (v->current_order.IsType(OT_LOADING)) v->LeaveStation();
+		if (v->current_order.IsType(OT_WAITING)) v->HandleWaiting(true);
 
 		v->cur_implicit_order_index = v->cur_real_order_index = sel_ord;
 		v->UpdateRealOrderIndex();
@@ -2137,7 +2144,9 @@ bool ProcessOrders(Vehicle *v)
 
 		case OT_LOADING:
 			return false;
-
+		case OT_WAITING:
+			return false;
+		
 		case OT_LEAVESTATION:
 			if (v->type != VEH_AIRCRAFT) return false;
 			break;

@@ -339,6 +339,11 @@ static bool CheckShipLeaveDepot(Ship *v)
 {
 	if (!v->IsChainInDepot()) return false;
 
+	if (v->current_order.IsWaitTimetabled())
+		v->HandleWaiting(false);
+	if (v->current_order.IsType(OT_WAITING))
+		return true;
+	
 	/* We are leaving a depot, but have to go to the exact same one; re-enter */
 	if (v->current_order.IsType(OT_GOTO_DEPOT) &&
 			IsShipDepotTile(v->tile) && GetDepotIndex(v->tile) == v->current_order.GetDestination()) {

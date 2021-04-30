@@ -30,6 +30,8 @@
 
 #include "safeguards.h"
 
+
+
 /** Container for the arrival/departure dates of a vehicle */
 struct TimetableArrivalDeparture {
 	Ticks arrival;   ///< The arrival time
@@ -145,6 +147,13 @@ static void ChangeTimetableStartCallback(const Window *w, Date date)
 	DoCommandP(0, w->window_number, date, CMD_SET_TIMETABLE_START | CMD_MSG(STR_ERROR_CAN_T_TIMETABLE_VEHICLE));
 }
 
+enum QueryType
+{
+	TIMETABLE_QT_SPEED,
+	TIMETABLE_QT_CHANGE_TIME,
+	TIMETABLE_QT_MULTIPLY_TIME,
+	TIMETABLE_QT_ADD_TIME,
+};
 
 struct TimetableWindow : Window {
 	int sel_index;
@@ -153,7 +162,7 @@ struct TimetableWindow : Window {
 	uint deparr_time_width; ///< The width of the departure/arrival time
 	uint deparr_abbr_width; ///< The width of the departure/arrival abbreviation
 	Scrollbar *vscroll;
-	bool query_is_speed_query; ///< The currently open query window is a speed query and not a time query.
+	QueryType query_type;
 
 	TimetableWindow(WindowDesc *desc, WindowNumber window_number) :
 			Window(desc),
@@ -179,7 +188,7 @@ struct TimetableWindow : Window {
 	{
 		assert(HasBit(v->vehicle_flags, VF_TIMETABLE_STARTED));
 
-		bool travelling = (!v->current_order.IsType(OT_LOADING) || v->current_order.GetNonStopType() == ONSF_STOP_EVERYWHERE);
+		bool travelling = (!(v->current_order.IsType(OT_LOADING) || v->current_order.IsType(OT_WAITING)) || v->current_order.GetNonStopType() == ONSF_STOP_EVERYWHERE);
 		Ticks start_time = _date_fract - v->current_order_time;
 
 		FillTimetableArrivalDepartureTable(v, v->cur_real_order_index % v->GetNumOrders(), travelling, table, start_time);
@@ -309,7 +318,7 @@ struct TimetableWindow : Window {
 				if (selected % 2 == 1) {
 					disable = order != nullptr && (order->IsType(OT_CONDITIONAL) || order->IsType(OT_IMPLICIT));
 				} else {
-					disable = order == nullptr || ((!order->IsType(OT_GOTO_STATION) || (order->GetNonStopType() & ONSF_NO_STOP_AT_DESTINATION_STATION)) && !order->IsType(OT_CONDITIONAL));
+					disable = order == nullptr || ((!(order->IsType(OT_GOTO_STATION) || (order->IsType(OT_GOTO_DEPOT) && !(order->GetDepotActionType() & ODATFB_HALT))) || (order->GetNonStopType() & ONSF_NO_STOP_AT_DESTINATION_STATION)) && !order->IsType(OT_CONDITIONAL));
 				}
 			}
 			bool disable_speed = disable || selected % 2 != 1 || v->type == VEH_AIRCRAFT;
@@ -501,10 +510,10 @@ struct TimetableWindow : Window {
 		}
 	}
 
-	static inline uint32 PackTimetableArgs(const Vehicle *v, uint selected, bool speed)
+	static inline uint32 PackTimetableArgs(const Vehicle *v, uint selected, QueryType query_type)
 	{
 		uint order_number = (selected + 1) / 2;
-		ModifyTimetableFlags mtf = (selected % 2 == 1) ? (speed ? MTF_TRAVEL_SPEED : MTF_TRAVEL_TIME) : MTF_WAIT_TIME;
+		ModifyTimetableFlags mtf = (selected % 2 == 1) ? (query_type==TIMETABLE_QT_SPEED ? MTF_TRAVEL_SPEED : MTF_TRAVEL_TIME) : MTF_WAIT_TIME;
 
 		if (order_number >= v->GetNumOrders()) order_number = 0;
 
@@ -531,6 +540,46 @@ struct TimetableWindow : Window {
 			case WID_VT_START_DATE: // Change the date that the timetable starts.
 				ShowSetDateWindow(this, v->index | (v->orders.list->IsCompleteTimetable() && _ctrl_pressed ? 1U << 20 : 0), _date, _cur_year, _cur_year + 15, ChangeTimetableStartCallback);
 				break;
+			case WID_VT_MUL: {
+				int selected = this->sel_index;
+				VehicleOrderID real = (selected + 1) / 2;
+
+				if (real >= v->GetNumOrders()) real = 0;
+
+				const Order* order = v->GetOrder(real);
+				StringID current = STR_EMPTY;
+
+				if (order != nullptr) {
+					SetDParam(0, 100);
+					current = STR_JUST_INT;
+
+				}
+
+				this->query_type = TIMETABLE_QT_MULTIPLY_TIME;
+
+				ShowQueryString(current, STR_TIMETABLE_MULTIPLY_TRAVEL_TIMES, 31, this, CS_NUMERAL, QSF_ACCEPT_UNCHANGED);
+				break;
+			}
+			case WID_VT_ADD: {
+				int selected = this->sel_index;
+				VehicleOrderID real = (selected + 1) / 2;
+
+				if (real >= v->GetNumOrders()) real = 0;
+
+				const Order* order = v->GetOrder(real);
+				StringID current = STR_EMPTY;
+
+				if (order != nullptr) {
+					SetDParam(0, 0);
+					current = STR_JUST_INT;
+
+				}
+
+				this->query_type = TIMETABLE_QT_ADD_TIME;
+
+				ShowQueryString(current, STR_TIMETABLE_ADD_TRAVEL_TIMES, 31, this, CS_NUMERAL, QSF_ACCEPT_UNCHANGED);
+				break;
+			}
 
 			case WID_VT_CHANGE_TIME: { // "Wait For" button.
 				int selected = this->sel_index;
@@ -551,7 +600,8 @@ struct TimetableWindow : Window {
 					}
 				}
 
-				this->query_is_speed_query = false;
+				this->query_type = TIMETABLE_QT_CHANGE_TIME;
+
 				ShowQueryString(current, STR_TIMETABLE_CHANGE_TIME, 31, this, CS_NUMERAL, QSF_ACCEPT_UNCHANGED);
 				break;
 			}
@@ -571,19 +621,20 @@ struct TimetableWindow : Window {
 					}
 				}
 
-				this->query_is_speed_query = true;
+				this->query_type = TIMETABLE_QT_SPEED;
+
 				ShowQueryString(current, STR_TIMETABLE_CHANGE_SPEED, 31, this, CS_NUMERAL, QSF_NONE);
 				break;
 			}
 
 			case WID_VT_CLEAR_TIME: { // Clear waiting time.
-				uint32 p1 = PackTimetableArgs(v, this->sel_index, false);
+				uint32 p1 = PackTimetableArgs(v, this->sel_index, TIMETABLE_QT_CHANGE_TIME);
 				DoCommandP(0, p1, 0, CMD_CHANGE_TIMETABLE | CMD_MSG(STR_ERROR_CAN_T_TIMETABLE_VEHICLE));
 				break;
 			}
 
 			case WID_VT_CLEAR_SPEED: { // Clear max speed button.
-				uint32 p1 = PackTimetableArgs(v, this->sel_index, true);
+				uint32 p1 = PackTimetableArgs(v, this->sel_index, TIMETABLE_QT_SPEED);
 				DoCommandP(0, p1, UINT16_MAX, CMD_CHANGE_TIMETABLE | CMD_MSG(STR_ERROR_CAN_T_TIMETABLE_VEHICLE));
 				break;
 			}
@@ -618,18 +669,91 @@ struct TimetableWindow : Window {
 
 		const Vehicle *v = this->vehicle;
 
-		uint32 p1 = PackTimetableArgs(v, this->sel_index, this->query_is_speed_query);
+		if (this->query_type == TIMETABLE_QT_ADD_TIME) {
+			
+			uint64 valToAdd = StrEmpty(str) ? 100 : strtoul(str, nullptr, 10);
 
-		uint64 val = StrEmpty(str) ? 0 : strtoul(str, nullptr, 10);
-		if (this->query_is_speed_query) {
-			val = ConvertDisplaySpeedToKmhishSpeed(val);
-		} else {
-			if (!_settings_client.gui.timetable_in_ticks) val *= DAY_TICKS;
+		
+			for (uint32 selected = 0; selected < (uint32)(this->vehicle->GetNumOrders() * 2); selected++)
+			{
+				VehicleOrderID real = (selected + 1) / 2;
+
+				if (real >= v->GetNumOrders()) real = 0;
+
+				const Order* order = v->GetOrder(real);
+				StringID current = STR_EMPTY;
+
+				if (order != nullptr && (selected % 2 == 1)) {
+
+					uint32 p1 = PackTimetableArgs(v, selected, TIMETABLE_QT_CHANGE_TIME);
+
+					uint64 val = (uint64)(order->GetTravelTime());
+
+					if (!_settings_client.gui.timetable_in_ticks)
+						val += valToAdd * DAY_TICKS;
+					else
+						val += valToAdd;
+
+
+					uint32 p2 = std::min<uint32>(val, UINT16_MAX);
+
+					DoCommandP(0, p1, p2, CMD_CHANGE_TIMETABLE | CMD_MSG(STR_ERROR_CAN_T_TIMETABLE_VEHICLE));
+				}
+			}
+
+
 		}
+		else if (this->query_type == TIMETABLE_QT_MULTIPLY_TIME) {
+			
+			uint64 val = StrEmpty(str) ? 100 : strtoul(str, nullptr, 10);
 
-		uint32 p2 = std::min<uint32>(val, UINT16_MAX);
+			float valF = val / 100.0f;
+		
+			for(uint32 selected = 0; selected < (uint32)(this->vehicle->GetNumOrders()*2); selected++)
+			{
+				VehicleOrderID real = (selected + 1) / 2;
 
-		DoCommandP(0, p1, p2, CMD_CHANGE_TIMETABLE | CMD_MSG(STR_ERROR_CAN_T_TIMETABLE_VEHICLE));
+				if (real >= v->GetNumOrders()) real = 0;
+
+				const Order* order = v->GetOrder(real);
+				StringID current = STR_EMPTY;
+
+				if (order != nullptr && (selected % 2 == 1)) {
+					
+					uint32 p1 = PackTimetableArgs(v, selected, TIMETABLE_QT_CHANGE_TIME);
+
+					uint64 val = (uint64)(order->GetTravelTime());
+
+					
+					val *= valF;
+		
+					uint32 p2 = std::min<uint32>(val, UINT16_MAX);
+
+					DoCommandP(0, p1, p2, CMD_CHANGE_TIMETABLE | CMD_MSG(STR_ERROR_CAN_T_TIMETABLE_VEHICLE));
+				}
+			}
+			
+			
+		}
+		else
+		{
+			uint32 p1 = PackTimetableArgs(v, this->sel_index, this->query_type);
+
+			uint64 val = StrEmpty(str) ? 0 : strtoul(str, nullptr, 10);
+
+			if (this->query_type == TIMETABLE_QT_SPEED) {
+				val = ConvertDisplaySpeedToKmhishSpeed(val);
+			}
+			else {
+				if (!_settings_client.gui.timetable_in_ticks) val *= DAY_TICKS;
+			}
+
+			uint32 p2 = std::min<uint32>(val, UINT16_MAX);
+
+			DoCommandP(0, p1, p2, CMD_CHANGE_TIMETABLE | CMD_MSG(STR_ERROR_CAN_T_TIMETABLE_VEHICLE));
+		}
+		
+		
 	}
 
 	void OnResize() override
@@ -680,6 +804,11 @@ static const NWidgetPart _nested_timetable_widgets[] = {
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_RESET_LATENESS), SetResize(1, 0), SetFill(1, 1), SetDataTip(STR_TIMETABLE_RESET_LATENESS, STR_TIMETABLE_RESET_LATENESS_TOOLTIP),
 			EndContainer(),
 			NWidget(NWID_VERTICAL, NC_EQUALSIZE),
+				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_MUL), SetResize(1, 0), SetFill(1, 1),	SetDataTip(STR_TIMETABLE_MULTIPLY_TRAVEL_TIMES, STR_TIMETABLE_MULTIPLY_TRAVEL_TIMES_TOOLTIP),
+				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_ADD), SetResize(1, 0), SetFill(1, 1),	SetDataTip(STR_TIMETABLE_ADD_TRAVEL_TIMES, STR_TIMETABLE_ADD_TRAVEL_TIMES_TOOLTIP),
+			EndContainer(),		
+
+			NWidget(NWID_VERTICAL, NC_EQUALSIZE),
 				NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_AUTOFILL), SetResize(1, 0), SetFill(1, 1), SetDataTip(STR_TIMETABLE_AUTOFILL, STR_TIMETABLE_AUTOFILL_TOOLTIP),
 				NWidget(NWID_SELECTION, INVALID_COLOUR, WID_VT_EXPECTED_SELECTION),
 					NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_VT_EXPECTED), SetResize(1, 0), SetFill(1, 1), SetDataTip(STR_BLACK_STRING, STR_TIMETABLE_EXPECTED_TOOLTIP),
@@ -690,12 +819,12 @@ static const NWidgetPart _nested_timetable_widgets[] = {
 		NWidget(NWID_VERTICAL, NC_EQUALSIZE),
 			NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_VT_SHARED_ORDER_LIST), SetFill(0, 1), SetDataTip(SPR_SHARED_ORDERS_ICON, STR_ORDERS_VEH_WITH_SHARED_ORDERS_LIST_TOOLTIP),
 			NWidget(WWT_RESIZEBOX, COLOUR_GREY), SetFill(0, 1),
-		EndContainer(),
+		EndContainer(),	
 	EndContainer(),
 };
 
 static WindowDesc _timetable_desc(
-	WDP_AUTO, "view_vehicle_timetable", 400, 130,
+	WDP_AUTO, "view_vehicle_timetable", 400, 150,
 	WC_VEHICLE_TIMETABLE, WC_VEHICLE_VIEW,
 	WDF_CONSTRUCTION,
 	_nested_timetable_widgets, lengthof(_nested_timetable_widgets)

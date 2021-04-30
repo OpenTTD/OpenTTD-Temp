@@ -5236,3 +5236,9 @@ STR_PLANE                                                       :{BLACK}{PLANE}
 STR_SHIP                                                        :{BLACK}{SHIP}
 
 STR_TOOLBAR_RAILTYPE_VELOCITY                                   :{STRING} ({VELOCITY})
+
+STR_TIMETABLE_MULTIPLY_TRAVEL_TIMES                             :{BLACK}Travel Time Percentage
+STR_TIMETABLE_MULTIPLY_TRAVEL_TIMES_TOOLTIP                     :{BLACK}Use a percentage to modify all travel times. (200 for double, 50 for half)
+
+STR_TIMETABLE_ADD_TRAVEL_TIMES                             :{BLACK}Travel Time Add
+STR_TIMETABLE_ADD_TRAVEL_TIMES_TOOLTIP                     :{BLACK}Add to all travel times.
