@@ -101,7 +101,7 @@ struct CFollowTrackT
 	{
 		assert(IsTram()); // this function shouldn't be called in other cases
 
-		if (IsNormalRoadTile(tile)) {
+		if (IsNormalRoadTile(tile) || IsBigRoadDepotTile(tile)) {
 			RoadBits rb = GetRoadBits(tile, RTT_TRAM);
 			switch (rb) {
 				case ROAD_NW: return DIAGDIR_NW;
@@ -270,14 +270,16 @@ protected:
 			}
 		}
 
-		/* road depots can be also left in one direction only */
+		/* road depots can be also left in one direction sometimes */
 		if (IsRoadTT() && IsDepotTypeTile(m_old_tile, TT())) {
-			DiagDirection exitdir = GetRoadDepotDirection(m_old_tile);
-			if (exitdir != m_exitdir) {
+			RoadTramType rtt = IsTram() ? RTT_TRAM : RTT_ROAD;
+			RoadBits rb = GetRoadBits(m_old_tile, rtt);
+			if ((rb & DiagDirToRoadBits(m_exitdir)) == ROAD_NONE) {
 				m_err = EC_NO_WAY;
 				return false;
 			}
 		}
+
 		return true;
 	}
 
@@ -304,14 +306,15 @@ protected:
 
 		/* road and rail depots can also be entered from one direction only */
 		if (IsRoadTT() && IsDepotTypeTile(m_new_tile, TT())) {
-			DiagDirection exitdir = GetRoadDepotDirection(m_new_tile);
-			if (ReverseDiagDir(exitdir) != m_exitdir) {
-				m_err = EC_NO_WAY;
-				return false;
-			}
 			/* don't try to enter other company's depots */
 			if (GetTileOwner(m_new_tile) != m_veh_owner) {
 				m_err = EC_OWNER;
+				return false;
+			}
+			RoadTramType rtt = IsTram() ? RTT_TRAM : RTT_ROAD;
+			RoadBits rb = GetRoadBits(m_new_tile, rtt);
+			if ((rb & DiagDirToRoadBits(ReverseDiagDir(m_exitdir))) == ROAD_NONE) {
+				m_err = EC_NO_WAY;
 				return false;
 			}
 		}
@@ -402,9 +405,11 @@ protected:
 					if (IsBigRailDepot(m_old_tile)) return false;
 					exitdir = GetRailDepotDirection(m_old_tile);
 					break;
-				case TRANSPORT_ROAD:
-					exitdir = GetRoadDepotDirection(m_old_tile);
+				case TRANSPORT_ROAD: {
+					if (GetRoadBits(m_old_tile, IsTram() ? RTT_TRAM : RTT_ROAD) !=  DiagDirToRoadBits(m_exitdir)) return false;
+					exitdir = ReverseDiagDir(m_exitdir);
 					break;
+				}
 				default: NOT_REACHED();
 			}
 

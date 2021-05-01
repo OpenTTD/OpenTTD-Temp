@@ -369,7 +369,22 @@ static int32 NPFRoadPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 		case MP_ROAD:
 			cost = NPF_TILE_LENGTH;
 			/* Increase the cost for level crossings */
-			if (IsLevelCrossing(tile)) cost += _settings_game.pf.npf.npf_crossing_penalty;
+			if (IsLevelCrossing(tile)) {
+				cost += _settings_game.pf.npf.npf_crossing_penalty;
+			} else if (IsRoadDepot(tile) && IsBigRoadDepot(tile)) {
+				switch (GetDepotReservation(tile, current->direction)) {
+					case DEPOT_RESERVATION_FULL_STOPPED_VEH:
+						cost += 32 * NPF_TILE_LENGTH;
+						break;
+					case DEPOT_RESERVATION_IN_USE:
+						cost += 8 * NPF_TILE_LENGTH;
+						break;
+					case DEPOT_RESERVATION_EMPTY:
+						cost += NPF_TILE_LENGTH;
+						break;
+					default: NOT_REACHED();
+				}
+			}
 			break;
 
 		case MP_STATION: {
@@ -826,7 +841,7 @@ static DiagDirection GetSingleTramBit(TileIndex tile)
  */
 static DiagDirection GetTileSingleEntry(TileIndex tile, TransportType type, uint subtype)
 {
-	if (type != TRANSPORT_WATER && IsDepotTypeTile(tile, type) && !IsBigRailDepotTile(tile)) return GetDepotDirection(tile, type);
+	if (type != TRANSPORT_WATER && IsDepotTypeTile(tile, type) && !IsBigDepotTile(tile)) return GetDepotDirection(tile, type);
 
 	if (type == TRANSPORT_ROAD) {
 		if (IsStandardRoadStopTile(tile)) return GetRoadStopDir(tile);
