@@ -238,7 +238,10 @@ void NetworkTextMessage(NetworkAction action, TextColour colour, bool self_send,
 			/* Show the Client ID for the server but not for the client. */
 			strid = _network_server ? STR_NETWORK_MESSAGE_CLIENT_JOINED_ID :  STR_NETWORK_MESSAGE_CLIENT_JOINED;
 			break;
-		case NETWORK_ACTION_LEAVE:          strid = STR_NETWORK_MESSAGE_CLIENT_LEFT; break;
+		case NETWORK_ACTION_LEAVE:
+			/* Show client identification for the server but not for the client. */
+			strid = _network_server ? STR_NETWORK_MESSAGE_CLIENT_LEFT_ID :  STR_NETWORK_MESSAGE_CLIENT_LEFT;
+			break;
 		case NETWORK_ACTION_NAME_CHANGE:    strid = STR_NETWORK_MESSAGE_NAME_CHANGE; break;
 		case NETWORK_ACTION_GIVE_MONEY:     strid = STR_NETWORK_MESSAGE_GIVE_MONEY; break;
 		case NETWORK_ACTION_CHAT_COMPANY:   strid = self_send ? STR_NETWORK_CHAT_TO_COMPANY : STR_NETWORK_CHAT_COMPANY; break;
@@ -540,8 +543,7 @@ NetworkAddress ParseGameConnectionString(CompanyID *company, const std::string &
 	/* Register the login */
 	_network_clients_connected++;
 
-	ServerNetworkGameSocketHandler *cs = new ServerNetworkGameSocketHandler(s);
-	cs->client_address = address; // Save the IP of the client
+	new ServerNetworkGameSocketHandler(s, address);
 
 	InvalidateWindowData(WC_CLIENT_LIST, 0);
 }

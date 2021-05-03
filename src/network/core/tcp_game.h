@@ -530,7 +530,7 @@ protected:
 
 	NetworkRecvStatus HandlePacket(Packet *p);
 
-	NetworkGameSocketHandler(SOCKET s);
+	NetworkGameSocketHandler(SOCKET s, ClientID client_id = INVALID_CLIENT_ID);
 public:
 	ClientID client_id;          ///< Client identifier
 	uint32 last_frame;           ///< Last frame we have executed
