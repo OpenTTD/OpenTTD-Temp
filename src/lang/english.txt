@@ -4591,7 +4591,7 @@ STR_ERROR_CANT_START_PLATFORM_LONG                              :{WHITE}{VEHICLE
 STR_ERROR_DEPOT_FULL_DEPOT                                      :There is no free depot compatible with this type of vehicle
 STR_ADVICE_PLATFORM_TYPE                                        :{WHITE}{VEHICLE} cannot leave depot because there is no compatible platform for this type of train
 STR_ADVICE_PLATFORM_LONG                                        :{WHITE}{VEHICLE} cannot leave depot because compatible platforms are not long enough
-STR_ADVICE_TRAIN_HAS_NO_POWER                                   :{WHITE}{VEHICLE} cannot leave depot because it has no power in any tile of the depot
+STR_ADVICE_VEHICLE_HAS_NO_POWER                                 :{WHITE}{VEHICLE} cannot leave depot because it has no power in any tile of the depot
 STR_ADVICE_PLATFORM_FREE_PLATFORM                               :{WHITE}{VEHICLE} cannot leave depot because compatible platforms are occupied
 STR_ADVICE_PLATFORM_SIGNALS                                     :{WHITE}{VEHICLE} cannot leave depot because the segments of the compatible free platforms are occupied. Check the signaling of those segments.
 
@@ -4752,6 +4752,7 @@ STR_ERROR_NO_VEHICLES_AVAILABLE_YET_EXPLANATION                 :{WHITE}Start a 
 STR_ERROR_CAN_T_MAKE_TRAIN_PASS_SIGNAL                          :{WHITE}Can't make train pass signal at danger...
 STR_ERROR_CAN_T_REVERSE_DIRECTION_TRAIN                         :{WHITE}Can't reverse direction of train...
 STR_ERROR_TRAIN_START_NO_POWER                                  :Train has no power
+STR_ERROR_ROAD_VEHICLE_START_NO_POWER                           :Road vehicle has no power
 
 STR_ERROR_CAN_T_MAKE_ROAD_VEHICLE_TURN                          :{WHITE}Can't make road vehicle turn around...
 

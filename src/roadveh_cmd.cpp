@@ -248,7 +248,7 @@ void RoadVehUpdateCache(RoadVehicle *v, bool same_length)
 	v->vcache.cached_max_speed = (max_speed != 0) ? max_speed * 4 : RoadVehInfo(v->engine_type)->max_speed;
 }
 
-CommandCost FindDepotTileForPlacingEngine(TileIndex &tile, const Engine *e, DoCommandFlag flags)
+CommandCost FindDepotTileForPlacingEngine(TileIndex &tile, bool &is_exit_facing_south, const Engine *e, bool already_built)
 {
 	assert(IsRoadDepotTile(tile));
 
@@ -259,22 +259,46 @@ CommandCost FindDepotTileForPlacingEngine(TileIndex &tile, const Engine *e, DoCo
 	const RoadTypeInfo *rti = GetRoadTypeInfo(rt);
 	if ((dep->r_types.road_types & rti->powered_roadtypes) == 0) return_cmd_error(STR_ERROR_DEPOT_WRONG_DEPOT_TYPE);
 
-	/* Use same tile if possible when replacing. */
-	if (flags & DC_AUTOREPLACE) {
-		/* Use same tile if possible when replacing. */
-		if (HasTileAnyRoadType(tile, rti->powered_roadtypes)) return CommandCost();
-	}
+	/* Use same tile if possible when replacing or trying to leave the depot. */
+	if (HasTileAnyRoadType(tile, rti->powered_roadtypes) && already_built) return CommandCost();
 
 	TileIndex best_tile = INVALID_TILE;
 	for (std::vector<TileIndex>::iterator it = dep->depot_tiles.begin(); it != dep->depot_tiles.end(); ++it) {
 		tile = *it;
 		if (!HasTileAnyRoadType(tile, rti->powered_roadtypes)) continue;
-		best_tile = *it;
+		if (!IsBigDepot(tile)) return CommandCost();
+		if (GetDepotReservation(tile, is_exit_facing_south) == DEPOT_RESERVATION_EMPTY) {
+			best_tile = *it;
+			return CommandCost();
+		} else if (GetDepotReservation(tile, !is_exit_facing_south) == DEPOT_RESERVATION_EMPTY) {
+			is_exit_facing_south = !is_exit_facing_south;
+			best_tile = *it;
+			return CommandCost();
+		}
 	}
 
+	if (best_tile == INVALID_TILE) return_cmd_error(STR_ERROR_DEPOT_FULL_DEPOT);
 	tile = best_tile;
 	return CommandCost();
 }
+
+DiagDirection GetRoadDepotExit(TileIndex tile, RoadTramType rtt, DiagDirection dir)
+{
+	assert(IsRoadDepot(tile));
+	RoadBits rb = GetRoadBits(tile, rtt);
+	if ((rb & DiagDirToRoadBits(dir)) != ROAD_NONE) return dir;
+	if (rb & ROAD_SE) return DIAGDIR_SE;
+	if (rb & ROAD_SW) return DIAGDIR_SW;
+	if (rb & ROAD_NE) return DIAGDIR_NE;
+	if (rb & ROAD_NW) return DIAGDIR_NW;
+	return INVALID_DIAGDIR;
+}
+
+struct RoadDriveEntry {
+	byte x, y;
+};
+
+#include "table/roadveh_movement.h"
 
 /**
  * Build a road vehicle.
@@ -290,24 +314,36 @@ CommandCost CmdBuildRoadVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 	assert(IsRoadDepotTile(tile));
 	RoadType rt = e->u.road.roadtype;
 	const RoadTypeInfo *rti = GetRoadTypeInfo(rt);
+	DiagDirection dir = GetRoadDepotExit(tile, RoadTramType(rt), GetRoadDepotDirection(tile));
+	bool facing_south = IsValidDiagDirection(dir) ? IsDiagDirFacingSouth(dir) : false;
 
-	CommandCost check = FindDepotTileForPlacingEngine(tile, e, flags);
-	if (check.Failed()) return check;
+	if ((flags & DC_AUTOREPLACE) == 0) {
+		CommandCost check = FindDepotTileForPlacingEngine(tile, facing_south, e, false);
+		if (check.Failed()) return check;
+		dir = GetRoadDepotExit(tile, RoadTramType(rt), GetRoadDepotDirection(tile));
+	}
+
+	if (IsBigRoadDepotTile(tile) && facing_south != IsDiagDirFacingSouth(dir)) dir = ReverseDiagDir(dir);
 
 	if (flags & DC_EXEC) {
 		const RoadVehicleInfo *rvi = &e->u.road;
 
 		RoadVehicle *v = new RoadVehicle();
 		*ret = v;
-		v->direction = DiagDirToDir(GetRoadDepotDirection(tile));
+		v->direction = DiagDirToDir(dir);
 		v->owner = _current_company;
 
 		v->tile = tile;
-		int x = TileX(tile) * TILE_SIZE + TILE_SIZE / 2;
-		int y = TileY(tile) * TILE_SIZE + TILE_SIZE / 2;
-		v->x_pos = x;
-		v->y_pos = y;
-		v->z_pos = GetSlopePixelZ(x, y);
+		if (IsBigRoadDepotTile(tile)) {
+			const RoadDriveEntry *rdp = _road_drive_data[GetRoadTramType(rt)][(_settings_game.vehicle.road_side << RVS_DRIVE_SIDE) + DiagDirToDiagTrackdir(dir)];
+			v->frame = RVC_DEPOT_START_FRAME;
+			v->x_pos = TileX(v->tile) * TILE_SIZE + (rdp[RVC_DEPOT_START_FRAME].x & 0xF);
+			v->y_pos = TileY(v->tile) * TILE_SIZE + (rdp[RVC_DEPOT_START_FRAME].y & 0xF);
+		} else {
+			v->x_pos = TileX(tile) * TILE_SIZE + TILE_SIZE / 2;
+			v->y_pos = TileY(tile) * TILE_SIZE + TILE_SIZE / 2;
+		}
+		v->z_pos = GetSlopePixelZ(v->x_pos, v->y_pos);
 
 		v->state = RVSB_IN_DEPOT;
 		v->vehstatus = VS_HIDDEN | VS_STOPPED | VS_DEFPAL;
@@ -350,6 +386,7 @@ CommandCost CmdBuildRoadVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		for (RoadVehicle *u = v; u != nullptr; u = u->Next()) {
 			u->cargo_cap = u->GetEngine()->DetermineCapacity(u);
 			u->refit_cap = 0;
+			u->state = RVSB_IN_DEPOT;
 			v->InvalidateNewGRFCache();
 			u->InvalidateNewGRFCache();
 		}
@@ -358,6 +395,12 @@ CommandCost CmdBuildRoadVehicle(TileIndex tile, DoCommandFlag flags, const Engin
 		if (_settings_game.vehicle.roadveh_acceleration_model != AM_ORIGINAL) v->CargoChanged();
 
 		v->UpdatePosition();
+
+		if (IsBigDepot(v->tile) && (flags & DC_AUTOREPLACE) == 0) {
+			v->vehstatus &= ~VS_HIDDEN;
+			UpdateExtendedDepotReservation(v, true);
+			v->UpdateViewport(true, true);
+		}
 
 		CheckConsistencyOfArticulatedVehicle(v);
 	}
@@ -653,7 +696,7 @@ static Vehicle *EnumCheckRoadVehClose(Vehicle *v, void *data)
 	short y_diff = v->y_pos - rvf->y;
 
 	if (v->type == VEH_ROAD &&
-			!v->IsInDepot() &&
+			(v->vehstatus & VS_HIDDEN) == 0 &&
 			abs(v->z_pos - rvf->veh->z_pos) < 6 &&
 			v->direction == rvf->dir &&
 			rvf->veh->First() != v->First() &&
@@ -800,7 +843,7 @@ static Vehicle *EnumFindVehBlockingOvertake(Vehicle *v, void *data)
 {
 	const OvertakeData *od = (OvertakeData*)data;
 
-	return (v->type == VEH_ROAD && v->First() == v && v != od->u && v != od->v) ? v : nullptr;
+	return (v->type == VEH_ROAD && v->First() == v && v != od->u && v != od->v && ((v->vehstatus & VS_HIDDEN) == 0)) ? v : nullptr;
 }
 
 /**
@@ -836,6 +879,9 @@ static void RoadVehCheckOvertake(RoadVehicle *v, RoadVehicle *u)
 
 	/* Don't overtake in stations */
 	if (IsTileType(v->tile, MP_STATION) || IsTileType(u->tile, MP_STATION)) return;
+
+	/* Don't overtake in road depot platforms. */
+	if (IsBigRoadDepotTile(v->tile)) return;
 
 	/* For now, articulated road vehicles can't overtake anything. */
 	if (v->HasArticulatedPart()) return;
@@ -918,9 +964,17 @@ static Trackdir RoadFindPathToDest(RoadVehicle *v, TileIndex tile, DiagDirection
 	TrackdirBits trackdirs = TrackStatusToTrackdirBits(ts);
 
 	if (IsTileType(tile, MP_ROAD)) {
-		if (IsRoadDepot(tile) && (!IsTileOwner(tile, v->owner) || GetRoadDepotDirection(tile) == enterdir)) {
-			/* Road depot owned by another company or with the wrong orientation */
-			trackdirs = TRACKDIR_BIT_NONE;
+		if (IsRoadDepot(tile)) {
+			if (!IsTileOwner(tile, v->owner)) {
+				trackdirs = TRACKDIR_BIT_NONE;
+			} else if (IsBigRoadDepotTile(tile)) {
+				if (tile != v->tile) {
+					RoadBits rb = GetRoadBits(tile, GetRoadTramType(v->roadtype)) & DiagDirToRoadBits(ReverseDiagDir(enterdir));
+					if (rb == ROAD_NONE) trackdirs = TRACKDIR_BIT_NONE;
+				}
+			} else if (GetRoadDepotDirection(tile) == enterdir) { // Standard depot
+				trackdirs = TRACKDIR_BIT_NONE;
+			}
 		}
 	} else if (IsTileType(tile, MP_STATION) && IsStandardRoadStopTile(tile)) {
 		/* Standard road stop (drive-through stops are treated as normal road) */
@@ -1026,57 +1080,113 @@ found_best_track:;
 	return best_track;
 }
 
-struct RoadDriveEntry {
-	byte x, y;
-};
+void HandleRoadVehicleEnterDepot(RoadVehicle *v)
+{
+	assert(IsRoadDepotTile(v->tile));
 
-#include "table/roadveh_movement.h"
+	if (IsBigRoadDepot(v->tile)) {
+		assert(v == v->First());
+		for (RoadVehicle *u = v; u != nullptr; u = u->Next()) {
+			assert(u->direction == v->direction);
+			assert(IsBigRoadDepotTile(u->tile));
+			assert(GetDepotIndex(u->tile) == GetDepotIndex(v->tile));
+			u->state = RVSB_IN_DEPOT;
+			u->cur_speed = 0;
+			u->UpdateViewport(true, true); // revise: probably unneded
+		}
+
+		v->StartService();
+		UpdateExtendedDepotReservation(v, true);
+
+		SetWindowClassesDirty(WC_ROADVEH_LIST);
+		SetWindowDirty(WC_VEHICLE_VIEW, v->index);
+		InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
+	} else {
+		VehicleEnterDepot(v);
+	}
+}
 
 static bool RoadVehLeaveDepot(RoadVehicle *v, bool first)
 {
 	/* Don't leave unless v and following wagons are in the depot. */
 	for (const RoadVehicle *u = v; u != nullptr; u = u->Next()) {
-		if (u->state != RVSB_IN_DEPOT || u->tile != v->tile) return false;
+		if (!u->IsInDepot()) return false;
 	}
 
-	DiagDirection dir = GetRoadDepotDirection(v->tile);
-	v->direction = DiagDirToDir(dir);
+	bool visible_vehicle = first && (v->vehstatus & VS_HIDDEN) == 0;
 
-	Trackdir tdir = DiagDirToDiagTrackdir(dir);
-	const RoadDriveEntry *rdp = _road_drive_data[GetRoadTramType(v->roadtype)][(_settings_game.vehicle.road_side << RVS_DRIVE_SIDE) + tdir];
+	if (first && (v->vehstatus & VS_HIDDEN) != 0) {
+		TileIndex new_tile = v->tile;
+		bool facing_south = IsDiagDirFacingSouth(DirToDiagDir(v->direction));
+		if (FindDepotTileForPlacingEngine(new_tile, facing_south, Engine::Get(v->engine_type), true).Failed()) return false;
+		if (IsBigDepot(v->tile)) {
+			UpdateExtendedDepotReservation(v, false);
+			v->tile = new_tile;
+			UpdateExtendedDepotReservation(v, true);
+		}
 
-	int x = TileX(v->tile) * TILE_SIZE + (rdp[RVC_DEPOT_START_FRAME].x & 0xF);
-	int y = TileY(v->tile) * TILE_SIZE + (rdp[RVC_DEPOT_START_FRAME].y & 0xF);
+		DiagDirection dir = GetRoadDepotExit(v->tile, RoadTramType(v->roadtype), DirToDiagDir(v->direction));
+		if (facing_south != IsDiagDirFacingSouth(dir)) dir = ReverseDiagDir(dir);
+		assert(dir != INVALID_DIAGDIR);
+		for (Vehicle *u = v; u != nullptr; u = u->Next()) {
+			u->direction = DiagDirToDir(dir);
+			u->tile = v->tile;
+		}
+	}
+
+	int x = v->x_pos;
+	int y = v->y_pos;
+	Trackdir tdir = v->GetVehicleTrackdir();
+
+	if ((v->vehstatus & VS_HIDDEN) != 0) {
+		const RoadDriveEntry *rdp = _road_drive_data[GetRoadTramType(v->roadtype)][(_settings_game.vehicle.road_side << RVS_DRIVE_SIDE) + tdir];
+
+		x = TileX(v->tile) * TILE_SIZE + (rdp[RVC_DEPOT_START_FRAME].x & 0xF);
+		y = TileY(v->tile) * TILE_SIZE + (rdp[RVC_DEPOT_START_FRAME].y & 0xF);
+	}
 
 	if (first) {
 		/* We are leaving a depot, but have to go to the exact same one; re-enter */
 		if (v->current_order.IsType(OT_GOTO_DEPOT) && v->tile == v->dest_tile) {
-			VehicleEnterDepot(v);
+			if (IsBigRoadDepot(v->tile)) {
+				v->StartService();
+			} else {
+				VehicleEnterDepot(v);
+			}
 			return true;
 		}
-
-		if (RoadVehFindCloseTo(v, x, y, v->direction, false) != nullptr) return true;
-
+		if ((v->vehstatus & VS_HIDDEN) != 0 && RoadVehFindCloseTo(v, x, y, v->direction, false) != nullptr) return true;
 		VehicleServiceInDepot(v);
-
 		StartRoadVehSound(v);
-
-		/* Vehicle is about to leave a depot */
+		/* Vehicle is about to leave a depot. */
 		v->cur_speed = 0;
 	}
 
-	v->vehstatus &= ~VS_HIDDEN;
 	v->state = tdir;
-	v->frame = RVC_DEPOT_START_FRAME;
 
-	v->x_pos = x;
-	v->y_pos = y;
+	if ((v->vehstatus & VS_HIDDEN) != 0) {
+		v->vehstatus &= ~VS_HIDDEN;
+		v->x_pos = x;
+		v->y_pos = y;
+		v->frame = RVC_DEPOT_START_FRAME;
+	} else if (v->Next() != nullptr && (v->Next()->vehstatus & VS_HIDDEN) == 0){
+		for (RoadVehicle *u = v->Next(); u != nullptr; u = u->Next()) {
+			u->state = DiagDirToDiagTrackdir(DirToDiagDir(u->direction));
+			u->UpdatePosition();
+			u->UpdateInclination(true, true);
+		}
+	}
+
 	v->UpdatePosition();
 	v->UpdateInclination(true, true);
 
+	if (first && IsBigDepot(v->tile)) {
+		UpdateExtendedDepotReservation(v, false);
+	}
+
 	InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
 
-	return true;
+	return !visible_vehicle;
 }
 
 static Trackdir FollowPreviousRoadVehicle(const RoadVehicle *v, const RoadVehicle *prev, TileIndex tile, DiagDirection entry_dir, bool already_reversed)
@@ -1096,7 +1206,7 @@ static Trackdir FollowPreviousRoadVehicle(const RoadVehicle *v, const RoadVehicl
 		if (IsTileType(tile, MP_TUNNELBRIDGE)) {
 			diag_dir = GetTunnelBridgeDirection(tile);
 		} else if (IsRoadDepotTile(tile)) {
-			diag_dir = ReverseDiagDir(GetRoadDepotDirection(tile));
+			diag_dir = ReverseDiagDir(IsBigRoadDepot(tile) ? DirToDiagDir(v->direction) : GetRoadDepotDirection(tile));
 		}
 
 		if (diag_dir == INVALID_DIAGDIR) return INVALID_TRACKDIR;
@@ -1164,6 +1274,53 @@ static bool CanBuildTramTrackOnTile(CompanyID c, TileIndex t, RoadType rt, RoadB
 	return ret.Succeeded();
 }
 
+/** Check whether there is a close vehicle ahead and act as needed.
+ * @param v Moving vehicle
+ * @param x x coordinate to check
+ * @param y y coordinate to check
+ * @param dir direction of the vehicle
+ * @return whether a close vehicle is found.
+ */
+bool CheckCloseVehicle(RoadVehicle *v, int x, int y, Direction dir)
+{
+	if (!v->IsFrontEngine() || IsInsideMM(v->state, RVSB_IN_ROAD_STOP, RVSB_IN_ROAD_STOP_END)) return false;
+	/* Vehicle is not in a road stop.
+	 * Check for another vehicle to overtake */
+	RoadVehicle *u = RoadVehFindCloseTo(v, x, y, dir);
+
+	if (u == nullptr)  return false;
+
+	u = u->First();
+	/* There is a vehicle in front overtake it if possible */
+	if (v->overtaking == 0) RoadVehCheckOvertake(v, u);
+	if (v->overtaking == 0) v->cur_speed = u->cur_speed;
+
+	/* In case we are in a road depot platform, why not try to start servicing? */
+	if (IsBigRoadDepotTile(v->tile) && v->current_order.IsType(OT_GOTO_DEPOT)) {
+		DepotID depot_id = GetDepotIndex(v->tile);
+		if (v->current_order.GetDestination() != depot_id) return true;
+		if (!u->IsInDepot() || GetDepotIndex(u->tile) != depot_id) return true;
+		for (Vehicle *u = v; u != nullptr; u = u->Next()) {
+			if (!IsBigRoadDepotTile(u->tile) || GetDepotIndex(u->tile) != depot_id) return true;
+			if (v->direction != u->direction) return true;
+		}
+		HandleRoadVehicleEnterDepot(v);
+		return true;
+	}
+
+	/* In case an RV is stopped in a road stop, why not try to load? */
+	if (v->cur_speed == 0 && IsInsideMM(v->state, RVSB_IN_DT_ROAD_STOP, RVSB_IN_DT_ROAD_STOP_END) &&
+			v->current_order.ShouldStopAtStation(v, GetStationIndex(v->tile)) &&
+			v->owner == GetTileOwner(v->tile) && !v->current_order.IsType(OT_LEAVESTATION) &&
+			GetRoadStopType(v->tile) == (v->IsBus() ? ROADSTOP_BUS : ROADSTOP_TRUCK)) {
+		Station *st = Station::GetByTile(v->tile);
+		v->last_station_visited = st->index;
+		RoadVehArrivesAt(v, st);
+		v->BeginLoading();
+	}
+	return true;
+}
+
 bool IndividualRoadVehicleController(RoadVehicle *v, const RoadVehicle *prev)
 {
 	if (v->overtaking != 0)  {
@@ -1221,18 +1378,21 @@ bool IndividualRoadVehicleController(RoadVehicle *v, const RoadVehicle *prev)
 		(_settings_game.vehicle.road_side << RVS_DRIVE_SIDE)) ^ v->overtaking][v->frame + 1];
 
 	if (rd.x & RDE_NEXT_TILE) {
-		TileIndex tile = v->tile + TileOffsByDiagDir((DiagDirection)(rd.x & 3));
+		DiagDirection diag_dir = (DiagDirection)(rd.x & 3);
+		TileIndex tile = v->tile + TileOffsByDiagDir(diag_dir);
 		Trackdir dir;
+		bool extended_depot_turn = IsBigRoadDepotTile(v->tile) &&
+				(GetRoadBits(v->tile, GetRoadTramType(v->roadtype)) & DiagDirToRoadBits(diag_dir)) == ROAD_NONE;
 
 		if (v->IsFrontEngine()) {
 			/* If this is the front engine, look for the right path. */
-			if (HasTileAnyRoadType(tile, v->compatible_roadtypes)) {
-				dir = RoadFindPathToDest(v, tile, (DiagDirection)(rd.x & 3));
+			if (HasTileAnyRoadType(tile, v->compatible_roadtypes) && !extended_depot_turn) {
+				dir = RoadFindPathToDest(v, tile, diag_dir);
 			} else {
-				dir = _road_reverse_table[(DiagDirection)(rd.x & 3)];
+				dir = _road_reverse_table[diag_dir];
 			}
 		} else {
-			dir = FollowPreviousRoadVehicle(v, prev, tile, (DiagDirection)(rd.x & 3), false);
+			dir = FollowPreviousRoadVehicle(v, prev, tile, diag_dir, false);
 		}
 
 		if (dir == INVALID_TRACKDIR) {
@@ -1259,7 +1419,10 @@ again:
 					case TRACKDIR_RVREV_SW: needed = ROAD_NE; break;
 					case TRACKDIR_RVREV_NW: needed = ROAD_SE; break;
 				}
-				if ((v->Previous() != nullptr && v->Previous()->tile == tile) ||
+				if (extended_depot_turn) {
+					tile = v->tile;
+					start_frame = RVC_TURN_AROUND_START_FRAME_SHORT_TRAM;
+				} else if ((v->Previous() != nullptr && v->Previous()->tile == tile) ||
 						(v->IsFrontEngine() && IsNormalRoadTile(tile) && !HasRoadWorks(tile) &&
 							HasTileAnyRoadType(tile, v->compatible_roadtypes) &&
 							(needed & GetRoadBits(tile, RTT_TRAM)) != ROAD_NONE)) {
@@ -1276,8 +1439,9 @@ again:
 				} else if (!v->IsFrontEngine() || !CanBuildTramTrackOnTile(v->owner, tile, v->roadtype, needed) || ((~needed & GetAnyRoadBits(v->tile, RTT_TRAM, false)) == ROAD_NONE)) {
 					/*
 					 * Taking the 'small' corner for trams only happens when:
-					 * - We are not the from vehicle of an articulated tram.
+					 * - We are not the front vehicle of an articulated tram.
 					 * - Or when the company cannot build on the next tile.
+					 * - Or when the extended depot doesn't have the appropriate tram bit to continue.
 					 *
 					 * The 'small' corner means that the vehicle is on the end of a
 					 * tram track and needs to start turning there. To do this properly
@@ -1316,6 +1480,11 @@ again:
 		}
 
 		uint32 r = VehicleEnterTile(v, tile, x, y);
+		if (HasBit(r, VETS_ENTERED_DEPOT_PLATFORM) && v->Next() == nullptr && v == v->First()) {
+			HandleRoadVehicleEnterDepot(RoadVehicle::From(v));
+			return false;
+		}
+
 		if (HasBit(r, VETS_CANNOT_ENTER)) {
 			if (!IsTileType(tile, MP_TUNNELBRIDGE)) {
 				v->cur_speed = 0;
@@ -1372,6 +1541,9 @@ again:
 		}
 		v->x_pos = x;
 		v->y_pos = y;
+		if (prev != nullptr && prev->IsInDepot() && (prev->vehstatus & VS_HIDDEN) == 0) {
+			v->state = RVSB_IN_DEPOT;
+		}
 		v->UpdatePosition();
 		RoadZPosAffectSpeed(v, v->UpdateInclination(true, true));
 		return true;
@@ -1382,7 +1554,7 @@ again:
 		Trackdir dir;
 		uint turn_around_start_frame = RVC_TURN_AROUND_START_FRAME;
 
-		if (RoadTypeIsTram(v->roadtype) && !IsRoadDepotTile(v->tile) && HasExactlyOneBit(GetAnyRoadBits(v->tile, RTT_TRAM, true))) {
+		if (RoadTypeIsTram(v->roadtype) && !IsRoadDepotTile(v->tile) && !IsBigRoadDepotTile(v->tile) && HasExactlyOneBit(GetAnyRoadBits(v->tile, RTT_TRAM, true))) {
 			/*
 			 * The tram is turning around with one tram 'roadbit'. This means that
 			 * it is using the 'big' corner 'drive data'. However, to support the
@@ -1447,6 +1619,9 @@ again:
 
 		v->x_pos = x;
 		v->y_pos = y;
+		if (prev != nullptr && prev->IsInDepot() && (prev->vehstatus & VS_HIDDEN) == 0) {
+			v->state = RVSB_IN_DEPOT;
+		}
 		v->UpdatePosition();
 		RoadZPosAffectSpeed(v, v->UpdateInclination(true, true));
 		return true;
@@ -1456,8 +1631,10 @@ again:
 	 * it's on a depot tile, check if it's time to activate the next vehicle in
 	 * the chain yet. */
 	if (v->Next() != nullptr && IsRoadDepotTile(v->tile)) {
-		if (v->frame == v->gcache.cached_veh_length + RVC_DEPOT_START_FRAME) {
-			RoadVehLeaveDepot(v->Next(), false);
+		if ((v->Next()->vehstatus & VS_HIDDEN)) {
+			if (v->frame == v->gcache.cached_veh_length + RVC_DEPOT_START_FRAME) {
+				RoadVehLeaveDepot(v->Next(), false);
+			}
 		}
 	}
 
@@ -1467,30 +1644,7 @@ again:
 
 	Direction new_dir = RoadVehGetSlidingDirection(v, x, y);
 
-	if (v->IsFrontEngine() && !IsInsideMM(v->state, RVSB_IN_ROAD_STOP, RVSB_IN_ROAD_STOP_END)) {
-		/* Vehicle is not in a road stop.
-		 * Check for another vehicle to overtake */
-		RoadVehicle *u = RoadVehFindCloseTo(v, x, y, new_dir);
-
-		if (u != nullptr) {
-			u = u->First();
-			/* There is a vehicle in front overtake it if possible */
-			if (v->overtaking == 0) RoadVehCheckOvertake(v, u);
-			if (v->overtaking == 0) v->cur_speed = u->cur_speed;
-
-			/* In case an RV is stopped in a road stop, why not try to load? */
-			if (v->cur_speed == 0 && IsInsideMM(v->state, RVSB_IN_DT_ROAD_STOP, RVSB_IN_DT_ROAD_STOP_END) &&
-					v->current_order.ShouldStopAtStation(v, GetStationIndex(v->tile)) &&
-					v->owner == GetTileOwner(v->tile) && !v->current_order.IsType(OT_LEAVESTATION) &&
-					GetRoadStopType(v->tile) == (v->IsBus() ? ROADSTOP_BUS : ROADSTOP_TRUCK)) {
-				Station *st = Station::GetByTile(v->tile);
-				v->last_station_visited = st->index;
-				RoadVehArrivesAt(v, st);
-				v->BeginLoading();
-			}
-			return false;
-		}
-	}
+	if (CheckCloseVehicle(v, x, y, new_dir)) return false;
 
 	Direction old_dir = v->direction;
 	if (new_dir != old_dir) {
@@ -1586,6 +1740,16 @@ again:
 	v->y_pos = y;
 	v->UpdatePosition();
 	RoadZPosAffectSpeed(v, v->UpdateInclination(false, true));
+
+	/* After updating the position, check whether the vehicle can stop in a depot platform. */
+	if (IsBigRoadDepotTile(v->tile) && v->Next() == nullptr) {
+		RoadVehicle *first = RoadVehicle::From(v)->First();
+		if (HasBit(VehicleEnterTile(first, first->tile, first->x_pos, first->y_pos), VETS_ENTERED_DEPOT_PLATFORM)) {
+			HandleRoadVehicleEnterDepot(first);
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -1606,6 +1770,8 @@ static bool RoadVehController(RoadVehicle *v)
 		v->SetLastSpeed();
 		return true;
 	}
+
+	if (v->ContinueServicing()) return true;
 
 	ProcessOrders(v);
 	v->HandleLoading();
@@ -1762,6 +1928,9 @@ Trackdir RoadVehicle::GetVehicleTrackdir() const
 	if (this->vehstatus & VS_CRASHED) return INVALID_TRACKDIR;
 
 	if (this->IsInDepot()) {
+		if (IsBigRoadDepot(this->tile)) {
+			return DiagDirToDiagTrackdir(DirToDiagDir(this->direction));
+		}
 		/* We'll assume the road vehicle is facing outwards */
 		return DiagDirToDiagTrackdir(GetRoadDepotDirection(this->tile));
 	}

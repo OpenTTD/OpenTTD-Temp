@@ -239,6 +239,9 @@ CommandCost CmdSellVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 		ret = CommandCost(EXPENSES_NEW_VEHICLES, -front->value);
 
 		if (flags & DC_EXEC) {
+			if (front->type == VEH_ROAD && IsBigDepot(v->tile) && (flags & DC_AUTOREPLACE) == 0) {
+				UpdateExtendedDepotReservation(v, false);
+			}
 			if (front->IsPrimaryVehicle() && p1 & MAKE_ORDER_BACKUP_FLAG) OrderBackup::Backup(front, p2);
 			delete front;
 		}
@@ -597,7 +600,16 @@ CommandCost CmdStartStopVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 		}
 
 		case VEH_SHIP:
+			break;
 		case VEH_ROAD:
+			if ((v->vehstatus & VS_STOPPED) && !(flags & DC_AUTOREPLACE) && v->IsStoppedInDepot()) {
+				Depot *dep = Depot:: GetByTile(v->tile);
+
+				/* Check that the vehicle can drive on some tile of the depot */
+				RoadType rt = Engine::Get(v->engine_type)->u.road.roadtype;
+				const RoadTypeInfo *rti = GetRoadTypeInfo(rt);
+				if ((dep->r_types.road_types & rti->powered_roadtypes) == 0) return_cmd_error(STR_ERROR_ROAD_VEHICLE_START_NO_POWER);
+			}
 			break;
 
 		case VEH_AIRCRAFT: {
