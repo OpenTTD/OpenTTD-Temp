@@ -123,7 +123,7 @@ DECLARE_POSTFIX_INCREMENT(DiagDirDiff)
 enum Axis {
 	AXIS_X = 0,          ///< The X axis
 	AXIS_Y = 1,          ///< The y axis
-	AXIS_END,            ///< Used for iterations
+	AXIS_END,            ///< Used for iterations and to represent both axis (in overlapping bridges)
 	INVALID_AXIS = 0xFF, ///< Flag for an invalid Axis
 };
 /** Helper information for extract tool. */

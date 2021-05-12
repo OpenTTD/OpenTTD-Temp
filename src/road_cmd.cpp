@@ -1378,8 +1378,7 @@ void DrawRoadTypeCatenary(const TileInfo *ti, RoadType rt, RoadBits rb)
 {
 	/* Don't draw the catenary under a low bridge */
 	if (IsBridgeAbove(ti->tile) && !IsTransparencySet(TO_CATENARY)) {
-		int height = GetBridgeHeight(GetNorthernBridgeEnd(ti->tile));
-
+		int height = GetLowestBridgeHeight(ti->tile);
 		if (height <= GetTileMaxZ(ti->tile) + 1) return;
 	}
 
@@ -1640,7 +1639,7 @@ static void DrawRoadBits(TileInfo *ti)
 
 	/* Do not draw details (street lights, trees) under low bridge */
 	if (IsBridgeAbove(ti->tile) && (roadside == ROADSIDE_TREES || roadside == ROADSIDE_STREET_LIGHTS)) {
-		int height = GetBridgeHeight(GetNorthernBridgeEnd(ti->tile));
+		int height = GetLowestBridgeHeight(ti->tile);
 		int minz = GetTileMaxZ(ti->tile) + 2;
 
 		if (roadside == ROADSIDE_TREES) minz++;

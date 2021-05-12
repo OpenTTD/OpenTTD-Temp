@@ -1251,7 +1251,11 @@ bool AfterLoadGame()
 					case DIAGDIR_NW: if ((v->y_pos & 0xF) !=  0)            continue; break;
 				}
 			} else if (v->z_pos > GetSlopePixelZ(v->x_pos, v->y_pos)) {
-				v->tile = GetNorthernBridgeEnd(v->tile);
+				/* Before SLV_42 a tile could have a single bridge above it,
+				 * so only one of the two calls here would return a valid tile */
+				TileIndex tile_at_x = GetNorthernBridgeEndAtAxis(v->tile, AXIS_X);
+				TileIndex tile_at_y = GetNorthernBridgeEndAtAxis(v->tile, AXIS_Y);
+				v->tile = tile_at_x != INVALID_TILE ? tile_at_x : tile_at_y;
 				v->UpdatePosition();
 			} else {
 				continue;
