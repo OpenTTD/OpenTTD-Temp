@@ -2026,6 +2026,7 @@ STR_NETWORK_SERVER_LIST_SERVER_VERSION                          :{SILVER}Server 
 STR_NETWORK_SERVER_LIST_SERVER_ADDRESS                          :{SILVER}Server address: {WHITE}{RAW_STRING}
 STR_NETWORK_SERVER_LIST_START_DATE                              :{SILVER}Start date: {WHITE}{DATE_SHORT}
 STR_NETWORK_SERVER_LIST_CURRENT_DATE                            :{SILVER}Current date: {WHITE}{DATE_SHORT}
+STR_NETWORK_SERVER_LIST_GAMESCRIPT                              :{SILVER}Gamescript: {WHITE}{RAW_STRING} (v{NUM})
 STR_NETWORK_SERVER_LIST_PASSWORD                                :{SILVER}Password protected!
 STR_NETWORK_SERVER_LIST_SERVER_OFFLINE                          :{SILVER}SERVER OFFLINE
 STR_NETWORK_SERVER_LIST_SERVER_FULL                             :{SILVER}SERVER FULL

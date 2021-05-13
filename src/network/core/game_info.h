@@ -76,6 +76,9 @@ struct NetworkServerGameInfo {
 	byte spectators_on;          ///< How many spectators do we have?
 	byte spectators_max;         ///< Max spectators allowed on server
 	byte landscape;              ///< The used landscape
+
+	int gs_version;              ///< Version of the gamescript
+	std::string gs_name;         ///< Gamescript name
 };
 
 /**
