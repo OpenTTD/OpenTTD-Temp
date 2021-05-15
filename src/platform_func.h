@@ -13,6 +13,7 @@
 #include "station_map.h"
 #include "depot_map.h"
 #include "platform_type.h"
+#include "road_map.h"
 
 /**
  * Check if a tile is a valid continuation to a railstation tile.
@@ -58,6 +59,31 @@ static inline bool IsCompatibleTrainDepotTile(TileIndex test_tile, TileIndex dep
 }
 
 /**
+ * Check if a tile is a valid continuation to a big road depot tile.
+ * The tile \a test_tile is a valid continuation to \a depot_tile, if all of the following are true:
+ * \li \a test_tile is a big depot tile
+ * \li \a test_tile and \a depot_tile have the same road type and appropriate road bits
+ * \li the tracks on \a test_tile and \a depot_tile are in the same direction
+ * \li both tiles belong to the same depot
+ * @param test_tile Tile to test
+ * @param depot_tile Depot tile to compare with
+ * @param rtt Whether road or tram type.
+ * @pre IsBigRoadDepotTile(depot_tile)
+ * @return true if the two tiles are compatible
+ */
+static inline bool IsCompatibleRoadDepotTile(TileIndex test_tile, TileIndex depot_tile, RoadTramType rtt)
+{
+	assert(IsBigRoadDepotTile(depot_tile));
+	if (!IsBigRoadDepotTile(test_tile)) return false;
+	if (GetDepotIndex(test_tile) != GetDepotIndex(depot_tile)) return false;
+	if (GetRoadType(depot_tile, rtt) != GetRoadType(test_tile, rtt)) return false;
+
+	DiagDirection dir = DiagdirBetweenTiles(test_tile, depot_tile);
+	assert(dir != INVALID_DIAGDIR);
+	return (GetRoadBits(test_tile, rtt) & DiagDirToRoadBits(dir)) != ROAD_NONE;
+}
+
+/**
  * Returns the type of platform of a given tile.
  * @param tile Tile to check
  * @return the type of platform (rail station, rail waypoint...)
@@ -71,6 +97,9 @@ static inline PlatformType GetPlatformType(TileIndex tile)
 			break;
 		case MP_RAILWAY:
 			if (IsBigRailDepotTile(tile)) return PT_RAIL_DEPOT;
+			break;
+		case MP_ROAD:
+			if (IsBigRoadDepotTile(tile)) return PT_ROAD_DEPOT;
 			break;
 		default: break;
 	}
@@ -110,9 +139,10 @@ static inline bool HasPlatformReservation(TileIndex tile)
  * platform type and (depending on the platform type) its railtype or other specs.
  * @param test_tile the tile to check
  * @param orig_tile the tile with the platform type we are interested in
+ * @param rtt Whether to check road or tram types (only for road transport);
  * @return whether the two tiles are compatible tiles for defining a platform
  */
-static inline bool IsCompatiblePlatformTile(TileIndex test_tile, TileIndex orig_tile)
+static inline bool IsCompatiblePlatformTile(TileIndex test_tile, TileIndex orig_tile, RoadTramType rtt = RTT_ROAD)
 {
 	switch (GetPlatformType(orig_tile)) {
 		case PT_RAIL_STATION:
@@ -121,6 +151,8 @@ static inline bool IsCompatiblePlatformTile(TileIndex test_tile, TileIndex orig_
 			return test_tile == orig_tile;
 		case PT_RAIL_DEPOT:
 			return IsCompatibleTrainDepotTile(test_tile, orig_tile);
+		case PT_ROAD_DEPOT:
+			return IsCompatibleRoadDepotTile(test_tile, orig_tile, rtt);
 		default: NOT_REACHED();
 	}
 }
@@ -128,8 +160,8 @@ static inline bool IsCompatiblePlatformTile(TileIndex test_tile, TileIndex orig_
 void SetPlatformReservation(TileIndex start, DiagDirection dir, bool b);
 void SetPlatformReservation(TileIndex start, bool b);
 
-uint GetPlatformLength(TileIndex tile);
-uint GetPlatformLength(TileIndex tile, DiagDirection dir);
+uint GetPlatformLength(TileIndex tile, RoadTramType rtt = RTT_ROAD);
+uint GetPlatformLength(TileIndex tile, DiagDirection dir, RoadTramType rtt = RTT_ROAD);
 
 TileIndex GetPlatformExtremeTile(TileIndex tile, DiagDirection dir);
 TileArea GetPlatformTileArea(TileIndex tile);

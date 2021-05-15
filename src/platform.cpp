@@ -183,6 +183,39 @@ uint GetRailDepotPlatformLength(TileIndex tile)
 	return len - 1;
 }
 
+/**
+ * Get the length of a road depot platform.
+ * @pre IsDepotTypeTile(tile, TRANSPORT_ROAD)
+ * @param tile Tile to check
+ * @param rtt Whether to check for road or tram type.
+ * @return The length of the platform in tile length.
+ */
+uint GetRoadDepotPlatformLength(TileIndex tile, RoadTramType rtt)
+{
+	assert(IsBigRoadDepotTile(tile));
+
+	DiagDirection dir = GetRoadDepotDirection(tile);
+	TileIndexDiff delta = TileOffsByDiagDir(dir);
+
+	TileIndex t = tile;
+	uint len = 0;
+	do {
+		len++;
+		if ((GetRoadBits(t, rtt) & DiagDirToRoadBits(dir)) == ROAD_NONE) break;
+		t -= delta;
+	} while (IsCompatibleRoadDepotTile(t, tile, rtt));
+
+	t = tile;
+	dir = ReverseDiagDir(dir);
+	do {
+		len++;
+		if ((GetRoadBits(t, rtt) & DiagDirToRoadBits(dir)) == ROAD_NONE) break;
+		t += delta;
+	} while (IsCompatibleRoadDepotTile(t, tile, rtt));
+
+	return len - 1;
+}
+
 
 /**
  * Get the length of a rail depot platform in a given direction.
@@ -207,11 +240,36 @@ uint GetRailDepotPlatformLength(TileIndex tile, DiagDirection dir)
 }
 
 /**
+ * Get the length of a road depot platform in a given direction.
+ * @pre IsRoadDepotTile(tile)
+ * @param tile Tile to check
+ * @param dir Direction to check
+ * @param rtt Whether to check for road or tram type.
+ * @return The length of the platform in tile length in the given direction.
+ */
+uint GetRoadDepotPlatformLength(TileIndex tile, DiagDirection dir, RoadTramType rtt)
+{
+	TileIndex start_tile = tile;
+	uint length = 0;
+	assert(IsBigRoadDepotTile(tile));
+	assert(dir < DIAGDIR_END);
+
+	do {
+		length++;
+		if ((GetRoadBits(tile, rtt) & DiagDirToRoadBits(dir)) == ROAD_NONE) break;
+		tile += TileOffsByDiagDir(dir);
+	} while (IsCompatibleRoadDepotTile(tile, start_tile, rtt));
+
+	return length;
+}
+
+/**
  * Get the length of a platform.
  * @param tile Tile to check
+ * @param rtt Whether to check for road or tram type (only for road transport).
  * @return The length of the platform in tile length.
  */
-uint GetPlatformLength(TileIndex tile)
+uint GetPlatformLength(TileIndex tile, RoadTramType rtt)
 {
 	switch (GetPlatformType(tile)) {
 		case PT_RAIL_STATION:
@@ -220,6 +278,8 @@ uint GetPlatformLength(TileIndex tile)
 			return 1;
 		case PT_RAIL_DEPOT:
 			return GetRailDepotPlatformLength(tile);
+		case PT_ROAD_DEPOT:
+			return GetRoadDepotPlatformLength(tile, rtt);
 		default: NOT_REACHED();
 	}
 }
@@ -229,9 +289,10 @@ uint GetPlatformLength(TileIndex tile)
  * @pre IsRailDepotTile(tile)
  * @param tile Tile to check
  * @param dir Direction to check
+ * @param rtt Whether to check for road or tram type (only for road transport).
  * @return The length of the platform in tile length in the given direction.
  */
-uint GetPlatformLength(TileIndex tile, DiagDirection dir)
+uint GetPlatformLength(TileIndex tile, DiagDirection dir, RoadTramType rtt)
 {
 	switch (GetPlatformType(tile)) {
 		case PT_RAIL_STATION:
@@ -240,6 +301,8 @@ uint GetPlatformLength(TileIndex tile, DiagDirection dir)
 			return 1;
 		case PT_RAIL_DEPOT:
 			return GetRailDepotPlatformLength(tile, dir);
+		case PT_ROAD_DEPOT:
+			return GetRoadDepotPlatformLength(tile, dir, rtt);
 		default: NOT_REACHED();
 	}
 }
