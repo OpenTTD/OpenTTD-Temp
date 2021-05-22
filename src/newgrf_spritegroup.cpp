@@ -35,6 +35,9 @@ TemporaryStorageArray<int32, 0x110> _temp_store;
 {
 	if (group == nullptr) return nullptr;
 
+	/* Exit early if evaluating a callback result (except special rerandomisation trigger) and there are no results in this chain */
+	if (object.callback > 1 && !group->has_cb_result) return nullptr;
+
 	const GRFFile *grf = object.grffile;
 	auto profiler = std::find_if(_newgrf_profilers.begin(), _newgrf_profilers.end(), [&](const NewGRFProfiler &pr) { return pr.grffile == grf; });
 

@@ -5066,6 +5066,9 @@ static void NewSpriteGroup(ByteReader *buf)
 			/* nvar == 0 is a special case -- we turn our value into a callback result */
 			group->calculated_result = ranges.size() == 0;
 
+			group->has_cb_result |= group->default_group->has_cb_result;
+			group->has_cb_result |= group->error_group->has_cb_result;
+
 			/* Sort ranges ascending. When ranges overlap, this may required clamping or splitting them */
 			std::vector<uint32> bounds;
 			for (uint i = 0; i < ranges.size(); i++) {
@@ -5098,6 +5101,7 @@ static void NewSpriteGroup(ByteReader *buf)
 						j++;
 					}
 					r.high = j < bounds.size() ? bounds[j] - 1 : UINT32_MAX;
+					group->has_cb_result |= r.group->has_cb_result;
 				} else {
 					j++;
 				}
@@ -5133,7 +5137,9 @@ static void NewSpriteGroup(ByteReader *buf)
 			}
 
 			for (uint i = 0; i < num_groups; i++) {
-				group->groups.push_back(GetGroupFromGroupID(setid, type, buf->ReadWord()));
+				const SpriteGroup *t = GetGroupFromGroupID(setid, type, buf->ReadWord());
+				group->groups.push_back(t);
+				group->has_cb_result |= t->has_cb_result;
 			}
 
 			break;
@@ -5205,11 +5211,13 @@ static void NewSpriteGroup(ByteReader *buf)
 					for (uint16 spriteid : loaded) {
 						const SpriteGroup *t = CreateGroupFromGroupID(feature, setid, type, spriteid);
 						group->loaded.push_back(t);
+						group->has_cb_result |= t->has_cb_result;
 					}
 
 					for (uint16 spriteid : loading) {
 						const SpriteGroup *t = CreateGroupFromGroupID(feature, setid, type, spriteid);
 						group->loading.push_back(t);
+						group->has_cb_result |= t->has_cb_result;
 					}
 
 					break;
