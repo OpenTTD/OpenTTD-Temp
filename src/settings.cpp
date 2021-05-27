@@ -888,9 +888,7 @@ static bool InvalidateBuildIndustryWindow(int32 p1)
 
 static bool CloseSignalGUI(int32 p1)
 {
-	if (p1 == 0) {
-		DeleteWindowByClass(WC_BUILD_SIGNAL);
-	}
+	DeleteWindowByClass(WC_BUILD_SIGNAL);
 	return true;
 }
 
