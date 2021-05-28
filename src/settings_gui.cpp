@@ -1652,6 +1652,7 @@ static SettingsContainer &GetSettingsTree()
 			advisors->Add(new SettingEntry("news_display.arrival_other"));
 			advisors->Add(new SettingEntry("news_display.advice"));
 			advisors->Add(new SettingEntry("gui.order_review_system"));
+			advisors->Add(new SettingEntry("gui.no_depot_order_warn"));
 			advisors->Add(new SettingEntry("gui.vehicle_income_warn"));
 			advisors->Add(new SettingEntry("gui.lost_vehicle_warn"));
 			advisors->Add(new SettingEntry("gui.show_finances"));

@@ -668,6 +668,7 @@ static void DeleteOrderWarnings(const Vehicle *v)
 	DeleteVehicleNews(v->index, STR_NEWS_VEHICLE_HAS_VOID_ORDER);
 	DeleteVehicleNews(v->index, STR_NEWS_VEHICLE_HAS_DUPLICATE_ENTRY);
 	DeleteVehicleNews(v->index, STR_NEWS_VEHICLE_HAS_INVALID_ENTRY);
+	DeleteVehicleNews(v->index, STR_NEWS_VEHICLE_NO_DEPOT_ORDER);
 	DeleteVehicleNews(v->index, STR_NEWS_PLANE_USES_TOO_SHORT_RUNWAY);
 }
 
@@ -1785,6 +1786,11 @@ void CheckOrders(const Vehicle *v)
 #ifndef NDEBUG
 		if (v->orders.list != nullptr) v->orders.list->DebugCheckSanity();
 #endif
+
+		/* If the vehicle is not an aircraft and breakdowns are enabled, check if it has a depot order. If not, check if we should send a warning. */
+		if (message == INVALID_STRING_ID && v->type != VEH_AIRCRAFT && _settings_client.gui.no_depot_order_warn && _settings_game.difficulty.vehicle_breakdowns != 0 && !v->HasDepotOrder()) {
+			message = STR_NEWS_VEHICLE_NO_DEPOT_ORDER;
+		}
 
 		/* We don't have a problem */
 		if (message == INVALID_STRING_ID) return;
