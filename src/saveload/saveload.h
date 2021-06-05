@@ -327,6 +327,7 @@ enum SaveLoadVersion : uint16 {
 	SLV_INDUSTRY_TEXT,                      ///< 289  PR#8576 v1.11.0-RC1  Additional GS text for industries.
 	SLV_MAPGEN_SETTINGS_REVAMP,             ///< 290  PR#8891 v1.11  Revamp of some mapgen settings (snow coverage, desert coverage, heightmap height, custom terrain type).
 	SLV_GROUP_REPLACE_WAGON_REMOVAL,        ///< 291  PR#7441 Per-group wagon removal flag.
+	SLV_VEH_LAST_STATION_DEPARTURE,         ///< 292  PR#9093 NewGRF vehicle var last station departure date
 
 	SL_MAX_VERSION,                         ///< Highest possible saveload version
 };

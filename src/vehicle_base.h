@@ -310,6 +310,7 @@ public:
 
 	StationID last_station_visited;     ///< The last station we stopped at.
 	StationID last_loading_station;     ///< Last station the vehicle has stopped at and could possibly leave from with any cargo loaded.
+	Date last_station_departure_date;   ///< Date of the last station departure.
 
 	CargoID cargo_type;                 ///< type of cargo this vehicle is carrying
 	byte cargo_subtype;                 ///< Used for livery refits (NewGRF variations)

@@ -611,6 +611,8 @@ static uint32 VehicleGetVariable(Vehicle *v, const VehicleScopeResolver *object,
 				SetBit(v->grf_cache.cache_valid, NCVV_POSITION_IN_VEHICLE);
 			}
 			return v->grf_cache.position_in_vehicle;
+		case 0x4E: // Long date of last station departure
+			return v->last_station_departure_date;
 
 		/* Variables which use the parameter */
 		case 0x60: // Count consist's engine ID occurrence

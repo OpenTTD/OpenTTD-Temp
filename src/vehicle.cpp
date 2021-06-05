@@ -354,6 +354,7 @@ Vehicle::Vehicle(VehicleType type)
 	this->cargo_age_counter  = 1;
 	this->last_station_visited = INVALID_STATION;
 	this->last_loading_station = INVALID_STATION;
+	this->last_station_departure_date = INVALID_DATE;
 }
 
 /**
@@ -2278,6 +2279,7 @@ void Vehicle::LeaveStation()
 
 	HideFillingPercent(&this->fill_percent_te_id);
 	trip_occupancy = CalcPercentVehicleFilled(this, nullptr);
+	this->last_station_departure_date = _date;
 
 	if (this->type == VEH_TRAIN && !(this->vehstatus & VS_CRASHED)) {
 		/* Trigger station animation (trains only) */
