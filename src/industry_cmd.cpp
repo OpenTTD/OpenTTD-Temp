@@ -1637,7 +1637,7 @@ static CommandCost CheckIfFarEnoughFromConflictingIndustry(TileIndex tile, int t
 	/* On a large map with many industries, it may be faster to check an area. */
 	static const int dmax = 14;
 	if (Industry::GetNumItems() > (size_t) (dmax * dmax * 2)) {
-		const Industry* i = nullptr;
+		const Industry *i = nullptr;
 		TileArea tile_area = TileArea(tile, 1, 1).Expand(dmax);
 		for (TileIndex atile : tile_area) {
 			if (GetTileType(atile) == MP_INDUSTRY) {

@@ -17,6 +17,7 @@
 #include "../tunnelbridge.h"
 #include "../tunnelbridge_map.h"
 #include "../depot_map.h"
+#include "../newgrf_bridge.h"
 #include "pathfinder_func.h"
 
 /**
@@ -445,7 +446,7 @@ public:
 
 		/* Check for on-bridge speed limit */
 		if (!IsWaterTT() && IsBridgeTile(m_old_tile)) {
-			int spd = GetBridgeSpec(GetBridgeType(m_old_tile))->speed;
+			int spd = BridgeSpec::Get(GetBridgeType(m_old_tile))->speed;
 			if (IsRoadTT()) spd *= 2;
 			max_speed = std::min(max_speed, spd);
 		}

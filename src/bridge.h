@@ -10,63 +10,43 @@
 #ifndef BRIDGE_H
 #define BRIDGE_H
 
+#include "core/pool_type.hpp"
 #include "gfx_type.h"
+#include "bridge_type.h"
 #include "tile_cmd.h"
+#include "newgrf_commons.h"
 
-/**
- * This enum is related to the definition of bridge pieces,
- * which is used to determine the proper sprite table to use
- * while drawing a given bridge part.
- */
-enum BridgePieces {
-	BRIDGE_PIECE_NORTH = 0,
-	BRIDGE_PIECE_SOUTH,
-	BRIDGE_PIECE_INNER_NORTH,
-	BRIDGE_PIECE_INNER_SOUTH,
-	BRIDGE_PIECE_MIDDLE_ODD,
-	BRIDGE_PIECE_MIDDLE_EVEN,
-	BRIDGE_PIECE_HEAD,
-	BRIDGE_PIECE_INVALID,
+struct Bridge;
+typedef Pool<Bridge, BridgeID, 64, 0xFF0000> BridgePool;
+extern BridgePool _bridge_pool;
+
+/** Bridge data structure. */
+struct Bridge : BridgePool::PoolItem<&_bridge_pool> {
+	BridgeType type;    ///< Type of the bridge
+	Date build_date;    ///< Date of construction
+	Town *town;         ///< Town the bridge is built in
+	uint16 random;      ///< Random bits
+	TileIndex heads[2]; ///< Tile where the bridge ramp is located
+
+	/** Make sure the bridge isn't zeroed. */
+	Bridge() {}
+	/** Make sure the right destructor is called as well! */
+	~Bridge() {}
+
+	Axis GetAxis() const {
+		return DiagDirToAxis(DiagdirBetweenTiles(this->heads[0], this->heads[1]));
+	}
+
+	uint GetLength() const {
+		TileIndexDiffC diff = TileIndexToTileIndexDiffC(this->heads[1], this->heads[0]);
+		return diff.x != 0 ? (diff.x + 1) : (diff.y + 1);
+	}
 };
 
-DECLARE_POSTFIX_INCREMENT(BridgePieces)
-
-static const uint MAX_BRIDGES = 13; ///< Maximal number of available bridge specs.
-
-typedef uint BridgeType; ///< Bridge spec number.
-
-/**
- * Struct containing information about a single bridge type
- */
-struct BridgeSpec {
-	Year avail_year;             ///< the year where it becomes available
-	byte min_length;             ///< the minimum length (not counting start and end tile)
-	uint16 max_length;           ///< the maximum length (not counting start and end tile)
-	uint16 price;                ///< the price multiplier
-	uint16 speed;                ///< maximum travel speed (1 unit = 1/1.6 mph = 1 km-ish/h)
-	SpriteID sprite;             ///< the sprite which is used in the GUI
-	PaletteID pal;               ///< the palette which is used in the GUI
-	StringID material;           ///< the string that contains the bridge description
-	StringID transport_name[2];  ///< description of the bridge, when built for road or rail
-	PalSpriteID **sprite_table;  ///< table of sprites for drawing the bridge
-	byte flags;                  ///< bit 0 set: disable drawing of far pillars.
-};
-
-extern BridgeSpec _bridge[MAX_BRIDGES];
+extern BridgeSpec _bridge_specs[NUM_BRIDGES];
 
 Foundation GetBridgeFoundation(Slope tileh, Axis axis);
 bool HasBridgeFlatRamp(Slope tileh, Axis axis);
-
-/**
- * Get the specification of a bridge type.
- * @param i The type of bridge to get the specification for.
- * @return The specification.
- */
-static inline const BridgeSpec *GetBridgeSpec(BridgeType i)
-{
-	assert(i < lengthof(_bridge));
-	return &_bridge[i];
-}
 
 void DrawBridgeMiddle(const TileInfo *ti);
 

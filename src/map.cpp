@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "core/alloc_func.hpp"
 #include "water_map.h"
+#include "bridge_map.h"
 #include "string_func.h"
 
 #include "safeguards.h"
@@ -58,6 +59,9 @@ void AllocateMap(uint size_x, uint size_y)
 
 	free(_m);
 	free(_me);
+
+	_bridge_index[0].clear();
+	_bridge_index[1].clear();
 
 	_m = CallocT<Tile>(_map_size);
 	_me = CallocT<TileExtended>(_map_size);

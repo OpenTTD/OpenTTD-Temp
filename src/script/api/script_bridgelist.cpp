@@ -11,19 +11,20 @@
 #include "script_bridgelist.hpp"
 #include "script_bridge.hpp"
 #include "../../bridge.h"
+#include "../../newgrf_bridge.h"
 
 #include "../../safeguards.h"
 
 ScriptBridgeList::ScriptBridgeList()
 {
-	for (byte j = 0; j < MAX_BRIDGES; j++) {
+	for (uint16 j = 0; j < _bridge_mngr.GetMaxMapping(); j++) {
 		if (ScriptBridge::IsValidBridge(j)) this->AddItem(j);
 	}
 }
 
 ScriptBridgeList_Length::ScriptBridgeList_Length(uint length)
 {
-	for (byte j = 0; j < MAX_BRIDGES; j++) {
+	for (uint16 j = 0; j < _bridge_mngr.GetMaxMapping(); j++) {
 		if (ScriptBridge::IsValidBridge(j)) {
 			if (length >= (uint)ScriptBridge::GetMinLength(j) && length <= (uint)ScriptBridge::GetMaxLength(j)) this->AddItem(j);
 		}

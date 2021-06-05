@@ -19,6 +19,7 @@
 #include "clear_map.h"
 #include "station_map.h"
 #include "tree_map.h"
+#include "newgrf_bridge.h"
 #include "tunnelbridge_map.h"
 #include "newgrf_object.h"
 #include "genworld.h"
@@ -335,6 +336,36 @@ void ObjectOverrideManager::SetEntitySpec(ObjectSpec *spec)
 	/* Now that we know we can use the given id, copy the spec to its final destination. */
 	memcpy(&_object_specs[type], spec, sizeof(*spec));
 	ObjectClass::Assign(&_object_specs[type]);
+}
+
+/**
+ * Method to install the new bridge data in its proper slot
+ * The slot assignment is internal of this method, since it requires
+ * checking what is available
+ * @param spec BridgeSpec that comes from the grf decoding process
+ */
+void BridgeOverrideManager::SetEntitySpec(BridgeSpec *spec)
+{
+	/* First step : We need to find if this object is already specified in the savegame data. */
+	ObjectType type = this->GetID(spec->grf_prop.local_id, spec->grf_prop.grffile->grfid);
+
+	if (type == invalid_ID) {
+		/* Not found.
+		 * Or it has already been overridden, so you've lost your place old boy.
+		 * Or it is a simple substitute.
+		 * We need to find a free available slot */
+		type = this->AddEntityID(spec->grf_prop.local_id, spec->grf_prop.grffile->grfid, 0);
+	}
+
+	if (type == invalid_ID) {
+		grfmsg(1, "Bridge.SetEntitySpec: Too many bridges allocated. Ignoring.");
+		return;
+	}
+
+	extern BridgeSpec _bridge_specs[NUM_BRIDGES];
+
+	/* Now that we know we can use the given id, copy the spec to its final destination. */
+	memcpy(&_bridge_specs[type], spec, sizeof(*spec));
 }
 
 /**

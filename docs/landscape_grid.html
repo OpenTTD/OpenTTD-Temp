@@ -79,7 +79,7 @@ the array so you can quickly see what is used and what is not.
     <tr>
       <td rowspan="2">0</td>
       <td class="caption">ground</td>
-      <td class="bits" rowspan=27><span class="used" title="Tile type">XXXX</span> <span class="used" title="Presence and direction of bridge above">XX</span> <span class="used" title="Tropic Zone: only meaningfull in tropic climate. It contains the definition of the available zones">XX</span></td>
+      <td class="bits" rowspan=27><span class="used" title="Tile type">XXXX</span> <span class="free">O</span><span class="used" title="Presence and direction of bridge above">X</span> <span class="used" title="Tropic Zone: only meaningfull in tropic climate. It contains the definition of the available zones">XX</span></td>
       <td class="bits" rowspan=27><span class="used" title="Tile height">XXXX XXXX</span></td>
       <td class="bits" rowspan=2><span class="free">OOO</span><span class="usable" title="Owner (always OWNER_NONE)">1 OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO OOOO OOOO</span></td>
@@ -282,7 +282,7 @@ the array so you can quickly see what is used and what is not.
       <td rowspan=2>9</td>
       <td class="caption">tunnel entrance</td>
       <td class="bits" rowspan=2><span class="used" title="Ship docking tile status (for aqueducts)">X</span><span class="free">OO</span> <span class="used" title="Owner">XXXXX</span></td>
-      <td class="bits" rowspan=2><span class="free">OOOO OOOO OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OOOO OOOO OOOO</span></td>
       <td class="bits" rowspan=2><span class="rearrange" title="Owner of tram (road only; a rearrangement can free some of these bits)">XXXX</span> <span class="free">OOOO</span></td>
       <td class="bits" rowspan=2><span class="free">OO</span><span class="used" title="Road type">XX XXXX</span></td>
       <td class="bits"><span class="used" title="Bridge or tunnel bit">O</span><span class="free">OO</span><span class="rearrange" title="PBS reservation (rail; a rearrangement can free some of these bits)">X</span> <span class="used" title="Transport type">XX</span> <span class="used" title="Direction of the tunnel/bridge">XX</span></td>
@@ -291,9 +291,10 @@ the array so you can quickly see what is used and what is not.
       <td class="bits" rowspan=2><span class="free">OOOO</span> <span class="used" title="Tram type">XXXX XX</span><span class="rearrange" title="Railway type (rail only; a rearrangement can free some of these bits)">XX XXXX</span></td>
     </tr>
     <tr>
-      <td>bridge ramp</td>
-      <td class="bits"><span class="used" title="Bridge or tunnel bit">1</span><span class="free">OO</span><span class="rearrange" title="PBS reservation (rail; a rearrangement can free some of these bits)">X</span> <span class="used" title="Transport type">XX</span> <span class="used" title="Direction of the tunnel/bridge">XX</span></td>
-      <td class="bits"><span class="free">OO</span><span class="used" title="Bridge type: wooden, steel,...">XX XX</span><span class="free">OO</span></td>
+        <td>bridge ramp</td>
+        <td class="bits"><span class="pool" title="Bridge index on pool (m2 + m6)">XXXX XXXX XXXX XXXX</span></td>
+        <td class="bits"><span class="used" title="Bridge or tunnel bit">1</span><span class="free">OO</span><span class="rearrange" title="PBS reservation (rail; a rearrangement can free some of these bits)">X</span> <span class="used" title="Transport type">XX</span> <span class="used" title="Direction of the tunnel/bridge">XX</span></td>
+        <td class="bits"><span class="pool" title="Bridge index on pool (m2 + m6)">XXXX XXXX</span></td>
     </tr>
     <tr>
       <td>A</td>

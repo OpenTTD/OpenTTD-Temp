@@ -67,6 +67,7 @@ add_files(
     bridge_gui.cpp
     bridge_map.cpp
     bridge_map.h
+    bridge_type.h
     build_vehicle_gui.cpp
     cargo_type.h
     cargoaction.cpp
@@ -230,6 +231,8 @@ add_files(
     newgrf_airporttiles.h
     newgrf_animation_base.h
     newgrf_animation_type.h
+    newgrf_bridge.cpp
+    newgrf_bridge.h
     newgrf_callbacks.h
     newgrf_canal.cpp
     newgrf_canal.h

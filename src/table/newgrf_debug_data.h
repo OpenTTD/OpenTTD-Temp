@@ -10,6 +10,7 @@
 #include "../newgrf_house.h"
 #include "../newgrf_engine.h"
 #include "../newgrf_roadtype.h"
+#include "../newgrf_bridge.h"
 
 /* Helper for filling property tables */
 #define NIP(prop, base, variable, type, name) { name, [] (const void *b) -> const void * { return std::addressof(static_cast<const base *>(b)->variable); }, cpp_sizeof(base, variable), prop, type }
@@ -91,7 +92,6 @@ static const NIFeature _nif_vehicle = {
 	new NIHVehicle(),
 };
 
-
 /*** NewGRF station (tiles) ***/
 
 #define NICS(cb_id, bit) NIC(cb_id, StationSpec, callback_mask, bit)
@@ -152,6 +152,40 @@ static const NIFeature _nif_station = {
 	_nic_stations,
 	_niv_stations,
 	new NIHStation(),
+};
+
+
+/*** NewGRF bridges ***/
+static const NIVariable _niv_bridge[] = {
+	NIV(0x40, "construction date"),
+	NIV(0x41, "terrain type"),
+	NIV(0x42, "position along bridge"),
+	NIV(0x43, "length of bridge"),
+	NIV(0x44, "transport type"),
+	NIV(0x60, "bridge ID of nearby tiles"),
+	NIV_END()
+};
+
+class NIHBridge : public NIHelper {
+	bool IsInspectable(uint index) const override        { return BridgeSpec::Get(GetBridgeType(index))->grf_prop.grffile != nullptr; }
+	uint GetParent(uint index) const override            { return GetInspectWindowNumber(GSF_FAKE_TOWNS, Bridge::Get(GetBridgeIndex(index))->town->index); }
+	const void *GetInstance(uint index)const override    { return nullptr; }
+	const void *GetSpec(uint index) const override       { return BridgeSpec::Get(GetBridgeType(index)); }
+	void SetStringParameters(uint index) const override  { this->SetObjectAtStringParameters(STR_NEWGRF_INSPECT_CAPTION_OBJECT_AT_BRIDGE, INVALID_STRING_ID, index); }
+	uint32 GetGRFID(uint index) const override           { return (this->IsInspectable(index)) ? BridgeSpec::Get(GetBridgeType(index))->grf_prop.grffile->grfid : 0; }
+
+	uint Resolve(uint index, uint var, uint param, bool *avail) const override
+	{
+		BridgeResolverObject ro(BridgeSpec::Get(GetBridgeType(index)), Bridge::Get(GetBridgeIndex(index)), index, BSG_END);
+		return ro.GetScope(VSG_SCOPE_SELF)->GetVariable(var, param, avail);
+	}
+};
+
+static const NIFeature _nif_bridge = {
+	nullptr,
+	nullptr,
+	_niv_bridge,
+	new NIHBridge(),
 };
 
 
@@ -614,7 +648,7 @@ static const NIFeature * const _nifeatures[] = {
 	&_nif_vehicle,      // GSF_AIRCRAFT
 	&_nif_station,      // GSF_STATIONS
 	nullptr,               // GSF_CANALS (no callbacks/action2 implemented)
-	nullptr,               // GSF_BRIDGES (no callbacks/action2)
+	&_nif_bridge,       // GSF_BRIDGES
 	&_nif_house,        // GSF_HOUSES
 	nullptr,               // GSF_GLOBALVAR (has no "physical" objects)
 	&_nif_industrytile, // GSF_INDUSTRYTILES

@@ -1185,7 +1185,7 @@ bool AfterLoadGame()
 
 	if (IsSavegameVersionBefore(SLV_42)) {
 		for (TileIndex t = 0; t < map_size; t++) {
-			if (MayHaveBridgeAbove(t)) ClearBridgeMiddle(t);
+			if (MayHaveBridgeAbove(t)) SB(_m[t].type, 2, 2, 0); // ClearBridgeMiddle
 			if (IsBridgeTile(t)) {
 				if (HasBit(_m[t].m5, 6)) { // middle part
 					Axis axis = (Axis)GB(_m[t].m5, 0, 1);
@@ -1225,7 +1225,7 @@ bool AfterLoadGame()
 							}
 						}
 					}
-					SetBridgeMiddle(t, axis);
+					SetBit(_m[t].type, 2 + axis); // SetBridgeMiddle
 				} else { // ramp
 					Axis axis = (Axis)GB(_m[t].m5, 0, 1);
 					uint north_south = GB(_m[t].m5, 5, 1);
@@ -1251,7 +1251,7 @@ bool AfterLoadGame()
 					case DIAGDIR_NW: if ((v->y_pos & 0xF) !=  0)            continue; break;
 				}
 			} else if (v->z_pos > GetSlopePixelZ(v->x_pos, v->y_pos)) {
-				v->tile = GetNorthernBridgeEnd(v->tile);
+				v->tile = GetBridgeEnd(v->tile, ReverseDiagDir(AxisToDiagDir((Axis)(GB(_m[v->tile].type, 2, 2) - 1))));
 				v->UpdatePosition();
 			} else {
 				continue;
@@ -3142,6 +3142,45 @@ bool AfterLoadGame()
 				SetBit(g->flags, GroupFlags::GF_REPLACE_PROTECTION);
 			}
 			if (HasBit(wagon_removal, g->owner)) SetBit(g->flags, GroupFlags::GF_REPLACE_WAGON_REMOVAL);
+		}
+	}
+
+	if (IsSavegameVersionBefore(SLV_NEW_BRIDGES)) {
+		for (TileIndex t = 0; t < map_size; t++) {
+			if (IsBridgeTile(t)) {
+				DiagDirection dir = GetTunnelBridgeDirection(t);
+				if (dir == DIAGDIR_SW || dir == DIAGDIR_SE) {
+					TileIndex t2 = GetOtherBridgeEnd(t);
+
+					if (!Bridge::CanAllocateItem()) {
+						SlError(STR_ERROR_TOO_MANY_BRIDGES);
+					}
+					Bridge* b = new Bridge();
+					b->type = (BridgeType)GB(_me[t].m6, 2, 4);
+					b->build_date = _date;
+
+					b->town = CalcClosestTownFromTile(t);
+
+					b->heads[0] = t;
+					b->heads[1] = t2;
+
+					_m[t].m2 = b->index;
+					_me[t].m6 = b->index >> 16;
+
+					_m[t2].m2 = b->index;
+					_me[t2].m6 = b->index >> 16;
+
+					Axis axis = DiagDirToAxis(dir);
+					uint pos = axis == AXIS_X ? TileY(t) : TileX(t);
+					_bridge_index[axis].Insert(pos, b->index);
+				}
+			}
+		}
+
+		for (TileIndex t = 0; t < map_size; t++) {
+			if (GB(_m[t].type, 2, 2)) {
+				SB(_m[t].type, 2, 2, 1);
+			}
 		}
 	}
 

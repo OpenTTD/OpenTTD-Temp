@@ -23,6 +23,7 @@
 #include "cmd_helper.h"
 #include "tunnelbridge_map.h"
 #include "road_gui.h"
+#include "newgrf_bridge.h"
 
 #include "widgets/bridge_widget.h"
 
@@ -53,9 +54,9 @@ typedef GUIList<BuildBridgeData> GUIBridgeList; ///< List of bridges, used in #B
  * @param end_tile End tile of the bridge.
  * @param p1 packed start tile coords (~ dx)
  * @param p2 various bitstuffed elements
- * - p2 = (bit  0- 7) - bridge type (hi bh)
- * - p2 = (bit  8-13) - rail type or road types.
- * - p2 = (bit 15-16) - transport type.
+ * - p2 = (bit  0-15) - bridge type (hi bh)
+ * - p2 = (bit 16-21) - rail type or road types.
+ * - p2 = (bit 23-24) - transport type.
  * @param cmd unused
  */
 void CcBuildBridge(const CommandCost &result, TileIndex end_tile, uint32 p1, uint32 p2, uint32 cmd)
@@ -63,7 +64,7 @@ void CcBuildBridge(const CommandCost &result, TileIndex end_tile, uint32 p1, uin
 	if (result.Failed()) return;
 	if (_settings_client.sound.confirm) SndPlayTileFx(SND_27_CONSTRUCTION_BRIDGE, end_tile);
 
-	TransportType transport_type = Extract<TransportType, 15, 2>(p2);
+	TransportType transport_type = Extract<TransportType, 23, 2>(p2);
 
 	if (transport_type == TRANSPORT_ROAD) {
 		DiagDirection end_direction = ReverseDiagDir(GetTunnelBridgeDirection(end_tile));
@@ -112,7 +113,7 @@ private:
 
 	void BuildBridge(uint8 i)
 	{
-		switch ((TransportType)(this->type >> 15)) {
+		switch ((TransportType)(this->type >> 23)) {
 			case TRANSPORT_RAIL: _last_railbridge_type = this->bridges->at(i).index; break;
 			case TRANSPORT_ROAD: _last_roadbridge_type = this->bridges->at(i).index; break;
 			default: break;
@@ -144,8 +145,8 @@ public:
 		this->CreateNestedTree();
 		this->vscroll = this->GetScrollbar(WID_BBS_SCROLLBAR);
 		/* Change the data, or the caption of the gui. Set it to road or rail, accordingly. */
-		this->GetWidget<NWidgetCore>(WID_BBS_CAPTION)->widget_data = (GB(this->type, 15, 2) == TRANSPORT_ROAD) ? STR_SELECT_ROAD_BRIDGE_CAPTION : STR_SELECT_RAIL_BRIDGE_CAPTION;
-		this->FinishInitNested(GB(br_type, 15, 2)); // Initializes 'this->bridgetext_offset'.
+		this->GetWidget<NWidgetCore>(WID_BBS_CAPTION)->widget_data = (GB(this->type, 23, 2) == TRANSPORT_ROAD) ? STR_SELECT_ROAD_BRIDGE_CAPTION : STR_SELECT_RAIL_BRIDGE_CAPTION;
+		this->FinishInitNested(GB(br_type, 23, 2)); // Initializes 'this->bridgetext_offset'.
 
 		this->parent = FindWindowById(WC_BUILD_TOOLBAR, GB(this->type, 15, 2));
 		this->bridges->SetListing(this->last_sorting);
@@ -188,7 +189,12 @@ public:
 				Dimension text_dim   = {0, 0}; // Biggest text dimension
 				for (int i = 0; i < (int)this->bridges->size(); i++) {
 					const BridgeSpec *b = this->bridges->at(i).spec;
-					sprite_dim = maxdim(sprite_dim, GetSpriteSize(b->sprite));
+					SpriteID sprite = b->sprite;
+					if (b->use_custom_sprites) {
+						sprite = GetCustomBridgeSprites(b, nullptr, INVALID_TILE, BSG_GUI);
+					}
+
+					sprite_dim = maxdim(sprite_dim, GetSpriteSize(sprite));
 
 					SetDParam(2, this->bridges->at(i).cost);
 					SetDParam(1, b->speed);
@@ -233,7 +239,14 @@ public:
 					SetDParam(1, b->speed);
 					SetDParam(0, b->material);
 
-					DrawSprite(b->sprite, b->pal, r.left + WD_MATRIX_LEFT, y + this->resize.step_height - 1 - GetSpriteSize(b->sprite).height);
+					SpriteID sprite = b->sprite;
+					if (b->use_custom_sprites) {
+						sprite = BridgeResolverObject(b, nullptr, INVALID_TILE, BSG_GUI).Resolve()->GetResult();
+					}
+
+					PaletteID pal = b->use_custom_sprites ? PAL_NONE : b->pal;
+
+					DrawSprite(sprite, pal, r.left + WD_MATRIX_LEFT, y + this->resize.step_height - 1 - GetSpriteSize(b->sprite).height);
 					DrawStringMultiLine(r.left + this->bridgetext_offset, r.right, y + 2, y + this->resize.step_height,
 							_game_mode == GM_EDITOR ? STR_SELECT_BRIDGE_SCENEDIT_INFO : STR_SELECT_BRIDGE_INFO);
 					y += this->resize.step_height;
@@ -363,10 +376,10 @@ void ShowBuildBridgeWindow(TileIndex start, TileIndex end, TransportType transpo
 	CloseWindowByClass(WC_BUILD_BRIDGE);
 
 	/* Data type for the bridge.
-	 * Bit 16,15 = transport type,
-	 *     14..8 = road/rail types,
-	 *      7..0 = type of bridge */
-	uint32 type = (transport_type << 15) | (road_rail_type << 8);
+	 * Bit 24,23 = transport type,
+	 *    22..16 = road/rail types,
+	 *     15..0 = type of bridge */
+	uint32 type = (transport_type << 23) | (road_rail_type << 16);
 
 	/* The bridge length without ramps. */
 	const uint bridge_len = GetTunnelBridgeLength(start, end);
@@ -429,13 +442,13 @@ void ShowBuildBridgeWindow(TileIndex start, TileIndex end, TransportType transpo
 		bool any_available = false;
 		CommandCost type_check;
 		/* loop for all bridgetypes */
-		for (BridgeType brd_type = 0; brd_type != MAX_BRIDGES; brd_type++) {
+		for (BridgeType brd_type = 0; brd_type != _bridge_mngr.GetMaxMapping(); brd_type++) {
 			type_check = CheckBridgeAvailability(brd_type, bridge_len);
 			if (type_check.Succeeded()) {
 				/* bridge is accepted, add to list */
 				BuildBridgeData &item = bl->emplace_back();
 				item.index = brd_type;
-				item.spec = GetBridgeSpec(brd_type);
+				item.spec = BridgeSpec::Get(brd_type);
 				/* Add to terraforming & bulldozing costs the cost of the
 				 * bridge itself (not computed with DC_QUERY_COST) */
 				item.cost = ret.GetCost() + (((int64)tot_bridgedata_len * _price[PR_BUILD_BRIDGE] * item.spec->price) >> 8) + infra_cost;

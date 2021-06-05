@@ -781,6 +781,7 @@ GrfSpecFeature GetGrfSpecFeature(TileIndex tile)
 				case STATION_AIRPORT: return GSF_AIRPORTTILES;
 				default:              return GSF_INVALID;
 			}
+		case MP_TUNNELBRIDGE: return IsBridge(tile) ? GSF_BRIDGES : GSF_INVALID;
 	}
 }
 

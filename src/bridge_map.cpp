@@ -8,18 +8,71 @@
 /** @file bridge_map.cpp Map accessor functions for bridges. */
 
 #include "stdafx.h"
+#include "core/multimap.hpp"
 #include "landscape.h"
 #include "tunnelbridge_map.h"
+#include <utility>
 
 #include "safeguards.h"
 
+MultiMap<uint, BridgeID> _bridge_index[2];
+
+/**
+ * Get the range of bridges in specific row or column
+ * @param axis the direction to search in
+ * @param tile the bridge tile to find the bridges for
+ */
+std::pair<MultiMap<uint, BridgeID>::iterator, MultiMap<uint, BridgeID>::iterator> GetBridgeIterator(Axis axis, TileIndex tile)
+{
+	uint pos = axis == AXIS_X ? TileY(tile) : TileX(tile);
+	return _bridge_index[axis].equal_range(pos);
+}
+
+/**
+ * Finds the bridge above a middle tile
+ * @param tile the bridge tile to find the bridge for
+ * @pre IsBridgeAbove(tile)
+ */
+Bridge *GetBridgeFromMiddle(TileIndex tile)
+{
+	assert(IsBridgeAbove(tile));
+
+	uint x = TileX(tile);
+	uint y = TileY(tile);
+
+	auto range = GetBridgeIterator(AXIS_X, tile);
+	for (auto it = range.first; it != range.second; it++) {
+		Bridge *b = Bridge::Get(*it);
+
+		uint x1 = TileX(b->heads[0]);
+		uint x2 = TileX(b->heads[1]);
+
+		if (x1 <= x && x <= x2) {
+			return b;
+		}
+	}
+
+	range = GetBridgeIterator(AXIS_Y, tile);
+	for (auto it = range.first; it != range.second; it++) {
+		Bridge *b = Bridge::Get(*it);
+
+		uint y1 = TileY(b->heads[0]);
+		uint y2 = TileY(b->heads[1]);
+
+		if (y1 <= y && y <= y2) {
+			return b;
+		}
+	}
+
+	return nullptr;
+}
 
 /**
  * Finds the end of a bridge in the specified direction starting at a middle tile
  * @param tile the bridge tile to find the bridge ramp for
  * @param dir  the direction to search in
  */
-static TileIndex GetBridgeEnd(TileIndex tile, DiagDirection dir)
+TileIndex GetBridgeEnd(TileIndex tile, DiagDirection dir)
 {
 	TileIndexDiff delta = TileOffsByDiagDir(dir);
 
@@ -38,7 +91,7 @@ static TileIndex GetBridgeEnd(TileIndex tile, DiagDirection dir)
  */
 TileIndex GetNorthernBridgeEnd(TileIndex t)
 {
-	return GetBridgeEnd(t, ReverseDiagDir(AxisToDiagDir(GetBridgeAxis(t))));
+	return GetBridgeFromMiddle(t)->heads[0];
 }
 
 
@@ -48,7 +101,7 @@ TileIndex GetNorthernBridgeEnd(TileIndex t)
  */
 TileIndex GetSouthernBridgeEnd(TileIndex t)
 {
-	return GetBridgeEnd(t, AxisToDiagDir(GetBridgeAxis(t)));
+	return GetBridgeFromMiddle(t)->heads[1];
 }
 
 
@@ -59,7 +112,13 @@ TileIndex GetSouthernBridgeEnd(TileIndex t)
 TileIndex GetOtherBridgeEnd(TileIndex tile)
 {
 	assert(IsBridgeTile(tile));
-	return GetBridgeEnd(tile, GetTunnelBridgeDirection(tile));
+
+	if (Bridge::IsValidID(GetBridgeIndex(tile))) {
+		TileIndex *heads = Bridge::Get(GetBridgeIndex(tile))->heads;
+		return tile == heads[0] ? heads[1] : heads[0];
+	} else {
+		return GetBridgeEnd(tile, GetTunnelBridgeDirection(tile));
+	}
 }
 
 /**

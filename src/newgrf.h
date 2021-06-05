@@ -117,6 +117,7 @@ struct GRFFile : ZeroedMemoryAllocator {
 	struct ObjectSpec **objectspec;
 	struct AirportSpec **airportspec;
 	struct AirportTileSpec **airtspec;
+	struct BridgeSpec **bridgespec;
 
 	uint32 param[0x80];
 	uint param_end;  ///< one more than the highest set parameter

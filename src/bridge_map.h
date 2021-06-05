@@ -10,10 +10,13 @@
 #ifndef BRIDGE_MAP_H
 #define BRIDGE_MAP_H
 
+#include "core/multimap.hpp"
 #include "rail_map.h"
 #include "road_map.h"
 #include "bridge.h"
 #include "water_map.h"
+
+extern MultiMap<uint, BridgeID> _bridge_index[2];
 
 /**
  * Checks if this is a bridge, instead of a tunnel
@@ -44,7 +47,19 @@ static inline bool IsBridgeTile(TileIndex t)
  */
 static inline bool IsBridgeAbove(TileIndex t)
 {
-	return GB(_m[t].type, 2, 2) != 0;
+	return GB(_m[t].type, 2, 1) != 0;
+}
+
+/**
+ * Get the index of bridge on a tile
+ * @param t the tile
+ * @pre IsBridgeTile(t)
+ * @return The BridgeID of the bridge.
+ */
+static inline BridgeID GetBridgeIndex(TileIndex t)
+{
+	assert(IsBridgeTile(t));
+	return _m[t].m2 | _me[t].m6 << 16;
 }
 
 /**
@@ -56,8 +71,12 @@ static inline bool IsBridgeAbove(TileIndex t)
 static inline BridgeType GetBridgeType(TileIndex t)
 {
 	assert(IsBridgeTile(t));
-	return GB(_me[t].m6, 2, 4);
+	return Bridge::Get(GetBridgeIndex(t))->type;
 }
+
+std::pair<MultiMap<uint, BridgeID>::iterator, MultiMap<uint, BridgeID>::iterator> GetBridgeIterator(Axis axis, TileIndex tile);
+
+Bridge *GetBridgeFromMiddle(TileIndex t);
 
 /**
  * Get the axis of the bridge that goes over the tile. Not the axis or the ramp.
@@ -68,9 +87,11 @@ static inline BridgeType GetBridgeType(TileIndex t)
 static inline Axis GetBridgeAxis(TileIndex t)
 {
 	assert(IsBridgeAbove(t));
-	return (Axis)(GB(_m[t].type, 2, 2) - 1);
+	Bridge *b = GetBridgeFromMiddle(t);
+	return b->GetAxis();
 }
 
+TileIndex GetBridgeEnd(TileIndex t, DiagDirection dir);
 TileIndex GetNorthernBridgeEnd(TileIndex t);
 TileIndex GetSouthernBridgeEnd(TileIndex t);
 TileIndex GetOtherBridgeEnd(TileIndex t);
@@ -87,54 +108,42 @@ static inline int GetBridgePixelHeight(TileIndex tile)
 }
 
 /**
- * Remove the bridge over the given axis.
- * @param t the tile to remove the bridge from
- * @param a the axis of the bridge to remove
- */
-static inline void ClearSingleBridgeMiddle(TileIndex t, Axis a)
-{
-	ClrBit(_m[t].type, 2 + a);
-}
-
-/**
  * Removes bridges from the given, that is bridges along the X and Y axis.
  * @param t the tile to remove the bridge from
  */
 static inline void ClearBridgeMiddle(TileIndex t)
 {
-	ClearSingleBridgeMiddle(t, AXIS_X);
-	ClearSingleBridgeMiddle(t, AXIS_Y);
+	ClrBit(_m[t].type, 2);
 }
 
 /**
  * Set that there is a bridge over the given axis.
  * @param t the tile to add the bridge to
- * @param a the axis of the bridge to add
  */
-static inline void SetBridgeMiddle(TileIndex t, Axis a)
+static inline void SetBridgeMiddle(TileIndex t)
 {
-	SetBit(_m[t].type, 2 + a);
+	SetBit(_m[t].type, 2);
 }
 
 /**
  * Generic part to make a bridge ramp for both roads and rails.
  * @param t          the tile to make a bridge ramp
  * @param o          the new owner of the bridge ramp
- * @param bridgetype the type of bridge this bridge ramp belongs to
+ * @param index      Index to the bridge.
  * @param d          the direction this ramp must be facing
  * @param tt         the transport type of the bridge
  * @note this function should not be called directly.
  */
-static inline void MakeBridgeRamp(TileIndex t, Owner o, BridgeType bridgetype, DiagDirection d, TransportType tt)
+static inline void MakeBridgeRamp(TileIndex t, Owner o, BridgeID index, DiagDirection d, TransportType tt)
 {
 	SetTileType(t, MP_TUNNELBRIDGE);
 	SetTileOwner(t, o);
 	SetDockingTile(t, false);
-	_m[t].m2 = 0;
+	_m[t].m2 = index;
 	_m[t].m3 = 0;
 	_m[t].m4 = INVALID_ROADTYPE;
 	_m[t].m5 = 1 << 7 | tt << 2 | d;
-	SB(_me[t].m6, 2, 4, bridgetype);
+	_me[t].m6 = index >> 16;
 	_me[t].m7 = 0;
 	_me[t].m8 = INVALID_ROADTYPE << 6;
 }
@@ -145,14 +154,14 @@ static inline void MakeBridgeRamp(TileIndex t, Owner o, BridgeType bridgetype, D
  * @param o          the new owner of the bridge ramp
  * @param owner_road the new owner of the road on the bridge
  * @param owner_tram the new owner of the tram on the bridge
- * @param bridgetype the type of bridge this bridge ramp belongs to
+ * @param index      Index to the bridge.
  * @param d          the direction this ramp must be facing
  * @param road_rt    the road type of the bridge
  * @param tram_rt    the tram type of the bridge
  */
-static inline void MakeRoadBridgeRamp(TileIndex t, Owner o, Owner owner_road, Owner owner_tram, BridgeType bridgetype, DiagDirection d, RoadType road_rt, RoadType tram_rt)
+static inline void MakeRoadBridgeRamp(TileIndex t, Owner o, Owner owner_road, Owner owner_tram, BridgeID index, DiagDirection d, RoadType road_rt, RoadType tram_rt)
 {
-	MakeBridgeRamp(t, o, bridgetype, d, TRANSPORT_ROAD);
+	MakeBridgeRamp(t, o, index, d, TRANSPORT_ROAD);
 	SetRoadOwner(t, RTT_ROAD, owner_road);
 	if (owner_tram != OWNER_TOWN) SetRoadOwner(t, RTT_TRAM, owner_tram);
 	SetRoadTypes(t, road_rt, tram_rt);
@@ -162,13 +171,13 @@ static inline void MakeRoadBridgeRamp(TileIndex t, Owner o, Owner owner_road, Ow
  * Make a bridge ramp for rails.
  * @param t          the tile to make a bridge ramp
  * @param o          the new owner of the bridge ramp
- * @param bridgetype the type of bridge this bridge ramp belongs to
+ * @param index      Index to the bridge.
  * @param d          the direction this ramp must be facing
  * @param rt         the rail type of the bridge
  */
-static inline void MakeRailBridgeRamp(TileIndex t, Owner o, BridgeType bridgetype, DiagDirection d, RailType rt)
+static inline void MakeRailBridgeRamp(TileIndex t, Owner o, BridgeID index, DiagDirection d, RailType rt)
 {
-	MakeBridgeRamp(t, o, bridgetype, d, TRANSPORT_RAIL);
+	MakeBridgeRamp(t, o, index, d, TRANSPORT_RAIL);
 	SetRailType(t, rt);
 }
 
@@ -178,9 +187,9 @@ static inline void MakeRailBridgeRamp(TileIndex t, Owner o, BridgeType bridgetyp
  * @param o          the new owner of the bridge ramp
  * @param d          the direction this ramp must be facing
  */
-static inline void MakeAqueductBridgeRamp(TileIndex t, Owner o, DiagDirection d)
+static inline void MakeAqueductBridgeRamp(TileIndex t, Owner o, BridgeID index, DiagDirection d)
 {
-	MakeBridgeRamp(t, o, 0, d, TRANSPORT_WATER);
+	MakeBridgeRamp(t, o, index, d, TRANSPORT_WATER);
 }
 
 #endif /* BRIDGE_MAP_H */

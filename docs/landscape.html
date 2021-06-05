@@ -50,12 +50,11 @@
       <tr><td><tt>0A</tt></td><td>Objects</td></tr>
      </table>
     </li>
-     Bits 3..2:
+     Bit 2:
      <table border="1" style="width: 30em;">
       <tr bgcolor="#CCCCCC"><td colspan="2">Presence and direction of bridge above.</td></tr>
       <tr><td style="width: 5em;"><tt>00</tt></td><td>no bridge</td></tr>
-      <tr><td><tt>01</tt></td><td>Axis X (North-East)</td></tr>
-      <tr><td><tt>02</tt></td><td>Axis Y (South-West)</td></tr>
+      <tr><td><tt>01</tt></td><td>bridge exists above the tile</td></tr>
      </table>
     <li>
      <a name="tropic_zone"></a>
@@ -1464,101 +1463,13 @@
     <ul>
      <li>m1 bit 7: Ship docking tile status (for aqueducts)</li>
      <li>m1 bits 4..0: <a href="#OwnershipInfo">owner</a></li>
+     <li>m2: index into the array of bridges, bits 0 to 15 (upper bits in m6) (for bridges)</li>
      <li>m3 bits 7..4: <a href="#OwnershipInfo">owner</a> of tram</li>
      <li>m4: <a href="#RoadType">Roadtype</a></li>
      <li>m5 bit 4: pbs reservation state for railway</li>
      <li>m5 bits 7 clear: tunnel entrance/exit</li>
      <li>m5 bit 7 set: bridge ramp
-      <ul>
-       <li>m6 bits 5..2: <a name="BridgeType">bridge type</a>:
-        <table>
-         <tr>
-          <th align=left>Type&nbsp;</th>
-          <th align=left>Max. speed (mph)&nbsp;</th>
-          <th align=left>Description</th>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>0</tt>&nbsp; </td>
-          <td align=center>20</td>
-          <td align=left>wooden</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>1</tt>&nbsp; </td>
-          <td align=center>30</td>
-          <td align=left>concrete</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>2</tt>&nbsp; </td>
-          <td align=center>40</td>
-          <td align=left>girder, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>3</tt>&nbsp; </td>
-          <td align=center>50</td>
-          <td align=left>suspension, concrete</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>4</tt>&nbsp; </td>
-          <td align=center>60</td>
-          <td align=left>suspension, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>5</tt>&nbsp; </td>
-          <td align=center>70</td>
-          <td align=left>suspension, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>6</tt>&nbsp; </td>
-          <td align=center>100</td>
-          <td align=left>cantilever, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>7</tt>&nbsp; </td>
-          <td align=center>130</td>
-          <td align=left>cantilever, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>8</tt>&nbsp; </td>
-          <td align=center>150</td>
-          <td align=left>cantilever, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>9</tt>&nbsp; </td>
-          <td align=center>160</td>
-          <td align=left>girder, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>A</tt>&nbsp; </td>
-          <td align=center>200</td>
-          <td align=left>tubular, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>B</tt>&nbsp; </td>
-          <td align=center>320</td>
-          <td align=left>tubular, steel</td>
-         </tr>
-
-         <tr>
-          <td nowrap valign=top><tt>C</tt>&nbsp; </td>
-          <td align=center>380</td>
-          <td align=left>tubular, silicon</td>
-         </tr>
-        </table>
-       </li>
-      </ul>
-     </li>
+     <li>m6: index into the array of objects, bits 16 to 23 (lower bits in m2) (for bridges)</li>
      <li>m5 bits 3..2: transport type
       <table>
        <tr>

@@ -3040,8 +3040,8 @@ draw_default_foundation:
 	if (IsRoadStop(ti->tile)) {
 		RoadType road_rt = GetRoadTypeRoad(ti->tile);
 		RoadType tram_rt = GetRoadTypeTram(ti->tile);
-		const RoadTypeInfo* road_rti = road_rt == INVALID_ROADTYPE ? nullptr : GetRoadTypeInfo(road_rt);
-		const RoadTypeInfo* tram_rti = tram_rt == INVALID_ROADTYPE ? nullptr : GetRoadTypeInfo(tram_rt);
+		const RoadTypeInfo *road_rti = road_rt == INVALID_ROADTYPE ? nullptr : GetRoadTypeInfo(road_rt);
+		const RoadTypeInfo *tram_rti = tram_rt == INVALID_ROADTYPE ? nullptr : GetRoadTypeInfo(tram_rt);
 
 		if (IsDriveThroughStopTile(ti->tile)) {
 			Axis axis = GetRoadStopDir(ti->tile) == DIAGDIR_NE ? AXIS_X : AXIS_Y;
@@ -3094,7 +3094,7 @@ void StationPickerDrawSprite(int x, int y, StationType st, RailType railtype, Ro
 	}
 
 	if (roadtype != INVALID_ROADTYPE) {
-		const RoadTypeInfo* rti = GetRoadTypeInfo(roadtype);
+		const RoadTypeInfo *rti = GetRoadTypeInfo(roadtype);
 		if (image >= 4) {
 			/* Drive-through stop */
 			uint sprite_offset = 5 - image;

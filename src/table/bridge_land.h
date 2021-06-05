@@ -709,7 +709,7 @@ static const PalSpriteID * const _bridge_sprite_table_12[] = {
 	_bridge_sprite_table_concrete_suspended_heads,
 };
 
-static const PalSpriteID * const * const _bridge_sprite_table[MAX_BRIDGES] = {
+static const PalSpriteID * const * const _bridge_sprite_table[NEW_BRIDGE_OFFSET] = {
 	_bridge_sprite_table_wood,
 	_bridge_sprite_table_concrete,
 	_bridge_sprite_table_archgirder,
@@ -739,9 +739,9 @@ static const PalSpriteID * const * const _bridge_sprite_table[MAX_BRIDGES] = {
  * @param nrd description of the road bridge in query tool
  */
 #define MBR(y, mnl, mxl, p, mxs, spr, plt, dsc, nrl, nrd) \
-	{y, mnl, mxl, p, mxs, spr, plt, dsc, { nrl, nrd }, nullptr, 0}
+	{y, mnl, mxl, p, mxs, spr, plt, dsc, { nrl, nrd }, nullptr, 0, true, GRFFilePropsBase<BSG_END>(), false}
 
-const BridgeSpec _orig_bridge[] = {
+const BridgeSpec _orig_bridge_specs[] = {
 /*
 	       year of availability
 	       |  minimum length
@@ -791,6 +791,9 @@ const BridgeSpec _orig_bridge[] = {
 	MBR(2010, 2, 0xFFFF, 510, 608, 0xA28, PALETTE_TO_STRUCT_CONCRETE,
 	   STR_BRIDGE_TUBULAR_SILICON,           STR_LAI_BRIDGE_DESCRIPTION_RAIL_TUBULAR_STEEL,       STR_LAI_BRIDGE_DESCRIPTION_ROAD_TUBULAR_STEEL)
 };
+
+/** Make sure we have the right number of elements: one entry for each bridge */
+static_assert(lengthof(_orig_bridge_specs) == NEW_BRIDGE_OFFSET);
 
 #undef MBR
 #undef MN

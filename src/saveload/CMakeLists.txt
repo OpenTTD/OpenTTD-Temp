@@ -4,6 +4,7 @@ add_files(
     airport_sl.cpp
     animated_tile_sl.cpp
     autoreplace_sl.cpp
+    bridge_sl.cpp
     cargomonitor_sl.cpp
     cargopacket_sl.cpp
     cheat_sl.cpp

@@ -1218,12 +1218,12 @@ static bool GrowTownWithBridge(const Town *t, const TileIndex tile, const DiagDi
 	if (!CanRoadContinueIntoNextTile(t, bridge_tile, bridge_dir)) return false;
 
 	for (uint8 times = 0; times <= 22; times++) {
-		byte bridge_type = RandomRange(MAX_BRIDGES - 1);
+		byte bridge_type = RandomRange(_bridge_mngr.GetMaxMapping() - 1);
 
 		/* Can we actually build the bridge? */
 		RoadType rt = GetTownRoadType(t);
-		if (DoCommand(tile, bridge_tile, bridge_type | rt << 8 | TRANSPORT_ROAD << 15, CommandFlagsToDCFlags(GetCommandFlags(CMD_BUILD_BRIDGE)), CMD_BUILD_BRIDGE).Succeeded()) {
-			DoCommand(tile, bridge_tile, bridge_type | rt << 8 | TRANSPORT_ROAD << 15, DC_EXEC | CommandFlagsToDCFlags(GetCommandFlags(CMD_BUILD_BRIDGE)), CMD_BUILD_BRIDGE);
+		if (DoCommand(tile, bridge_tile, bridge_type | rt << 16 | TRANSPORT_ROAD << 23, CommandFlagsToDCFlags(GetCommandFlags(CMD_BUILD_BRIDGE)), CMD_BUILD_BRIDGE).Succeeded()) {
+			DoCommand(tile, bridge_tile, bridge_type | rt << 16 | TRANSPORT_ROAD << 23, DC_EXEC | CommandFlagsToDCFlags(GetCommandFlags(CMD_BUILD_BRIDGE)), CMD_BUILD_BRIDGE);
 			_grow_town_result = GROWTH_SUCCEED;
 			return true;
 		}
@@ -3011,6 +3011,15 @@ CommandCost CmdDeleteTown(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32
 
 			case MP_INDUSTRY:
 				try_clear = Industry::GetByTile(current_tile)->town == t;
+				break;
+
+			case MP_TUNNELBRIDGE:
+				if (IsBridgeTile(tile)) {
+					Bridge *b = Bridge::Get(GetBridgeIndex(tile));
+					if (b->town == t) {
+						if (flags & DC_EXEC) b->town = nullptr;
+					}
+				}
 				break;
 
 			case MP_OBJECT:
