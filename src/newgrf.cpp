@@ -5037,6 +5037,9 @@ static void NewSpriteGroup(ByteReader *buf)
 					adjust.parameter = IsInsideMM(adjust.variable, 0x60, 0x80) ? buf->ReadByte() : 0;
 				}
 
+				/* DSGA_OP_STOP has side-effects so should be processed even if there is no callback result. */
+				if (adjust.operation == DSGA_OP_STOP) group->has_cb_result |= true;
+
 				varadjust = buf->ReadByte();
 				adjust.shift_num = GB(varadjust, 0, 5);
 				adjust.type      = (DeterministicSpriteGroupAdjustType)GB(varadjust, 6, 2);
