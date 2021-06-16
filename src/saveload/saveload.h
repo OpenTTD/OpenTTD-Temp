@@ -336,6 +336,7 @@ enum SaveLoadVersion : uint16 {
 
 	SLV_TABLE_CHUNKS,                       ///< 295  PR#9322 Introduction of CH_TABLE and CH_SPARSE_TABLE.
 	SLV_SCRIPT_INT64,                       ///< 296  PR#9415 SQInteger is 64bit but was saved as 32bit.
+	SLV_MULTITILE_DEPOTS,                   ///< 296  PR#8480 Multi-tile depots for rail, road and water transport.
 
 	SL_MAX_VERSION,                         ///< Highest possible saveload version
 };
