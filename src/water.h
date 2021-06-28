@@ -28,6 +28,7 @@ FloodingBehaviour GetFloodingBehaviour(TileIndex tile);
 void TileLoop_Water(TileIndex tile);
 bool FloodHalftile(TileIndex t);
 void DoFloodTile(TileIndex target);
+bool CanTerraformFloodingTile(TileIndex tile, int z_new, Slope tileh_new);
 
 void ConvertGroundTilesIntoWaterTiles();
 

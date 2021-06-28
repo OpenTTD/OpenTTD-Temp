@@ -1377,10 +1377,47 @@ static VehicleEnterTileStatus VehicleEnter_Water(Vehicle *v, TileIndex tile, int
 	return VETSB_CONTINUE;
 }
 
+/**
+ * Check whether a tile with or without a flooding behaviour can be terraformed.
+ *
+ * @param tile Tile to check.
+ * @param z_new The new height the tile would get after being terraformed.
+ * @param tileh_new The new slope type the tile would get after being terraformed.
+ * @return true iff a tile with or without a flooding behaviour can be terraformed.
+ * @note This function is intended to be used for the town growth algorithm using the terraform command.
+ */
+bool CanTerraformFloodingTile(TileIndex tile, int z_new, Slope tileh_new)
+{
+	/* This function is intended to be used for the town growth algorithm using the terraform command. */
+	assert(_current_company == OWNER_TOWN);
+
+	if (GetFloodingBehaviour(tile) != FLOOD_NONE) {
+		if (z_new != 0 || (!IsSlopeWithOneCornerRaised(tileh_new) && tileh_new != SLOPE_FLAT)) {
+			return true;
+		}
+		return false;
+	}
+
+	if (_settings_game.construction.freeform_edges && DistanceFromEdge(tile) == 1) {
+		if (tileh_new != SLOPE_FLAT) {
+			return true;
+		}
+		return false;
+	}
+
+	return true;
+}
+
 static CommandCost TerraformTile_Water(TileIndex tile, DoCommandFlag flags, int z_new, Slope tileh_new)
 {
 	/* Canals can't be terraformed */
 	if (IsWaterTile(tile) && IsCanal(tile)) return_cmd_error(STR_ERROR_MUST_DEMOLISH_CANAL_FIRST);
+
+	if (flags & DC_NO_TERRAFORM_FLOOD) {
+		if (!CanTerraformFloodingTile(tile, z_new, tileh_new)) {
+			return CMD_ERROR;
+		}
+	}
 
 	return DoCommand(tile, 0, 0, flags, CMD_LANDSCAPE_CLEAR);
 }
