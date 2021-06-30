@@ -16,6 +16,7 @@ enum BuildVehicleWidgets {
 	WID_BV_SORT_ASCENDING_DESCENDING, ///< Sort direction.
 	WID_BV_SORT_DROPDOWN,             ///< Criteria of sorting dropdown.
 	WID_BV_CARGO_FILTER_DROPDOWN,     ///< Cargo filter dropdown.
+	WID_BV_FILTER,                    ///< Filter by name.
 	WID_BV_SHOW_HIDDEN_ENGINES,       ///< Toggle whether to display the hidden vehicles.
 	WID_BV_LIST,                      ///< List of vehicles.
 	WID_BV_SCROLLBAR,                 ///< Scrollbar of list.
