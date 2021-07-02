@@ -457,7 +457,13 @@ CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 
 			ret = CheckTrackCombination(tile, trackbit, flags);
 			if (ret.Succeeded()) ret = EnsureNoTrainOnTrack(tile, track);
-			if (ret.Failed()) return ret;
+			if (ret.Failed()) {
+				if (ret.GetErrorMessage() != STR_ERROR_ALREADY_BUILT) return ret;
+				else {
+					/* We don't have to pay for rail that already exists, and we can break out early. */
+					return CMD_NOTHING;
+				}
+			}
 
 			ret = CheckRailSlope(tileh, trackbit, GetTrackBits(tile), tile);
 			if (ret.Failed()) return ret;
@@ -568,7 +574,7 @@ CommandCost CmdBuildSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, u
 			}
 
 			if (IsLevelCrossing(tile) && GetCrossingRailBits(tile) == trackbit) {
-				return_cmd_error(STR_ERROR_ALREADY_BUILT);
+				return CMD_NOTHING;
 			}
 			FALLTHROUGH;
 		}
@@ -641,7 +647,7 @@ CommandCost CmdRemoveSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 
 	switch (GetTileType(tile)) {
 		case MP_ROAD: {
-			if (!IsLevelCrossing(tile) || GetCrossingRailBits(tile) != trackbit) return_cmd_error(STR_ERROR_THERE_IS_NO_RAILROAD_TRACK);
+			if (!IsLevelCrossing(tile) || GetCrossingRailBits(tile) != trackbit) return CMD_NOTHING;
 
 			if (_current_company != OWNER_WATER) {
 				CommandCost ret = CheckTileOwnership(tile);
@@ -673,7 +679,7 @@ CommandCost CmdRemoveSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 		case MP_RAILWAY: {
 			TrackBits present;
 			/* There are no rails present at depots. */
-			if (!IsPlainRail(tile)) return_cmd_error(STR_ERROR_THERE_IS_NO_RAILROAD_TRACK);
+			if (!IsPlainRail(tile)) return CMD_NOTHING;
 
 			if (_current_company != OWNER_WATER) {
 				CommandCost ret = CheckTileOwnership(tile);
@@ -684,7 +690,7 @@ CommandCost CmdRemoveSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 			if (ret.Failed()) return ret;
 
 			present = GetTrackBits(tile);
-			if ((present & trackbit) == 0) return_cmd_error(STR_ERROR_THERE_IS_NO_RAILROAD_TRACK);
+			if ((present & trackbit) == 0) return CMD_NOTHING;
 			if (present == (TRACK_BIT_X | TRACK_BIT_Y)) crossing = true;
 
 			cost.AddCost(RailClearCost(GetRailType(tile)));
@@ -732,7 +738,7 @@ CommandCost CmdRemoveSingleRail(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 			break;
 		}
 
-		default: return_cmd_error(STR_ERROR_THERE_IS_NO_RAILROAD_TRACK);
+		default: return CMD_NOTHING;
 	}
 
 	if (flags & DC_EXEC) {
@@ -1473,10 +1479,10 @@ CommandCost CmdRemoveSingleSignal(TileIndex tile, DoCommandFlag flags, uint32 p1
 	Track track = Extract<Track, 0, 3>(p1);
 
 	if (!ValParamTrackOrientation(track) || !IsPlainRailTile(tile) || !HasTrack(tile, track)) {
-		return_cmd_error(STR_ERROR_THERE_IS_NO_RAILROAD_TRACK);
+		return CMD_NOTHING;
 	}
 	if (!HasSignalOnTrack(tile, track)) {
-		return_cmd_error(STR_ERROR_THERE_ARE_NO_SIGNALS);
+		return CMD_NOTHING;
 	}
 
 	/* Only water can remove signals from anyone */

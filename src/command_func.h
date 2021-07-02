@@ -21,6 +21,7 @@
  * which doesn't need to specific by a StringID.
  */
 static const CommandCost CMD_ERROR = CommandCost(INVALID_STRING_ID);
+static const CommandCost CMD_NOTHING = CommandCost();
 
 /**
  * Returns from a function with a specific StringID as error.
