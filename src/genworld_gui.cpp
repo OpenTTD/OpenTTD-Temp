@@ -63,6 +63,7 @@ void SetNewLandscapeType(byte landscape)
 	_settings_newgame.game_creation.landscape = landscape;
 	InvalidateWindowClassesData(WC_SELECT_GAME);
 	InvalidateWindowClassesData(WC_GENERATE_LANDSCAPE);
+	_switch_mode = SM_MENU;
 }
 
 /** Widgets of GenerateLandscapeWindow when generating world */

@@ -328,6 +328,21 @@ static void ShutdownGame()
 	UninitFreeType();
 }
 
+/** Get the introduction game landscape specific save file. */
+static std::string GetIntroGameSaveFile(LandscapeID landscape)
+{
+	switch (landscape) {
+		case LT_ARCTIC:
+			return "opntitle_arctic.sav";
+		case LT_TOYLAND:
+			return "opntitle_toyland.sav";
+		case LT_TROPIC:
+			return "opntitle_tropic.sav";
+		default:
+			return "opntitle.dat";
+	}
+}
+
 /**
  * Load the introduction game.
  * @param load_newgrfs Whether to load the NewGRFs or not.
@@ -342,8 +357,11 @@ static void LoadIntroGame(bool load_newgrfs = true)
 	ResetWindowSystem();
 	SetupColoursAndInitialWindow();
 
-	/* Load the default opening screen savegame */
-	if (SaveOrLoad("opntitle.dat", SLO_LOAD, DFT_GAME_FILE, BASESET_DIR) != SL_OK) {
+	const LandscapeID landscape = GetGameSettings().game_creation.landscape;
+	std::string savegameToLoad = GetIntroGameSaveFile(landscape);
+
+	/* Load the opening screen savegame */
+	if (SaveOrLoad(savegameToLoad, SLO_LOAD, DFT_GAME_FILE, BASESET_DIR) != SL_OK) {
 		GenerateWorld(GWM_EMPTY, 64, 64); // if failed loading, make empty world.
 		SetLocalCompany(COMPANY_SPECTATOR);
 	} else {
