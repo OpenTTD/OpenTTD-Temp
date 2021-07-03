@@ -93,37 +93,37 @@ STR_CARGO_SINGULAR_FIZZY_DRINK                                  :Fizzy Drink
 
 # Quantity of cargo
 STR_QUANTITY_NOTHING                                            :
-STR_QUANTITY_PASSENGERS                                         :{COMMA}{NBSP}passenger{P "" s}
-STR_QUANTITY_COAL                                               :{WEIGHT_LONG} of coal
-STR_QUANTITY_MAIL                                               :{COMMA}{NBSP}bag{P "" s} of mail
-STR_QUANTITY_OIL                                                :{VOLUME_LONG} of oil
-STR_QUANTITY_LIVESTOCK                                          :{COMMA}{NBSP}item{P "" s} of livestock
-STR_QUANTITY_GOODS                                              :{COMMA}{NBSP}crate{P "" s} of goods
-STR_QUANTITY_GRAIN                                              :{WEIGHT_LONG} of grain
-STR_QUANTITY_WOOD                                               :{WEIGHT_LONG} of wood
-STR_QUANTITY_IRON_ORE                                           :{WEIGHT_LONG} of iron ore
-STR_QUANTITY_STEEL                                              :{WEIGHT_LONG} of steel
-STR_QUANTITY_VALUABLES                                          :{COMMA}{NBSP}bag{P "" s} of valuables
-STR_QUANTITY_COPPER_ORE                                         :{WEIGHT_LONG} of copper ore
-STR_QUANTITY_MAIZE                                              :{WEIGHT_LONG} of maize
-STR_QUANTITY_FRUIT                                              :{WEIGHT_LONG} of fruit
-STR_QUANTITY_DIAMONDS                                           :{COMMA}{NBSP}bag{P "" s} of diamonds
-STR_QUANTITY_FOOD                                               :{WEIGHT_LONG} of food
-STR_QUANTITY_PAPER                                              :{WEIGHT_LONG} of paper
-STR_QUANTITY_GOLD                                               :{COMMA}{NBSP}bag{P "" s} of gold
-STR_QUANTITY_WATER                                              :{VOLUME_LONG} of water
-STR_QUANTITY_WHEAT                                              :{WEIGHT_LONG} of wheat
-STR_QUANTITY_RUBBER                                             :{VOLUME_LONG} of rubber
-STR_QUANTITY_SUGAR                                              :{WEIGHT_LONG} of sugar
-STR_QUANTITY_TOYS                                               :{COMMA}{NBSP}toy{P "" s}
-STR_QUANTITY_SWEETS                                             :{COMMA}{NBSP}bag{P "" s} of sweets
-STR_QUANTITY_COLA                                               :{VOLUME_LONG} of cola
-STR_QUANTITY_CANDYFLOSS                                         :{WEIGHT_LONG} of candyfloss
-STR_QUANTITY_BUBBLES                                            :{COMMA} bubble{P "" s}
-STR_QUANTITY_TOFFEE                                             :{WEIGHT_LONG} of toffee
-STR_QUANTITY_BATTERIES                                          :{COMMA} batter{P y ies}
-STR_QUANTITY_PLASTIC                                            :{VOLUME_LONG} of plastic
-STR_QUANTITY_FIZZY_DRINKS                                       :{COMMA} fizzy drink{P "" s}
+STR_QUANTITY_PASSENGERS                                         :{COMMA}{NBSP}Passenger{P "" s}
+STR_QUANTITY_COAL                                               :{WEIGHT_LONG} of Coal
+STR_QUANTITY_MAIL                                               :{COMMA}{NBSP}bag{P "" s} of Mail
+STR_QUANTITY_OIL                                                :{VOLUME_LONG} of Oil
+STR_QUANTITY_LIVESTOCK                                          :{COMMA}{NBSP}item{P "" s} of Livestock
+STR_QUANTITY_GOODS                                              :{COMMA}{NBSP}crate{P "" s} of Goods
+STR_QUANTITY_GRAIN                                              :{WEIGHT_LONG} of Grain
+STR_QUANTITY_WOOD                                               :{WEIGHT_LONG} of Wood
+STR_QUANTITY_IRON_ORE                                           :{WEIGHT_LONG} of Iron Ore
+STR_QUANTITY_STEEL                                              :{WEIGHT_LONG} of Steel
+STR_QUANTITY_VALUABLES                                          :{COMMA}{NBSP}bag{P "" s} of Valuables
+STR_QUANTITY_COPPER_ORE                                         :{WEIGHT_LONG} of Copper Ore
+STR_QUANTITY_MAIZE                                              :{WEIGHT_LONG} of Maize
+STR_QUANTITY_FRUIT                                              :{WEIGHT_LONG} of Fruit
+STR_QUANTITY_DIAMONDS                                           :{COMMA}{NBSP}bag{P "" s} of Diamonds
+STR_QUANTITY_FOOD                                               :{WEIGHT_LONG} of Food
+STR_QUANTITY_PAPER                                              :{WEIGHT_LONG} of Paper
+STR_QUANTITY_GOLD                                               :{COMMA}{NBSP}bag{P "" s} of Gold
+STR_QUANTITY_WATER                                              :{VOLUME_LONG} of Water
+STR_QUANTITY_WHEAT                                              :{WEIGHT_LONG} of Wheat
+STR_QUANTITY_RUBBER                                             :{VOLUME_LONG} of Rubber
+STR_QUANTITY_SUGAR                                              :{WEIGHT_LONG} of Sugar
+STR_QUANTITY_TOYS                                               :{COMMA}{NBSP}Toy{P "" s}
+STR_QUANTITY_SWEETS                                             :{COMMA}{NBSP}Bag{P "" s} of Sweets
+STR_QUANTITY_COLA                                               :{VOLUME_LONG} of Cola
+STR_QUANTITY_CANDYFLOSS                                         :{WEIGHT_LONG} of Candyfloss
+STR_QUANTITY_BUBBLES                                            :{COMMA} Bubble{P "" s}
+STR_QUANTITY_TOFFEE                                             :{WEIGHT_LONG} of Toffee
+STR_QUANTITY_BATTERIES                                          :{COMMA} Batter{P y ies}
+STR_QUANTITY_PLASTIC                                            :{VOLUME_LONG} of Plastic
+STR_QUANTITY_FIZZY_DRINKS                                       :{COMMA} Fizzy Drink{P "" s}
 STR_QUANTITY_N_A                                                :N/A
 
 # Two letter abbreviation of cargo name
@@ -264,7 +264,7 @@ STR_SHOW_HIDDEN_ENGINES_VEHICLE_AIRCRAFT_TOOLTIP                :{BLACK}By enabl
 STR_BUTTON_DEFAULT                                              :{BLACK}Default
 STR_BUTTON_CANCEL                                               :{BLACK}Cancel
 STR_BUTTON_OK                                                   :{BLACK}OK
-STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Warning: Server administrators may be able to read any text entered here.
+STR_WARNING_PASSWORD_SECURITY                                   :{YELLOW}Warning: server administrators may be able to read any text entered here.
 
 # On screen keyboard window
 STR_OSK_KEYBOARD_LAYOUT                                         :`1234567890-=\qwertyuiop[]asdfghjkl;'  zxcvbnm,./ .
@@ -386,7 +386,7 @@ STR_SCENEDIT_FILE_MENU_QUIT                                     :Exit
 ############ range for settings menu starts
 STR_SETTINGS_MENU_GAME_OPTIONS                                  :Game options
 STR_SETTINGS_MENU_CONFIG_SETTINGS_TREE                          :Settings
-STR_SETTINGS_MENU_SCRIPT_SETTINGS                               :AI/Game script settings
+STR_SETTINGS_MENU_SCRIPT_SETTINGS                               :AI/Game Script settings
 STR_SETTINGS_MENU_NEWGRF_SETTINGS                               :NewGRF settings
 STR_SETTINGS_MENU_TRANSPARENCY_OPTIONS                          :Transparency options
 STR_SETTINGS_MENU_TOWN_NAMES_DISPLAYED                          :Town names displayed
@@ -411,7 +411,7 @@ STR_FILE_MENU_EXIT                                              :Exit
 # map menu
 STR_MAP_MENU_MAP_OF_WORLD                                       :Map of world
 STR_MAP_MENU_EXTRA_VIEWPORT                                     :Extra viewport
-STR_MAP_MENU_LINGRAPH_LEGEND                                    :Cargo Flow Legend
+STR_MAP_MENU_LINGRAPH_LEGEND                                    :Cargo flow legend
 STR_MAP_MENU_SIGN_LIST                                          :Sign list
 
 ############ range for town menu starts
@@ -471,7 +471,7 @@ STR_LANDSCAPING_MENU_PLACE_SIGN                                 :Place sign
 ############ range ends here
 
 ############ range for music menu starts
-STR_TOOLBAR_SOUND_MUSIC                                         :Sound/music
+STR_TOOLBAR_SOUND_MUSIC                                         :Sound/Music
 ############ range ends here
 
 ############ range for message menu starts
@@ -484,7 +484,7 @@ STR_NEWS_MENU_DELETE_ALL_MESSAGES                               :Delete all mess
 STR_ABOUT_MENU_LAND_BLOCK_INFO                                  :Land area information
 STR_ABOUT_MENU_SEPARATOR                                        :
 STR_ABOUT_MENU_TOGGLE_CONSOLE                                   :Toggle console
-STR_ABOUT_MENU_AI_DEBUG                                         :AI/Game script debug
+STR_ABOUT_MENU_AI_DEBUG                                         :AI/Game Script debug
 STR_ABOUT_MENU_SCREENSHOT                                       :Screenshot
 STR_ABOUT_MENU_SHOW_FRAMERATE                                   :Show frame rate
 STR_ABOUT_MENU_ABOUT_OPENTTD                                    :About 'OpenTTD'
@@ -581,13 +581,13 @@ STR_GRAPH_X_LABEL_MONTH_YEAR                                    :{TINY_FONT}{STR
 STR_GRAPH_Y_LABEL                                               :{TINY_FONT}{STRING2}
 STR_GRAPH_Y_LABEL_NUMBER                                        :{TINY_FONT}{COMMA}
 
-STR_GRAPH_OPERATING_PROFIT_CAPTION                              :{WHITE}Operating Profit Graph
-STR_GRAPH_INCOME_CAPTION                                        :{WHITE}Income Graph
+STR_GRAPH_OPERATING_PROFIT_CAPTION                              :{WHITE}Operating profit graph
+STR_GRAPH_INCOME_CAPTION                                        :{WHITE}Income graph
 STR_GRAPH_CARGO_DELIVERED_CAPTION                               :{WHITE}Units of cargo delivered
 STR_GRAPH_COMPANY_PERFORMANCE_RATINGS_CAPTION                   :{WHITE}Company performance ratings (maximum rating=1000)
 STR_GRAPH_COMPANY_VALUES_CAPTION                                :{WHITE}Company values
 
-STR_GRAPH_CARGO_PAYMENT_RATES_CAPTION                           :{WHITE}Cargo Payment Rates
+STR_GRAPH_CARGO_PAYMENT_RATES_CAPTION                           :{WHITE}Cargo payment rates
 STR_GRAPH_CARGO_PAYMENT_RATES_X_LABEL                           :{TINY_FONT}{BLACK}Days in transit
 STR_GRAPH_CARGO_PAYMENT_RATES_TITLE                             :{TINY_FONT}{BLACK}Payment for delivering 10 units (or 10,000 litres) of cargo a distance of 20 squares
 STR_GRAPH_CARGO_ENABLE_ALL                                      :{TINY_FONT}{BLACK}Enable all
@@ -604,7 +604,7 @@ STR_GRAPH_KEY_CAPTION                                           :{WHITE}Key to c
 STR_GRAPH_KEY_COMPANY_SELECTION_TOOLTIP                         :{BLACK}Click here to toggle company's entry on graph on/off
 
 # Company league window
-STR_COMPANY_LEAGUE_TABLE_CAPTION                                :{WHITE}Company League Table
+STR_COMPANY_LEAGUE_TABLE_CAPTION                                :{WHITE}Company league table
 STR_COMPANY_LEAGUE_COMPANY_NAME                                 :{ORANGE}{COMPANY} {BLACK}{COMPANY_NUM} '{STRING}'
 STR_COMPANY_LEAGUE_PERFORMANCE_TITLE_ENGINEER                   :Engineer
 STR_COMPANY_LEAGUE_PERFORMANCE_TITLE_TRAFFIC_MANAGER            :Traffic Manager
@@ -654,8 +654,8 @@ STR_MUSIC_PLAYLIST_NEW_STYLE                                    :{TINY_FONT}{BLA
 STR_MUSIC_PLAYLIST_EZY_STREET                                   :{TINY_FONT}{BLACK}Ezy Street
 STR_MUSIC_PLAYLIST_CUSTOM_1                                     :{TINY_FONT}{BLACK}Custom 1
 STR_MUSIC_PLAYLIST_CUSTOM_2                                     :{TINY_FONT}{BLACK}Custom 2
-STR_MUSIC_MUSIC_VOLUME                                          :{TINY_FONT}{BLACK}Music Volume
-STR_MUSIC_EFFECTS_VOLUME                                        :{TINY_FONT}{BLACK}Effects Volume
+STR_MUSIC_MUSIC_VOLUME                                          :{TINY_FONT}{BLACK}Music volume
+STR_MUSIC_EFFECTS_VOLUME                                        :{TINY_FONT}{BLACK}Effects volume
 STR_MUSIC_TRACK_NONE                                            :{TINY_FONT}{DKGREEN}--
 STR_MUSIC_TRACK_DIGIT                                           :{TINY_FONT}{DKGREEN}{ZEROFILL_NUM}
 STR_MUSIC_TITLE_NONE                                            :{TINY_FONT}{DKGREEN}------
@@ -680,9 +680,9 @@ STR_MUSIC_TOOLTIP_TOGGLE_PROGRAM_SHUFFLE                        :{BLACK}Toggle p
 STR_MUSIC_TOOLTIP_SHOW_MUSIC_TRACK_SELECTION                    :{BLACK}Show music track selection window
 
 # Playlist window
-STR_PLAYLIST_MUSIC_SELECTION_SETNAME                            :{WHITE}Music Programme - '{RAW_STRING}'
+STR_PLAYLIST_MUSIC_SELECTION_SETNAME                            :{WHITE}Music programme - '{RAW_STRING}'
 STR_PLAYLIST_TRACK_NAME                                         :{TINY_FONT}{LTBLUE}{ZEROFILL_NUM} "{RAW_STRING}"
-STR_PLAYLIST_TRACK_INDEX                                        :{TINY_FONT}{BLACK}Track Index
+STR_PLAYLIST_TRACK_INDEX                                        :{TINY_FONT}{BLACK}Track index
 STR_PLAYLIST_PROGRAM                                            :{TINY_FONT}{BLACK}Programme - '{STRING}'
 STR_PLAYLIST_CLEAR                                              :{TINY_FONT}{BLACK}Clear
 STR_PLAYLIST_CHANGE_SET                                         :{BLACK}Change set
@@ -693,7 +693,7 @@ STR_PLAYLIST_TOOLTIP_CLICK_TO_REMOVE_TRACK                      :{BLACK}Click on
 
 # Highscore window
 STR_HIGHSCORE_TOP_COMPANIES_WHO_REACHED                         :{BIG_FONT}{BLACK}Top companies who reached {NUM}
-STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME                        :{BIG_FONT}{BLACK}Company League Table in {NUM}
+STR_HIGHSCORE_TOP_COMPANIES_NETWORK_GAME                        :{BIG_FONT}{BLACK}Company league table in {NUM}
 STR_HIGHSCORE_POSITION                                          :{BIG_FONT}{BLACK}{COMMA}.
 STR_HIGHSCORE_PERFORMANCE_TITLE_BUSINESSMAN                     :Businessperson
 STR_HIGHSCORE_PERFORMANCE_TITLE_ENTREPRENEUR                    :Entrepreneur
@@ -713,7 +713,7 @@ STR_SMALLMAP_CAPTION                                            :{WHITE}Map - {S
 STR_SMALLMAP_TYPE_CONTOURS                                      :Contours
 STR_SMALLMAP_TYPE_VEHICLES                                      :Vehicles
 STR_SMALLMAP_TYPE_INDUSTRIES                                    :Industries
-STR_SMALLMAP_TYPE_ROUTEMAP                                      :Cargo Flow
+STR_SMALLMAP_TYPE_ROUTEMAP                                      :Cargo flow
 STR_SMALLMAP_TYPE_ROUTES                                        :Routes
 STR_SMALLMAP_TYPE_VEGETATION                                    :Vegetation
 STR_SMALLMAP_TYPE_OWNERS                                        :Owners
@@ -734,25 +734,25 @@ STR_SMALLMAP_LEGENDA_STATIONS_AIRPORTS_DOCKS                    :{TINY_FONT}{BLA
 STR_SMALLMAP_LEGENDA_BUILDINGS_INDUSTRIES                       :{TINY_FONT}{BLACK}Buildings/Industries
 STR_SMALLMAP_LEGENDA_VEHICLES                                   :{TINY_FONT}{BLACK}Vehicles
 STR_SMALLMAP_LEGENDA_TRAINS                                     :{TINY_FONT}{BLACK}Trains
-STR_SMALLMAP_LEGENDA_ROAD_VEHICLES                              :{TINY_FONT}{BLACK}Road Vehicles
+STR_SMALLMAP_LEGENDA_ROAD_VEHICLES                              :{TINY_FONT}{BLACK}Road vehicles
 STR_SMALLMAP_LEGENDA_SHIPS                                      :{TINY_FONT}{BLACK}Ships
 STR_SMALLMAP_LEGENDA_AIRCRAFT                                   :{TINY_FONT}{BLACK}Aircraft
-STR_SMALLMAP_LEGENDA_TRANSPORT_ROUTES                           :{TINY_FONT}{BLACK}Transport Routes
+STR_SMALLMAP_LEGENDA_TRANSPORT_ROUTES                           :{TINY_FONT}{BLACK}Transport routes
 STR_SMALLMAP_LEGENDA_FOREST                                     :{TINY_FONT}{BLACK}Forest
-STR_SMALLMAP_LEGENDA_RAILROAD_STATION                           :{TINY_FONT}{BLACK}Railway Station
-STR_SMALLMAP_LEGENDA_TRUCK_LOADING_BAY                          :{TINY_FONT}{BLACK}Lorry Loading Bay
-STR_SMALLMAP_LEGENDA_BUS_STATION                                :{TINY_FONT}{BLACK}Bus Station
+STR_SMALLMAP_LEGENDA_RAILROAD_STATION                           :{TINY_FONT}{BLACK}Railway station
+STR_SMALLMAP_LEGENDA_TRUCK_LOADING_BAY                          :{TINY_FONT}{BLACK}Lorry loading bay
+STR_SMALLMAP_LEGENDA_BUS_STATION                                :{TINY_FONT}{BLACK}Bus station
 STR_SMALLMAP_LEGENDA_AIRPORT_HELIPORT                           :{TINY_FONT}{BLACK}Airport/Heliport
 STR_SMALLMAP_LEGENDA_DOCK                                       :{TINY_FONT}{BLACK}Dock
-STR_SMALLMAP_LEGENDA_ROUGH_LAND                                 :{TINY_FONT}{BLACK}Rough Land
-STR_SMALLMAP_LEGENDA_GRASS_LAND                                 :{TINY_FONT}{BLACK}Grass Land
-STR_SMALLMAP_LEGENDA_BARE_LAND                                  :{TINY_FONT}{BLACK}Bare Land
+STR_SMALLMAP_LEGENDA_ROUGH_LAND                                 :{TINY_FONT}{BLACK}Rough land
+STR_SMALLMAP_LEGENDA_GRASS_LAND                                 :{TINY_FONT}{BLACK}Grass land
+STR_SMALLMAP_LEGENDA_BARE_LAND                                  :{TINY_FONT}{BLACK}Bare land
 STR_SMALLMAP_LEGENDA_RAINFOREST                                 :{TINY_FONT}{BLACK}Rainforest
 STR_SMALLMAP_LEGENDA_FIELDS                                     :{TINY_FONT}{BLACK}Fields
 STR_SMALLMAP_LEGENDA_TREES                                      :{TINY_FONT}{BLACK}Trees
 STR_SMALLMAP_LEGENDA_ROCKS                                      :{TINY_FONT}{BLACK}Rocks
 STR_SMALLMAP_LEGENDA_WATER                                      :{TINY_FONT}{BLACK}Water
-STR_SMALLMAP_LEGENDA_NO_OWNER                                   :{TINY_FONT}{BLACK}No Owner
+STR_SMALLMAP_LEGENDA_NO_OWNER                                   :{TINY_FONT}{BLACK}No owner
 STR_SMALLMAP_LEGENDA_TOWNS                                      :{TINY_FONT}{BLACK}Towns
 STR_SMALLMAP_LEGENDA_INDUSTRIES                                 :{TINY_FONT}{BLACK}Industries
 STR_SMALLMAP_LEGENDA_DESERT                                     :{TINY_FONT}{BLACK}Desert
@@ -799,11 +799,11 @@ STR_NEWS_FIRST_CARGO_TRAM_ARRIVAL                               :{BIG_FONT}{BLAC
 STR_NEWS_FIRST_SHIP_ARRIVAL                                     :{BIG_FONT}{BLACK}Citizens celebrate . . .{}First ship arrives at {STATION}!
 STR_NEWS_FIRST_AIRCRAFT_ARRIVAL                                 :{BIG_FONT}{BLACK}Citizens celebrate . . .{}First aircraft arrives at {STATION}!
 
-STR_NEWS_TRAIN_CRASH                                            :{BIG_FONT}{BLACK}Train Crash!{}{COMMA} die in fireball after collision
-STR_NEWS_ROAD_VEHICLE_CRASH_DRIVER                              :{BIG_FONT}{BLACK}Road Vehicle Crash!{}Driver dies in fireball after collision with train
-STR_NEWS_ROAD_VEHICLE_CRASH                                     :{BIG_FONT}{BLACK}Road Vehicle Crash!{}{COMMA} die in fireball after collision with train
-STR_NEWS_AIRCRAFT_CRASH                                         :{BIG_FONT}{BLACK}Plane Crash!{}{COMMA} die in fireball at {STATION}
-STR_NEWS_PLANE_CRASH_OUT_OF_FUEL                                :{BIG_FONT}{BLACK}Plane Crash!{}Aircraft ran out of fuel, {COMMA} die in fireball
+STR_NEWS_TRAIN_CRASH                                            :{BIG_FONT}{BLACK}Train crash!{}{COMMA} die in fireball after collision
+STR_NEWS_ROAD_VEHICLE_CRASH_DRIVER                              :{BIG_FONT}{BLACK}Road vehicle crash!{}Driver dies in fireball after collision with train
+STR_NEWS_ROAD_VEHICLE_CRASH                                     :{BIG_FONT}{BLACK}Road vehicle crash!{}{COMMA} die in fireball after collision with train
+STR_NEWS_AIRCRAFT_CRASH                                         :{BIG_FONT}{BLACK}Plane crash!{}{COMMA} die in fireball at {STATION}
+STR_NEWS_PLANE_CRASH_OUT_OF_FUEL                                :{BIG_FONT}{BLACK}Plane crash!{}Aircraft ran out of fuel, {COMMA} die in fireball
 
 STR_NEWS_DISASTER_ZEPPELIN                                      :{BIG_FONT}{BLACK}Zeppelin disaster at {STATION}!
 STR_NEWS_DISASTER_SMALL_UFO                                     :{BIG_FONT}{BLACK}Road vehicle destroyed in 'UFO' collision!
@@ -835,8 +835,8 @@ STR_NEWS_INDUSTRY_CLOSURE_SUPPLY_PROBLEMS                       :{BIG_FONT}{BLAC
 STR_NEWS_INDUSTRY_CLOSURE_LACK_OF_TREES                         :{BIG_FONT}{BLACK}Lack of nearby trees causes {STRING2} to announce imminent closure!
 
 STR_NEWS_EURO_INTRODUCTION                                      :{BIG_FONT}{BLACK}European Monetary Union!{}{}The Euro is introduced as the sole currency for everyday transactions in your country!
-STR_NEWS_BEGIN_OF_RECESSION                                     :{BIG_FONT}{BLACK}World Recession!{}{}Financial experts fear worst as economy slumps!
-STR_NEWS_END_OF_RECESSION                                       :{BIG_FONT}{BLACK}Recession Over!{}{}Upturn in trade gives confidence to industries as economy strengthens!
+STR_NEWS_BEGIN_OF_RECESSION                                     :{BIG_FONT}{BLACK}World recession!{}{}Financial experts fear worst as economy slumps!
+STR_NEWS_END_OF_RECESSION                                       :{BIG_FONT}{BLACK}Recession over!{}{}Upturn in trade gives confidence to industries as economy strengthens!
 
 STR_NEWS_INDUSTRY_PRODUCTION_INCREASE_GENERAL                   :{BIG_FONT}{BLACK}{INDUSTRY} increases production!
 STR_NEWS_INDUSTRY_PRODUCTION_INCREASE_COAL                      :{BIG_FONT}{BLACK}New coal seam found at {INDUSTRY}!{}Production is expected to double!
@@ -1082,7 +1082,7 @@ STR_DIFFICULTY_LEVEL_SETTING_MAXIMUM_NO_COMPETITORS             :{LTBLUE}Maximum
 STR_NONE                                                        :None
 STR_FUNDING_ONLY                                                :Funding only
 STR_MINIMAL                                                     :Minimal
-STR_NUM_VERY_LOW                                                :Very Low
+STR_NUM_VERY_LOW                                                :Very low
 STR_NUM_LOW                                                     :Low
 STR_NUM_NORMAL                                                  :Normal
 STR_NUM_HIGH                                                    :High
@@ -1090,19 +1090,19 @@ STR_NUM_CUSTOM                                                  :Custom
 STR_NUM_CUSTOM_NUMBER                                           :Custom ({NUM})
 
 STR_VARIETY_NONE                                                :None
-STR_VARIETY_VERY_LOW                                            :Very Low
+STR_VARIETY_VERY_LOW                                            :Very low
 STR_VARIETY_LOW                                                 :Low
 STR_VARIETY_MEDIUM                                              :Medium
 STR_VARIETY_HIGH                                                :High
-STR_VARIETY_VERY_HIGH                                           :Very High
+STR_VARIETY_VERY_HIGH                                           :Very high
 
-STR_AI_SPEED_VERY_SLOW                                          :Very Slow
+STR_AI_SPEED_VERY_SLOW                                          :Very slow
 STR_AI_SPEED_SLOW                                               :Slow
 STR_AI_SPEED_MEDIUM                                             :Medium
 STR_AI_SPEED_FAST                                               :Fast
-STR_AI_SPEED_VERY_FAST                                          :Very Fast
+STR_AI_SPEED_VERY_FAST                                          :Very fast
 
-STR_SEA_LEVEL_VERY_LOW                                          :Very Low
+STR_SEA_LEVEL_VERY_LOW                                          :Very low
 STR_SEA_LEVEL_LOW                                               :Low
 STR_SEA_LEVEL_MEDIUM                                            :Medium
 STR_SEA_LEVEL_HIGH                                              :High
@@ -1123,7 +1123,7 @@ STR_SUBSIDY_X2                                                  :x2
 STR_SUBSIDY_X3                                                  :x3
 STR_SUBSIDY_X4                                                  :x4
 
-STR_TERRAIN_TYPE_VERY_FLAT                                      :Very Flat
+STR_TERRAIN_TYPE_VERY_FLAT                                      :Very flat
 STR_TERRAIN_TYPE_FLAT                                           :Flat
 STR_TERRAIN_TYPE_HILLY                                          :Hilly
 STR_TERRAIN_TYPE_MOUNTAINOUS                                    :Mountainous
@@ -1375,10 +1375,10 @@ STR_CONFIG_SETTING_DESERT_COVERAGE_HELPTEXT                     :Control the app
 STR_CONFIG_SETTING_DESERT_COVERAGE_VALUE                        :{NUM}%
 STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN                         :Roughness of terrain: {STRING2}
 STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_HELPTEXT                :(TerraGenesis only) Choose the frequency of hills: Smooth landscapes have fewer, more wide-spread hills. Rough landscapes have many hills, which may look repetitive
-STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_VERY_SMOOTH             :Very Smooth
+STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_VERY_SMOOTH             :Very smooth
 STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_SMOOTH                  :Smooth
 STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_ROUGH                   :Rough
-STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_VERY_ROUGH              :Very Rough
+STR_CONFIG_SETTING_ROUGHNESS_OF_TERRAIN_VERY_ROUGH              :Very rough
 STR_CONFIG_SETTING_VARIETY                                      :Variety distribution: {STRING2}
 STR_CONFIG_SETTING_VARIETY_HELPTEXT                             :(TerraGenesis only) Control whether the map contains both mountainous and flat areas. Since this only makes the map flatter, other settings should be set to mountainous
 STR_CONFIG_SETTING_RIVER_AMOUNT                                 :River amount: {STRING2}
@@ -1567,7 +1567,7 @@ STR_CONFIG_SETTING_NEWS_ARRIVAL_FIRST_VEHICLE_OWN               :Arrival of firs
 STR_CONFIG_SETTING_NEWS_ARRIVAL_FIRST_VEHICLE_OWN_HELPTEXT      :Display a newspaper when the first vehicle arrives at a new player's station
 STR_CONFIG_SETTING_NEWS_ARRIVAL_FIRST_VEHICLE_OTHER             :Arrival of first vehicle at competitor's station: {STRING2}
 STR_CONFIG_SETTING_NEWS_ARRIVAL_FIRST_VEHICLE_OTHER_HELPTEXT    :Display a newspaper when the first vehicle arrives at a new competitor's station
-STR_CONFIG_SETTING_NEWS_ACCIDENTS_DISASTERS                     :Accidents / disasters: {STRING2}
+STR_CONFIG_SETTING_NEWS_ACCIDENTS_DISASTERS                     :Accidents/Disasters: {STRING2}
 STR_CONFIG_SETTING_NEWS_ACCIDENTS_DISASTERS_HELPTEXT            :Display a newspaper when accidents or disasters occur
 STR_CONFIG_SETTING_NEWS_COMPANY_INFORMATION                     :Company information: {STRING2}
 STR_CONFIG_SETTING_NEWS_COMPANY_INFORMATION_HELPTEXT            :Display a newspaper when a new company starts, or when companies are risking to bankrupt
@@ -1583,7 +1583,7 @@ STR_CONFIG_SETTING_NEWS_INDUSTRY_CHANGES_OTHER                  :Production chan
 STR_CONFIG_SETTING_NEWS_INDUSTRY_CHANGES_OTHER_HELPTEXT         :Display a newspaper when the production level of industries change, which are served by the competitors
 STR_CONFIG_SETTING_NEWS_INDUSTRY_CHANGES_UNSERVED               :Other industry production changes: {STRING2}
 STR_CONFIG_SETTING_NEWS_INDUSTRY_CHANGES_UNSERVED_HELPTEXT      :Display a newspaper when the production level of industries change, which are not served by the company or competitors
-STR_CONFIG_SETTING_NEWS_ADVICE                                  :Advice / information on company's vehicles: {STRING2}
+STR_CONFIG_SETTING_NEWS_ADVICE                                  :Advice/Information on company's vehicles: {STRING2}
 STR_CONFIG_SETTING_NEWS_ADVICE_HELPTEXT                         :Display messages about vehicles needing attention
 STR_CONFIG_SETTING_NEWS_NEW_VEHICLES                            :New vehicles: {STRING2}
 STR_CONFIG_SETTING_NEWS_NEW_VEHICLES_HELPTEXT                   :Display a newspaper when a new vehicle type becomes available
@@ -1775,14 +1775,14 @@ STR_CONFIG_SETTING_INTERFACE                                    :{ORANGE}Interfa
 STR_CONFIG_SETTING_INTERFACE_GENERAL                            :{ORANGE}General
 STR_CONFIG_SETTING_INTERFACE_VIEWPORTS                          :{ORANGE}Viewports
 STR_CONFIG_SETTING_INTERFACE_CONSTRUCTION                       :{ORANGE}Construction
-STR_CONFIG_SETTING_ADVISORS                                     :{ORANGE}News / Advisors
+STR_CONFIG_SETTING_ADVISORS                                     :{ORANGE}News/Advisors
 STR_CONFIG_SETTING_COMPANY                                      :{ORANGE}Company
 STR_CONFIG_SETTING_ACCOUNTING                                   :{ORANGE}Accounting
 STR_CONFIG_SETTING_VEHICLES                                     :{ORANGE}Vehicles
 STR_CONFIG_SETTING_VEHICLES_PHYSICS                             :{ORANGE}Physics
 STR_CONFIG_SETTING_VEHICLES_ROUTING                             :{ORANGE}Routing
 STR_CONFIG_SETTING_LIMITATIONS                                  :{ORANGE}Limitations
-STR_CONFIG_SETTING_ACCIDENTS                                    :{ORANGE}Disasters / Accidents
+STR_CONFIG_SETTING_ACCIDENTS                                    :{ORANGE}Accidents/Disasters
 STR_CONFIG_SETTING_GENWORLD                                     :{ORANGE}World generation
 STR_CONFIG_SETTING_ENVIRONMENT                                  :{ORANGE}Environment
 STR_CONFIG_SETTING_ENVIRONMENT_AUTHORITIES                      :{ORANGE}Authorities
@@ -1833,19 +1833,19 @@ STR_VIDEO_DRIVER_ERROR_NO_HARDWARE_ACCELERATION                 :{WHITE}... no c
 # Intro window
 STR_INTRO_CAPTION                                               :{WHITE}OpenTTD {REV}
 
-STR_INTRO_NEW_GAME                                              :{BLACK}New Game
-STR_INTRO_LOAD_GAME                                             :{BLACK}Load Game
-STR_INTRO_PLAY_SCENARIO                                         :{BLACK}Play Scenario
-STR_INTRO_PLAY_HEIGHTMAP                                        :{BLACK}Play Heightmap
-STR_INTRO_SCENARIO_EDITOR                                       :{BLACK}Scenario Editor
+STR_INTRO_NEW_GAME                                              :{BLACK}New game
+STR_INTRO_LOAD_GAME                                             :{BLACK}Load game
+STR_INTRO_PLAY_SCENARIO                                         :{BLACK}Play scenario
+STR_INTRO_PLAY_HEIGHTMAP                                        :{BLACK}Play heightmap
+STR_INTRO_SCENARIO_EDITOR                                       :{BLACK}Scenario editor
 STR_INTRO_MULTIPLAYER                                           :{BLACK}Multiplayer
 
-STR_INTRO_GAME_OPTIONS                                          :{BLACK}Game Options
-STR_INTRO_HIGHSCORE                                             :{BLACK}Highscore Table
+STR_INTRO_GAME_OPTIONS                                          :{BLACK}Game options
+STR_INTRO_HIGHSCORE                                             :{BLACK}Highscore table
 STR_INTRO_CONFIG_SETTINGS_TREE                                  :{BLACK}Settings
-STR_INTRO_NEWGRF_SETTINGS                                       :{BLACK}NewGRF Settings
-STR_INTRO_ONLINE_CONTENT                                        :{BLACK}Check Online Content
-STR_INTRO_SCRIPT_SETTINGS                                       :{BLACK}AI/Game Script Settings
+STR_INTRO_NEWGRF_SETTINGS                                       :{BLACK}NewGRF settings
+STR_INTRO_ONLINE_CONTENT                                        :{BLACK}Check online content
+STR_INTRO_SCRIPT_SETTINGS                                       :{BLACK}AI/Game Script settings
 STR_INTRO_QUIT                                                  :{BLACK}Exit
 
 STR_INTRO_TOOLTIP_NEW_GAME                                      :{BLACK}Start a new game. Ctrl+Click skips map configuration
@@ -1865,7 +1865,7 @@ STR_INTRO_TOOLTIP_HIGHSCORE                                     :{BLACK}Display 
 STR_INTRO_TOOLTIP_CONFIG_SETTINGS_TREE                          :{BLACK}Display settings
 STR_INTRO_TOOLTIP_NEWGRF_SETTINGS                               :{BLACK}Display NewGRF settings
 STR_INTRO_TOOLTIP_ONLINE_CONTENT                                :{BLACK}Check for new and updated content to download
-STR_INTRO_TOOLTIP_SCRIPT_SETTINGS                               :{BLACK}Display AI/Game script settings
+STR_INTRO_TOOLTIP_SCRIPT_SETTINGS                               :{BLACK}Display AI/Game Script settings
 STR_INTRO_TOOLTIP_QUIT                                          :{BLACK}Exit 'OpenTTD'
 
 STR_INTRO_BASESET                                               :{BLACK}The currently selected base graphics set is missing {NUM} sprite{P "" s}. Please check for updates for the baseset.
@@ -1878,7 +1878,7 @@ STR_QUIT_YES                                                    :{BLACK}Yes
 STR_QUIT_NO                                                     :{BLACK}No
 
 # Abandon game
-STR_ABANDON_GAME_CAPTION                                        :{WHITE}Abandon Game
+STR_ABANDON_GAME_CAPTION                                        :{WHITE}Abandon game
 STR_ABANDON_GAME_QUERY                                          :{YELLOW}Are you sure you want to abandon this game?
 STR_ABANDON_SCENARIO_QUERY                                      :{YELLOW}Are you sure you want to abandon this scenario?
 
@@ -1902,7 +1902,7 @@ STR_CHEAT_CHANGE_DATE_QUERY_CAPT                                :{WHITE}Change c
 STR_CHEAT_SETUP_PROD                                            :{LTBLUE}Enable modifying production values: {ORANGE}{STRING1}
 
 # Livery window
-STR_LIVERY_CAPTION                                              :{WHITE}{COMPANY} - Colour Scheme
+STR_LIVERY_CAPTION                                              :{WHITE}{COMPANY} - Colour scheme
 
 STR_LIVERY_GENERAL_TOOLTIP                                      :{BLACK}Show general colour schemes
 STR_LIVERY_TRAIN_TOOLTIP                                        :{BLACK}Show train colour schemes
@@ -1913,32 +1913,32 @@ STR_LIVERY_PRIMARY_TOOLTIP                                      :{BLACK}Choose t
 STR_LIVERY_SECONDARY_TOOLTIP                                    :{BLACK}Choose the secondary colour for the selected scheme. Ctrl+Click will set this colour for every scheme
 STR_LIVERY_PANEL_TOOLTIP                                        :{BLACK}Select a colour scheme to change, or multiple schemes with Ctrl+Click. Click on the box to toggle use of the scheme
 
-STR_LIVERY_DEFAULT                                              :Standard Livery
-STR_LIVERY_STEAM                                                :Steam Engine
-STR_LIVERY_DIESEL                                               :Diesel Engine
-STR_LIVERY_ELECTRIC                                             :Electric Engine
-STR_LIVERY_MONORAIL                                             :Monorail Engine
-STR_LIVERY_MAGLEV                                               :Maglev Engine
+STR_LIVERY_DEFAULT                                              :Standard livery
+STR_LIVERY_STEAM                                                :Steam engine
+STR_LIVERY_DIESEL                                               :Diesel engine
+STR_LIVERY_ELECTRIC                                             :Electric engine
+STR_LIVERY_MONORAIL                                             :Monorail engine
+STR_LIVERY_MAGLEV                                               :Maglev engine
 STR_LIVERY_DMU                                                  :DMU
 STR_LIVERY_EMU                                                  :EMU
-STR_LIVERY_PASSENGER_WAGON_STEAM                                :Passenger Coach (Steam)
-STR_LIVERY_PASSENGER_WAGON_DIESEL                               :Passenger Coach (Diesel)
-STR_LIVERY_PASSENGER_WAGON_ELECTRIC                             :Passenger Coach (Electric)
-STR_LIVERY_PASSENGER_WAGON_MONORAIL                             :Passenger Coach (Monorail)
-STR_LIVERY_PASSENGER_WAGON_MAGLEV                               :Passenger Coach (Maglev)
-STR_LIVERY_FREIGHT_WAGON                                        :Freight Wagon
+STR_LIVERY_PASSENGER_WAGON_STEAM                                :Passenger coach (Steam)
+STR_LIVERY_PASSENGER_WAGON_DIESEL                               :Passenger coach (Diesel)
+STR_LIVERY_PASSENGER_WAGON_ELECTRIC                             :Passenger coach (Electric)
+STR_LIVERY_PASSENGER_WAGON_MONORAIL                             :Passenger coach (Monorail)
+STR_LIVERY_PASSENGER_WAGON_MAGLEV                               :Passenger coach (Maglev)
+STR_LIVERY_FREIGHT_WAGON                                        :Freight wagon
 STR_LIVERY_BUS                                                  :Bus
 STR_LIVERY_TRUCK                                                :Lorry
-STR_LIVERY_PASSENGER_SHIP                                       :Passenger Ferry
-STR_LIVERY_FREIGHT_SHIP                                         :Freight Ship
+STR_LIVERY_PASSENGER_SHIP                                       :Passenger ferry
+STR_LIVERY_FREIGHT_SHIP                                         :Freight ship
 STR_LIVERY_HELICOPTER                                           :Helicopter
-STR_LIVERY_SMALL_PLANE                                          :Small Aeroplane
-STR_LIVERY_LARGE_PLANE                                          :Large Aeroplane
-STR_LIVERY_PASSENGER_TRAM                                       :Passenger Tram
-STR_LIVERY_FREIGHT_TRAM                                         :Freight Tram
+STR_LIVERY_SMALL_PLANE                                          :Small aeroplane
+STR_LIVERY_LARGE_PLANE                                          :Large aeroplane
+STR_LIVERY_PASSENGER_TRAM                                       :Passenger tram
+STR_LIVERY_FREIGHT_TRAM                                         :Freight tram
 
 # Face selection window
-STR_FACE_CAPTION                                                :{WHITE}Face Selection
+STR_FACE_CAPTION                                                :{WHITE}Face selection
 STR_FACE_CANCEL_TOOLTIP                                         :{BLACK}Cancel new face selection
 STR_FACE_OK_TOOLTIP                                             :{BLACK}Accept new face selection
 STR_FACE_RANDOM                                                 :{BLACK}Randomise
@@ -2007,7 +2007,7 @@ STR_NETWORK_SERVER_LIST_GAME_NAME                               :{BLACK}Name
 STR_NETWORK_SERVER_LIST_GAME_NAME_TOOLTIP                       :{BLACK}Name of the game
 STR_NETWORK_SERVER_LIST_GENERAL_ONLINE                          :{BLACK}{COMMA}/{COMMA} - {COMMA}/{COMMA}
 STR_NETWORK_SERVER_LIST_CLIENTS_CAPTION                         :{BLACK}Clients
-STR_NETWORK_SERVER_LIST_CLIENTS_CAPTION_TOOLTIP                 :{BLACK}Clients online / clients max{}Companies online / companies max
+STR_NETWORK_SERVER_LIST_CLIENTS_CAPTION_TOOLTIP                 :{BLACK}Clients online/Clients max.{}Companies online/Companies max
 STR_NETWORK_SERVER_LIST_MAP_SIZE_SHORT                          :{BLACK}{COMMA}x{COMMA}
 STR_NETWORK_SERVER_LIST_MAP_SIZE_CAPTION                        :{BLACK}Map size
 STR_NETWORK_SERVER_LIST_MAP_SIZE_CAPTION_TOOLTIP                :{BLACK}Map size of the game{}Click to sort by area
@@ -2265,7 +2265,7 @@ STR_NETWORK_SERVER_MESSAGE_GAME_UNPAUSED                        :Game unpaused (
 STR_NETWORK_SERVER_MESSAGE_GAME_REASON_NOT_ENOUGH_PLAYERS       :number of players
 STR_NETWORK_SERVER_MESSAGE_GAME_REASON_CONNECTING_CLIENTS       :connecting clients
 STR_NETWORK_SERVER_MESSAGE_GAME_REASON_MANUAL                   :manual
-STR_NETWORK_SERVER_MESSAGE_GAME_REASON_GAME_SCRIPT              :game script
+STR_NETWORK_SERVER_MESSAGE_GAME_REASON_GAME_SCRIPT              :Game Script
 STR_NETWORK_SERVER_MESSAGE_GAME_REASON_LINK_GRAPH               :waiting for link graph update
 ############ End of leave-in-this-order
 STR_NETWORK_MESSAGE_CLIENT_LEAVING                              :leaving
@@ -2298,7 +2298,7 @@ STR_CONTENT_SEARCH_EXTERNAL                                     :{BLACK}Search e
 STR_CONTENT_SEARCH_EXTERNAL_TOOLTIP                             :{BLACK}Search content not available on OpenTTD's content service on websites not associated to OpenTTD
 STR_CONTENT_SEARCH_EXTERNAL_DISCLAIMER_CAPTION                  :{WHITE}You are leaving OpenTTD!
 STR_CONTENT_SEARCH_EXTERNAL_DISCLAIMER                          :{WHITE}The terms and conditions for downloading content from external websites vary.{}You will have to refer to the external sites for instructions how to install the content into OpenTTD.{}Do you want to continue?
-STR_CONTENT_FILTER_TITLE                                        :{BLACK}Tag/name filter:
+STR_CONTENT_FILTER_TITLE                                        :{BLACK}Tag/Name filter:
 STR_CONTENT_OPEN_URL                                            :{BLACK}Visit website
 STR_CONTENT_OPEN_URL_TOOLTIP                                    :{BLACK}Visit the website for this content
 STR_CONTENT_DOWNLOAD_CAPTION                                    :{BLACK}Download
@@ -2332,7 +2332,7 @@ STR_CONTENT_TYPE_SCENARIO                                       :Scenario
 STR_CONTENT_TYPE_HEIGHTMAP                                      :Heightmap
 STR_CONTENT_TYPE_BASE_SOUNDS                                    :Base sounds
 STR_CONTENT_TYPE_BASE_MUSIC                                     :Base music
-STR_CONTENT_TYPE_GAME_SCRIPT                                    :Game script
+STR_CONTENT_TYPE_GAME_SCRIPT                                    :Game Script
 STR_CONTENT_TYPE_GS_LIBRARY                                     :GS library
 
 # Content downloading progress window
@@ -2359,7 +2359,7 @@ STR_MISSING_GRAPHICS_ERROR                                      :{BLACK}Download
 STR_MISSING_GRAPHICS_ERROR_QUIT                                 :{BLACK}Exit OpenTTD
 
 # Transparency settings window
-STR_TRANSPARENCY_CAPTION                                        :{WHITE}Transparency Options
+STR_TRANSPARENCY_CAPTION                                        :{WHITE}Transparency options
 STR_TRANSPARENT_SIGNS_TOOLTIP                                   :{BLACK}Toggle transparency for signs. Ctrl+Click to lock
 STR_TRANSPARENT_TREES_TOOLTIP                                   :{BLACK}Toggle transparency for trees. Ctrl+Click to lock
 STR_TRANSPARENT_HOUSES_TOOLTIP                                  :{BLACK}Toggle transparency for houses. Ctrl+Click to lock
@@ -2372,7 +2372,7 @@ STR_TRANSPARENT_LOADING_TOOLTIP                                 :{BLACK}Toggle t
 STR_TRANSPARENT_INVISIBLE_TOOLTIP                               :{BLACK}Set objects invisible instead of transparent
 
 # Linkgraph legend window
-STR_LINKGRAPH_LEGEND_CAPTION                                    :{BLACK}Cargo Flow Legend
+STR_LINKGRAPH_LEGEND_CAPTION                                    :{BLACK}Cargo flow legend
 STR_LINKGRAPH_LEGEND_ALL                                        :{BLACK}All
 STR_LINKGRAPH_LEGEND_NONE                                       :{BLACK}None
 STR_LINKGRAPH_LEGEND_SELECT_COMPANIES                           :{BLACK}Select companies to be displayed
@@ -2403,10 +2403,10 @@ STR_JOIN_WAYPOINT_CREATE_SPLITTED_WAYPOINT                      :{YELLOW}Build a
 STR_TOOLBAR_DISABLED_NO_VEHICLE_AVAILABLE                       :{BLACK}Disabled as currently no vehicles are available for this infrastructure
 
 # Rail construction toolbar
-STR_RAIL_TOOLBAR_RAILROAD_CONSTRUCTION_CAPTION                  :Railway Construction
-STR_RAIL_TOOLBAR_ELRAIL_CONSTRUCTION_CAPTION                    :Electrified Railway Construction
-STR_RAIL_TOOLBAR_MONORAIL_CONSTRUCTION_CAPTION                  :Monorail Construction
-STR_RAIL_TOOLBAR_MAGLEV_CONSTRUCTION_CAPTION                    :Maglev Construction
+STR_RAIL_TOOLBAR_RAILROAD_CONSTRUCTION_CAPTION                  :Railway construction
+STR_RAIL_TOOLBAR_ELRAIL_CONSTRUCTION_CAPTION                    :Electrified railway construction
+STR_RAIL_TOOLBAR_MONORAIL_CONSTRUCTION_CAPTION                  :Monorail construction
+STR_RAIL_TOOLBAR_MAGLEV_CONSTRUCTION_CAPTION                    :Maglev construction
 
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_RAILROAD_TRACK                   :{BLACK}Build railway track. Ctrl toggles build/remove for railway construction. Shift toggles building/showing cost estimate
 STR_RAIL_TOOLBAR_TOOLTIP_BUILD_AUTORAIL                         :{BLACK}Build railway track using the Autorail mode. Ctrl toggles build/remove for railway construction. Shift toggles building/showing cost estimate
@@ -2425,7 +2425,7 @@ STR_RAIL_NAME_MONORAIL                                          :Monorail
 STR_RAIL_NAME_MAGLEV                                            :Maglev
 
 # Rail depot construction window
-STR_BUILD_DEPOT_TRAIN_ORIENTATION_CAPTION                       :{WHITE}Train Depot Orientation
+STR_BUILD_DEPOT_TRAIN_ORIENTATION_CAPTION                       :{WHITE}Train depot orientation
 STR_BUILD_DEPOT_TRAIN_ORIENTATION_TOOLTIP                       :{BLACK}Select railway depot orientation
 
 # Rail waypoint construction window
@@ -2433,14 +2433,14 @@ STR_WAYPOINT_CAPTION                                            :{WHITE}Waypoint
 STR_WAYPOINT_GRAPHICS_TOOLTIP                                   :{BLACK}Select waypoint type
 
 # Rail station construction window
-STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Rail Station Selection
+STR_STATION_BUILD_RAIL_CAPTION                                  :{WHITE}Rail station selection
 STR_STATION_BUILD_ORIENTATION                                   :{BLACK}Orientation
 STR_STATION_BUILD_RAILROAD_ORIENTATION_TOOLTIP                  :{BLACK}Select railway station orientation
 STR_STATION_BUILD_NUMBER_OF_TRACKS                              :{BLACK}Number of tracks
 STR_STATION_BUILD_NUMBER_OF_TRACKS_TOOLTIP                      :{BLACK}Select number of platforms for railway station
 STR_STATION_BUILD_PLATFORM_LENGTH                               :{BLACK}Platform length
 STR_STATION_BUILD_PLATFORM_LENGTH_TOOLTIP                       :{BLACK}Select length of railway station
-STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Drag & Drop
+STR_STATION_BUILD_DRAG_DROP                                     :{BLACK}Drag & drop
 STR_STATION_BUILD_DRAG_DROP_TOOLTIP                             :{BLACK}Build a station using drag & drop
 
 STR_STATION_BUILD_STATION_CLASS_TOOLTIP                         :{BLACK}Select a station class to display
@@ -2450,7 +2450,7 @@ STR_STATION_CLASS_DFLT                                          :Default station
 STR_STATION_CLASS_WAYP                                          :Waypoints
 
 # Signal window
-STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Signal Selection
+STR_BUILD_SIGNAL_CAPTION                                        :{WHITE}Signal selection
 STR_BUILD_SIGNAL_SEMAPHORE_NORM_TOOLTIP                         :{BLACK}Block Signal (semaphore){}This is the most basic type of signal, allowing only one train to be in the same block at the same time
 STR_BUILD_SIGNAL_SEMAPHORE_ENTRY_TOOLTIP                        :{BLACK}Entry Signal (semaphore){}Green as long as there is one or more green exit-signal from the following section of track. Otherwise it shows red
 STR_BUILD_SIGNAL_SEMAPHORE_EXIT_TOOLTIP                         :{BLACK}Exit Signal (semaphore){}Behaves in the same way as a block signal but is necessary to trigger the correct colour on entry & combo pre-signals
@@ -2469,8 +2469,8 @@ STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_DECREASE_TOOLTIP          :{BLACK}Decrease
 STR_BUILD_SIGNAL_DRAG_SIGNALS_DENSITY_INCREASE_TOOLTIP          :{BLACK}Increase dragging signal distance
 
 # Bridge selection window
-STR_SELECT_RAIL_BRIDGE_CAPTION                                  :{WHITE}Select Rail Bridge
-STR_SELECT_ROAD_BRIDGE_CAPTION                                  :{WHITE}Select Road Bridge
+STR_SELECT_RAIL_BRIDGE_CAPTION                                  :{WHITE}Select rail bridge
+STR_SELECT_ROAD_BRIDGE_CAPTION                                  :{WHITE}Select road bridge
 STR_SELECT_BRIDGE_SELECTION_TOOLTIP                             :{BLACK}Bridge selection - click on your preferred bridge to build it
 STR_SELECT_BRIDGE_INFO                                          :{GOLD}{STRING},{} {VELOCITY} {WHITE}{CURRENCY_LONG}
 STR_SELECT_BRIDGE_SCENEDIT_INFO                                 :{GOLD}{STRING},{} {VELOCITY}
@@ -2485,8 +2485,8 @@ STR_BRIDGE_TUBULAR_SILICON                                      :Tubular, Silico
 
 
 # Road construction toolbar
-STR_ROAD_TOOLBAR_ROAD_CONSTRUCTION_CAPTION                      :{WHITE}Road Construction
-STR_ROAD_TOOLBAR_TRAM_CONSTRUCTION_CAPTION                      :{WHITE}Tramway Construction
+STR_ROAD_TOOLBAR_ROAD_CONSTRUCTION_CAPTION                      :{WHITE}Road construction
+STR_ROAD_TOOLBAR_TRAM_CONSTRUCTION_CAPTION                      :{WHITE}Tramway construction
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_ROAD_SECTION                     :{BLACK}Build road section. Ctrl toggles build/remove for road construction. Shift toggles building/showing cost estimate
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_TRAMWAY_SECTION                  :{BLACK}Build tramway section. Ctrl toggles build/remove for tramway construction. Shift toggles building/showing cost estimate
 STR_ROAD_TOOLBAR_TOOLTIP_BUILD_AUTOROAD                         :{BLACK}Build road section using the Autoroad mode. Ctrl toggles build/remove for road construction. Shift toggles building/showing cost estimate
@@ -2511,23 +2511,23 @@ STR_ROAD_NAME_ROAD                                              :Road
 STR_ROAD_NAME_TRAM                                              :Tramway
 
 # Road depot construction window
-STR_BUILD_DEPOT_ROAD_ORIENTATION_CAPTION                        :{WHITE}Road Depot Orientation
+STR_BUILD_DEPOT_ROAD_ORIENTATION_CAPTION                        :{WHITE}Road depot orientation
 STR_BUILD_DEPOT_ROAD_ORIENTATION_SELECT_TOOLTIP                 :{BLACK}Select road vehicle depot orientation
-STR_BUILD_DEPOT_TRAM_ORIENTATION_CAPTION                        :{WHITE}Tram Depot Orientation
+STR_BUILD_DEPOT_TRAM_ORIENTATION_CAPTION                        :{WHITE}Tram depot orientation
 STR_BUILD_DEPOT_TRAM_ORIENTATION_SELECT_TOOLTIP                 :{BLACK}Select tram vehicle depot orientation
 
 # Road vehicle station construction window
-STR_STATION_BUILD_BUS_ORIENTATION                               :{WHITE}Bus Station Orientation
+STR_STATION_BUILD_BUS_ORIENTATION                               :{WHITE}Bus station orientation
 STR_STATION_BUILD_BUS_ORIENTATION_TOOLTIP                       :{BLACK}Select bus station orientation
-STR_STATION_BUILD_TRUCK_ORIENTATION                             :{WHITE}Lorry Station Orientation
+STR_STATION_BUILD_TRUCK_ORIENTATION                             :{WHITE}Lorry station orientation
 STR_STATION_BUILD_TRUCK_ORIENTATION_TOOLTIP                     :{BLACK}Select lorry loading bay orientation
-STR_STATION_BUILD_PASSENGER_TRAM_ORIENTATION                    :{WHITE}Passenger Tram Station Orientation
+STR_STATION_BUILD_PASSENGER_TRAM_ORIENTATION                    :{WHITE}Passenger tram station orientation
 STR_STATION_BUILD_PASSENGER_TRAM_ORIENTATION_TOOLTIP            :{BLACK}Select passenger tram station orientation
-STR_STATION_BUILD_CARGO_TRAM_ORIENTATION                        :{WHITE}Freight Tram Station Orientation
+STR_STATION_BUILD_CARGO_TRAM_ORIENTATION                        :{WHITE}Freight tram station orientation
 STR_STATION_BUILD_CARGO_TRAM_ORIENTATION_TOOLTIP                :{BLACK}Select freight tram station orientation
 
 # Waterways toolbar (last two for SE only)
-STR_WATERWAYS_TOOLBAR_CAPTION                                   :{WHITE}Waterways Construction
+STR_WATERWAYS_TOOLBAR_CAPTION                                   :{WHITE}Waterways construction
 STR_WATERWAYS_TOOLBAR_CAPTION_SE                                :{WHITE}Waterways
 STR_WATERWAYS_TOOLBAR_BUILD_CANALS_TOOLTIP                      :{BLACK}Build canals. Shift toggles building/showing cost estimate
 STR_WATERWAYS_TOOLBAR_BUILD_LOCKS_TOOLTIP                       :{BLACK}Build locks. Shift toggles building/showing cost estimate
@@ -2539,7 +2539,7 @@ STR_WATERWAYS_TOOLBAR_CREATE_LAKE_TOOLTIP                       :{BLACK}Define w
 STR_WATERWAYS_TOOLBAR_CREATE_RIVER_TOOLTIP                      :{BLACK}Place rivers. Ctrl selects the area diagonally
 
 # Ship depot construction window
-STR_DEPOT_BUILD_SHIP_CAPTION                                    :{WHITE}Ship Depot Orientation
+STR_DEPOT_BUILD_SHIP_CAPTION                                    :{WHITE}Ship depot orientation
 STR_DEPOT_BUILD_SHIP_ORIENTATION_TOOLTIP                        :{BLACK}Select ship depot orientation
 
 # Dock construction window
@@ -2550,7 +2550,7 @@ STR_TOOLBAR_AIRCRAFT_CAPTION                                    :{WHITE}Airports
 STR_TOOLBAR_AIRCRAFT_BUILD_AIRPORT_TOOLTIP                      :{BLACK}Build airport. Ctrl enables joining stations. Shift toggles building/showing cost estimate
 
 # Airport construction window
-STR_STATION_BUILD_AIRPORT_CAPTION                               :{WHITE}Airport Selection
+STR_STATION_BUILD_AIRPORT_CAPTION                               :{WHITE}Airport selection
 STR_STATION_BUILD_AIRPORT_TOOLTIP                               :{BLACK}Select size/type of airport
 STR_STATION_BUILD_AIRPORT_CLASS_LABEL                           :{BLACK}Airport class
 STR_STATION_BUILD_AIRPORT_LAYOUT_NAME                           :{BLACK}Layout {NUM}
@@ -2580,7 +2580,7 @@ STR_LANDSCAPING_LEVEL_LAND_TOOLTIP                              :{BLACK}Level an
 STR_LANDSCAPING_TOOLTIP_PURCHASE_LAND                           :{BLACK}Purchase land for future use. Shift toggles building/showing cost estimate
 
 # Object construction window
-STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Object Selection
+STR_OBJECT_BUILD_CAPTION                                        :{WHITE}Object selection
 STR_OBJECT_BUILD_TOOLTIP                                        :{BLACK}Select object to build. Shift toggles building/showing cost estimate
 STR_OBJECT_BUILD_CLASS_TOOLTIP                                  :{BLACK}Select class of the object to build
 STR_OBJECT_BUILD_PREVIEW_TOOLTIP                                :{BLACK}Preview of the object
@@ -2604,7 +2604,7 @@ STR_TREES_MODE_FOREST_LG_BUTTON                                 :{BLACK}Forest
 STR_TREES_MODE_FOREST_LG_TOOLTIP                                :{BLACK}Plant large forests by dragging over the landscape.
 
 # Land generation window (SE)
-STR_TERRAFORM_TOOLBAR_LAND_GENERATION_CAPTION                   :{WHITE}Land Generation
+STR_TERRAFORM_TOOLBAR_LAND_GENERATION_CAPTION                   :{WHITE}Land generation
 STR_TERRAFORM_TOOLTIP_PLACE_ROCKY_AREAS_ON_LANDSCAPE            :{BLACK}Place rocky areas on landscape
 STR_TERRAFORM_TOOLTIP_DEFINE_DESERT_AREA                        :{BLACK}Define desert area.{}Hold Ctrl to remove it
 STR_TERRAFORM_TOOLTIP_INCREASE_SIZE_OF_LAND_AREA                :{BLACK}Increase area of land to lower/raise
@@ -2614,14 +2614,14 @@ STR_TERRAFORM_SE_NEW_WORLD                                      :{BLACK}Create n
 STR_TERRAFORM_RESET_LANDSCAPE                                   :{BLACK}Reset landscape
 STR_TERRAFORM_RESET_LANDSCAPE_TOOLTIP                           :{BLACK}Remove all company-owned property from the map
 
-STR_QUERY_RESET_LANDSCAPE_CAPTION                               :{WHITE}Reset Landscape
+STR_QUERY_RESET_LANDSCAPE_CAPTION                               :{WHITE}Reset landscape
 STR_RESET_LANDSCAPE_CONFIRMATION_TEXT                           :{WHITE}Are you sure you want to remove all company-owned property?
 
 # Town generation window (SE)
-STR_FOUND_TOWN_CAPTION                                          :{WHITE}Town Generation
-STR_FOUND_TOWN_NEW_TOWN_BUTTON                                  :{BLACK}New Town
+STR_FOUND_TOWN_CAPTION                                          :{WHITE}Town generation
+STR_FOUND_TOWN_NEW_TOWN_BUTTON                                  :{BLACK}New town
 STR_FOUND_TOWN_NEW_TOWN_TOOLTIP                                 :{BLACK}Found new town. Shift+Click shows only estimated cost
-STR_FOUND_TOWN_RANDOM_TOWN_BUTTON                               :{BLACK}Random Town
+STR_FOUND_TOWN_RANDOM_TOWN_BUTTON                               :{BLACK}Random town
 STR_FOUND_TOWN_RANDOM_TOWN_TOOLTIP                              :{BLACK}Found town in random location
 STR_FOUND_TOWN_MANY_RANDOM_TOWNS                                :{BLACK}Many random towns
 STR_FOUND_TOWN_RANDOM_TOWNS_TOOLTIP                             :{BLACK}Cover the map with randomly placed towns
@@ -2683,7 +2683,7 @@ STR_INDUSTRY_CARGOES_SELECT_INDUSTRY                            :{BLACK}Select i
 STR_INDUSTRY_CARGOES_SELECT_INDUSTRY_TOOLTIP                    :{BLACK}Select the industry you want to display
 
 # Land area window
-STR_LAND_AREA_INFORMATION_CAPTION                               :{WHITE}Land Area Information
+STR_LAND_AREA_INFORMATION_CAPTION                               :{WHITE}Land area information
 STR_LAND_AREA_INFORMATION_LOCATION_TOOLTIP                      :{BLACK}Centre the main view on tile location. Ctrl+Click opens a new viewport on tile location
 STR_LAND_AREA_INFORMATION_COST_TO_CLEAR_N_A                     :{BLACK}Cost to clear: {LTBLUE}N/A
 STR_LAND_AREA_INFORMATION_COST_TO_CLEAR                         :{BLACK}Cost to clear: {RED}{CURRENCY_LONG}
@@ -2749,7 +2749,7 @@ STR_LAI_ROAD_DESCRIPTION_ROAD                                   :Road
 STR_LAI_ROAD_DESCRIPTION_ROAD_WITH_STREETLIGHTS                 :Road with street lights
 STR_LAI_ROAD_DESCRIPTION_TREE_LINED_ROAD                        :Tree-lined road
 STR_LAI_ROAD_DESCRIPTION_ROAD_VEHICLE_DEPOT                     :Road vehicle depot
-STR_LAI_ROAD_DESCRIPTION_ROAD_RAIL_LEVEL_CROSSING               :Road/rail level crossing
+STR_LAI_ROAD_DESCRIPTION_ROAD_RAIL_LEVEL_CROSSING               :Road/Rail level crossing
 STR_LAI_ROAD_DESCRIPTION_TRAMWAY                                :Tramway
 
 # Houses come directly from their building names
@@ -2847,7 +2847,7 @@ STR_FRAMERATE_DRAWING_VIEWPORTS                                 :{BLACK}  World 
 STR_FRAMERATE_VIDEO                                             :{BLACK}Video output:
 STR_FRAMERATE_SOUND                                             :{BLACK}Sound mixing:
 STR_FRAMERATE_ALLSCRIPTS                                        :{BLACK}  GS/AI total:
-STR_FRAMERATE_GAMESCRIPT                                        :{BLACK}   Game script:
+STR_FRAMERATE_GAMESCRIPT                                        :{BLACK}   Game Script:
 STR_FRAMERATE_AI                                                :{BLACK}   AI {NUM} {RAW_STRING}
 ############ End of leave-in-this-order
 ############ Leave those lines in this order!!
@@ -2864,18 +2864,18 @@ STR_FRAMETIME_CAPTION_DRAWING_VIEWPORTS                         :World viewport 
 STR_FRAMETIME_CAPTION_VIDEO                                     :Video output
 STR_FRAMETIME_CAPTION_SOUND                                     :Sound mixing
 STR_FRAMETIME_CAPTION_ALLSCRIPTS                                :GS/AI scripts total
-STR_FRAMETIME_CAPTION_GAMESCRIPT                                :Game script
+STR_FRAMETIME_CAPTION_GAMESCRIPT                                :Game Script
 STR_FRAMETIME_CAPTION_AI                                        :AI {NUM} {RAW_STRING}
 ############ End of leave-in-this-order
 
 
 # Save/load game/scenario
-STR_SAVELOAD_SAVE_CAPTION                                       :{WHITE}Save Game
-STR_SAVELOAD_LOAD_CAPTION                                       :{WHITE}Load Game
-STR_SAVELOAD_SAVE_SCENARIO                                      :{WHITE}Save Scenario
-STR_SAVELOAD_LOAD_SCENARIO                                      :{WHITE}Load Scenario
-STR_SAVELOAD_LOAD_HEIGHTMAP                                     :{WHITE}Load Heightmap
-STR_SAVELOAD_SAVE_HEIGHTMAP                                     :{WHITE}Save Heightmap
+STR_SAVELOAD_SAVE_CAPTION                                       :{WHITE}Save game
+STR_SAVELOAD_LOAD_CAPTION                                       :{WHITE}Load game
+STR_SAVELOAD_SAVE_SCENARIO                                      :{WHITE}Save scenario
+STR_SAVELOAD_LOAD_SCENARIO                                      :{WHITE}Load scenario
+STR_SAVELOAD_LOAD_HEIGHTMAP                                     :{WHITE}Load heightmap
+STR_SAVELOAD_SAVE_HEIGHTMAP                                     :{WHITE}Save heightmap
 STR_SAVELOAD_HOME_BUTTON                                        :{BLACK}Click here to jump to the current default save/load directory
 STR_SAVELOAD_BYTES_FREE                                         :{BLACK}{BYTES} free
 STR_SAVELOAD_LIST_TOOLTIP                                       :{BLACK}List of drives, directories and saved-game files
@@ -2887,12 +2887,12 @@ STR_SAVELOAD_SAVE_TOOLTIP                                       :{BLACK}Save the
 STR_SAVELOAD_LOAD_BUTTON                                        :{BLACK}Load
 STR_SAVELOAD_LOAD_TOOLTIP                                       :{BLACK}Load the selected game
 STR_SAVELOAD_LOAD_HEIGHTMAP_TOOLTIP                             :{BLACK}Load the selected heightmap
-STR_SAVELOAD_DETAIL_CAPTION                                     :{BLACK}Game Details
+STR_SAVELOAD_DETAIL_CAPTION                                     :{BLACK}Game details
 STR_SAVELOAD_DETAIL_NOT_AVAILABLE                               :{BLACK}No information available
 STR_SAVELOAD_DETAIL_COMPANY_INDEX                               :{SILVER}{COMMA}: {WHITE}{STRING1}
 STR_SAVELOAD_DETAIL_GRFSTATUS                                   :{SILVER}NewGRF: {WHITE}{STRING}
 STR_SAVELOAD_FILTER_TITLE                                       :{BLACK}Filter string:
-STR_SAVELOAD_OVERWRITE_TITLE                                    :{WHITE}Overwrite File
+STR_SAVELOAD_OVERWRITE_TITLE                                    :{WHITE}Overwrite file
 STR_SAVELOAD_OVERWRITE_WARNING                                  :{YELLOW}Are you sure you want to overwrite the existing file?
 STR_SAVELOAD_DIRECTORY                                          :{RAW_STRING} (Directory)
 STR_SAVELOAD_PARENT_DIRECTORY                                   :{RAW_STRING} (Parent directory)
@@ -2900,7 +2900,7 @@ STR_SAVELOAD_PARENT_DIRECTORY                                   :{RAW_STRING} (P
 STR_SAVELOAD_OSKTITLE                                           :{BLACK}Enter a name for the savegame
 
 # World generation
-STR_MAPGEN_WORLD_GENERATION_CAPTION                             :{WHITE}World Generation
+STR_MAPGEN_WORLD_GENERATION_CAPTION                             :{WHITE}World generation
 STR_MAPGEN_MAPSIZE                                              :{BLACK}Map size:
 STR_MAPGEN_MAPSIZE_TOOLTIP                                      :{BLACK}Select the size of the map in tiles. The number of available tiles will be slightly smaller
 STR_MAPGEN_BY                                                   :{BLACK}*
@@ -2950,7 +2950,7 @@ STR_MAPGEN_DESERT_COVERAGE_QUERY_CAPT                           :{WHITE}Desert c
 STR_MAPGEN_START_DATE_QUERY_CAPT                                :{WHITE}Change starting year
 
 # SE Map generation
-STR_SE_MAPGEN_CAPTION                                           :{WHITE}Scenario Type
+STR_SE_MAPGEN_CAPTION                                           :{WHITE}Scenario type
 STR_SE_MAPGEN_FLAT_WORLD                                        :{WHITE}Flat land
 STR_SE_MAPGEN_FLAT_WORLD_TOOLTIP                                :{BLACK}Generate a flat land
 STR_SE_MAPGEN_RANDOM_LAND                                       :{WHITE}Random land
@@ -2961,9 +2961,9 @@ STR_SE_MAPGEN_FLAT_WORLD_HEIGHT_UP                              :{BLACK}Move the
 STR_SE_MAPGEN_FLAT_WORLD_HEIGHT_QUERY_CAPT                      :{WHITE}Change height of flat land
 
 # Map generation progress
-STR_GENERATION_WORLD                                            :{WHITE}Generating World...
+STR_GENERATION_WORLD                                            :{WHITE}Generating world...
 STR_GENERATION_ABORT                                            :{BLACK}Abort
-STR_GENERATION_ABORT_CAPTION                                    :{WHITE}Abort World Generation
+STR_GENERATION_ABORT_CAPTION                                    :{WHITE}Abort world generation
 STR_GENERATION_ABORT_MESSAGE                                    :{YELLOW}Do you really want to abort the generation?
 STR_GENERATION_PROGRESS                                         :{WHITE}{NUM}% complete
 STR_GENERATION_PROGRESS_NUM                                     :{BLACK}{NUM} / {NUM}
@@ -2978,7 +2978,7 @@ STR_GENERATION_PREPARING_SCRIPT                                 :{BLACK}Running 
 STR_GENERATION_PREPARING_GAME                                   :{BLACK}Preparing game
 
 # NewGRF settings
-STR_NEWGRF_SETTINGS_CAPTION                                     :{WHITE}NewGRF Settings
+STR_NEWGRF_SETTINGS_CAPTION                                     :{WHITE}NewGRF settings
 STR_NEWGRF_SETTINGS_INFO_TITLE                                  :{WHITE}Detailed NewGRF information
 STR_NEWGRF_SETTINGS_ACTIVE_LIST                                 :{WHITE}Active NewGRF files
 STR_NEWGRF_SETTINGS_INACTIVE_LIST                               :{WHITE}Inactive NewGRF files
@@ -2996,9 +2996,9 @@ STR_NEWGRF_SETTINGS_RESCAN_FILES                                :{BLACK}Rescan f
 STR_NEWGRF_SETTINGS_RESCAN_FILES_TOOLTIP                        :{BLACK}Update the list of available NewGRF files
 STR_NEWGRF_SETTINGS_REMOVE                                      :{BLACK}Remove
 STR_NEWGRF_SETTINGS_REMOVE_TOOLTIP                              :{BLACK}Remove the selected NewGRF file from the list
-STR_NEWGRF_SETTINGS_MOVEUP                                      :{BLACK}Move Up
+STR_NEWGRF_SETTINGS_MOVEUP                                      :{BLACK}Move up
 STR_NEWGRF_SETTINGS_MOVEUP_TOOLTIP                              :{BLACK}Move the selected NewGRF file up the list
-STR_NEWGRF_SETTINGS_MOVEDOWN                                    :{BLACK}Move Down
+STR_NEWGRF_SETTINGS_MOVEDOWN                                    :{BLACK}Move down
 STR_NEWGRF_SETTINGS_MOVEDOWN_TOOLTIP                            :{BLACK}Move the selected NewGRF file down the list
 STR_NEWGRF_SETTINGS_UPGRADE                                     :{BLACK}Upgrade
 STR_NEWGRF_SETTINGS_UPGRADE_TOOLTIP                             :{BLACK}Upgrade NewGRF files for which you have a newer version installed
@@ -3136,7 +3136,7 @@ STR_NEWGRF_BROKEN_CAPACITY                                      :{WHITE}It chang
 STR_BROKEN_VEHICLE_LENGTH                                       :{WHITE}Train '{VEHICLE}' belonging to '{COMPANY}' has invalid length. It is probably caused by problems with NewGRFs. Game may desync or crash
 
 STR_NEWGRF_BUGGY                                                :{WHITE}NewGRF '{0:RAW_STRING}' provides incorrect information
-STR_NEWGRF_BUGGY_ARTICULATED_CARGO                              :{WHITE}Cargo/refit information for '{1:ENGINE}' differs from purchase list after construction. This might cause autorenew/-replace to fail refitting correctly
+STR_NEWGRF_BUGGY_ARTICULATED_CARGO                              :{WHITE}Cargo/Refit information for '{1:ENGINE}' differs from purchase list after construction. This might cause autorenew/-replace to fail refitting correctly
 STR_NEWGRF_BUGGY_ENDLESS_PRODUCTION_CALLBACK                    :{WHITE}'{1:STRING}' caused an endless loop in the production callback
 STR_NEWGRF_BUGGY_UNKNOWN_CALLBACK_RESULT                        :{WHITE}Callback {1:HEX} returned unknown/invalid result {2:HEX}
 STR_NEWGRF_BUGGY_INVALID_CARGO_PRODUCTION_CALLBACK              :{WHITE}'{1:STRING}' returned invalid cargo type in the production callback at {2:HEX}
@@ -3236,8 +3236,8 @@ STR_LOCAL_AUTHORITY_ACTION_TOOLTIP_BRIBE                        :{YELLOW}Bribe t
 
 # Goal window
 STR_GOALS_CAPTION                                               :{WHITE}{COMPANY} Goals
-STR_GOALS_SPECTATOR_CAPTION                                     :{WHITE}Global Goals
-STR_GOALS_SPECTATOR                                             :Global Goals
+STR_GOALS_SPECTATOR_CAPTION                                     :{WHITE}Global goals
+STR_GOALS_SPECTATOR                                             :Global goals
 STR_GOALS_GLOBAL_BUTTON                                         :{BLACK}Global
 STR_GOALS_GLOBAL_BUTTON_HELPTEXT                                :{BLACK}Show global goals
 STR_GOALS_COMPANY_BUTTON                                        :{BLACK}Company
@@ -3285,9 +3285,9 @@ STR_SUBSIDIES_SUBSIDISED_FROM_TO                                :{ORANGE}{STRING
 STR_SUBSIDIES_TOOLTIP_CLICK_ON_SERVICE_TO_CENTER                :{BLACK}Click on service to centre main view on industry/town. Ctrl+Click opens a new viewport on industry/town location
 
 # Story book window
-STR_STORY_BOOK_CAPTION                                          :{WHITE}{COMPANY} Story Book
-STR_STORY_BOOK_SPECTATOR_CAPTION                                :{WHITE}Global Story Book
-STR_STORY_BOOK_SPECTATOR                                        :Global Story Book
+STR_STORY_BOOK_CAPTION                                          :{WHITE}{COMPANY} story book
+STR_STORY_BOOK_SPECTATOR_CAPTION                                :{WHITE}Global story book
+STR_STORY_BOOK_SPECTATOR                                        :Global story book
 STR_STORY_BOOK_TITLE                                            :{YELLOW}{RAW_STRING}
 STR_STORY_BOOK_GENERIC_PAGE_ITEM                                :Page {NUM}
 STR_STORY_BOOK_SEL_PAGE_TOOLTIP                                 :{BLACK}Jump to a specific page by selecting it in this drop down list.
@@ -3383,28 +3383,28 @@ STR_BUOY_VIEW_CHANGE_BUOY_NAME                                  :{BLACK}Change b
 STR_EDIT_WAYPOINT_NAME                                          :{WHITE}Edit waypoint name
 
 # Finances window
-STR_FINANCES_CAPTION                                            :{WHITE}{COMPANY} Finances {BLACK}{COMPANY_NUM}
+STR_FINANCES_CAPTION                                            :{WHITE}{COMPANY} finances {BLACK}{COMPANY_NUM}
 STR_FINANCES_EXPENDITURE_INCOME_TITLE                           :{WHITE}Expenditure/Income
 STR_FINANCES_YEAR                                               :{WHITE}{NUM}
 STR_FINANCES_SECTION_CONSTRUCTION                               :{GOLD}Construction
-STR_FINANCES_SECTION_NEW_VEHICLES                               :{GOLD}New Vehicles
-STR_FINANCES_SECTION_TRAIN_RUNNING_COSTS                        :{GOLD}Train Running Costs
-STR_FINANCES_SECTION_ROAD_VEHICLE_RUNNING_COSTS                 :{GOLD}Road Vehicle Running Costs
-STR_FINANCES_SECTION_AIRCRAFT_RUNNING_COSTS                     :{GOLD}Aircraft Running Costs
-STR_FINANCES_SECTION_SHIP_RUNNING_COSTS                         :{GOLD}Ship Running Costs
-STR_FINANCES_SECTION_PROPERTY_MAINTENANCE                       :{GOLD}Property Maintenance
-STR_FINANCES_SECTION_TRAIN_INCOME                               :{GOLD}Train Income
-STR_FINANCES_SECTION_ROAD_VEHICLE_INCOME                        :{GOLD}Road Vehicle Income
-STR_FINANCES_SECTION_AIRCRAFT_INCOME                            :{GOLD}Aircraft Income
-STR_FINANCES_SECTION_SHIP_INCOME                                :{GOLD}Ship Income
-STR_FINANCES_SECTION_LOAN_INTEREST                              :{GOLD}Loan Interest
+STR_FINANCES_SECTION_NEW_VEHICLES                               :{GOLD}New vehicles
+STR_FINANCES_SECTION_TRAIN_RUNNING_COSTS                        :{GOLD}Train running costs
+STR_FINANCES_SECTION_ROAD_VEHICLE_RUNNING_COSTS                 :{GOLD}Road vehicle running costs
+STR_FINANCES_SECTION_AIRCRAFT_RUNNING_COSTS                     :{GOLD}Aircraft running costs
+STR_FINANCES_SECTION_SHIP_RUNNING_COSTS                         :{GOLD}Ship running costs
+STR_FINANCES_SECTION_PROPERTY_MAINTENANCE                       :{GOLD}Property maintenance
+STR_FINANCES_SECTION_TRAIN_INCOME                               :{GOLD}Train income
+STR_FINANCES_SECTION_ROAD_VEHICLE_INCOME                        :{GOLD}Road vehicle income
+STR_FINANCES_SECTION_AIRCRAFT_INCOME                            :{GOLD}Aircraft income
+STR_FINANCES_SECTION_SHIP_INCOME                                :{GOLD}Ship income
+STR_FINANCES_SECTION_LOAN_INTEREST                              :{GOLD}Loan interest
 STR_FINANCES_SECTION_OTHER                                      :{GOLD}Other
 STR_FINANCES_NEGATIVE_INCOME                                    :{BLACK}-{CURRENCY_LONG}
 STR_FINANCES_POSITIVE_INCOME                                    :{BLACK}+{CURRENCY_LONG}
 STR_FINANCES_TOTAL_CAPTION                                      :{WHITE}Total:
-STR_FINANCES_BANK_BALANCE_TITLE                                 :{WHITE}Bank Balance
+STR_FINANCES_BANK_BALANCE_TITLE                                 :{WHITE}Bank balance
 STR_FINANCES_LOAN_TITLE                                         :{WHITE}Loan
-STR_FINANCES_MAX_LOAN                                           :{WHITE}Maximum Loan: {BLACK}{CURRENCY_LONG}
+STR_FINANCES_MAX_LOAN                                           :{WHITE}Maximum loan: {BLACK}{CURRENCY_LONG}
 STR_FINANCES_TOTAL_CURRENCY                                     :{BLACK}{CURRENCY_LONG}
 STR_FINANCES_BORROW_BUTTON                                      :{BLACK}Borrow {CURRENCY_LONG}
 STR_FINANCES_BORROW_TOOLTIP                                     :{BLACK}Increase size of loan. Ctrl+Click borrows as much as possible
@@ -3417,7 +3417,7 @@ STR_COMPANY_VIEW_CAPTION                                        :{WHITE}{COMPANY
 STR_COMPANY_VIEW_PRESIDENT_MANAGER_TITLE                        :{WHITE}{PRESIDENT_NAME}{}{GOLD}(Manager)
 
 STR_COMPANY_VIEW_INAUGURATED_TITLE                              :{GOLD}Inaugurated: {WHITE}{NUM}
-STR_COMPANY_VIEW_COLOUR_SCHEME_TITLE                            :{GOLD}Colour Scheme:
+STR_COMPANY_VIEW_COLOUR_SCHEME_TITLE                            :{GOLD}Colour scheme:
 STR_COMPANY_VIEW_VEHICLES_TITLE                                 :{GOLD}Vehicles:
 STR_COMPANY_VIEW_TRAINS                                         :{WHITE}{COMMA} train{P "" s}
 STR_COMPANY_VIEW_ROAD_VEHICLES                                  :{WHITE}{COMMA} road vehicle{P "" s}
@@ -3445,13 +3445,13 @@ STR_COMPANY_VIEW_INFRASTRUCTURE_TOOLTIP                         :{BLACK}View det
 STR_COMPANY_VIEW_GIVE_MONEY_BUTTON                              :{BLACK}Give money
 STR_COMPANY_VIEW_GIVE_MONEY_TOOLTIP                             :{BLACK}Give money to this company
 
-STR_COMPANY_VIEW_NEW_FACE_BUTTON                                :{BLACK}New Face
+STR_COMPANY_VIEW_NEW_FACE_BUTTON                                :{BLACK}New face
 STR_COMPANY_VIEW_NEW_FACE_TOOLTIP                               :{BLACK}Select new face for manager
-STR_COMPANY_VIEW_COLOUR_SCHEME_BUTTON                           :{BLACK}Colour Scheme
+STR_COMPANY_VIEW_COLOUR_SCHEME_BUTTON                           :{BLACK}Colour scheme
 STR_COMPANY_VIEW_COLOUR_SCHEME_TOOLTIP                          :{BLACK}Change the company vehicle livery
-STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Company Name
+STR_COMPANY_VIEW_COMPANY_NAME_BUTTON                            :{BLACK}Company name
 STR_COMPANY_VIEW_COMPANY_NAME_TOOLTIP                           :{BLACK}Change the company name
-STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Manager Name
+STR_COMPANY_VIEW_PRESIDENT_NAME_BUTTON                          :{BLACK}Manager name
 STR_COMPANY_VIEW_PRESIDENT_NAME_TOOLTIP                         :{BLACK}Change the manager's name
 
 STR_COMPANY_VIEW_BUY_SHARE_BUTTON                               :{BLACK}Buy 25% share in company
@@ -3459,8 +3459,8 @@ STR_COMPANY_VIEW_SELL_SHARE_BUTTON                              :{BLACK}Sell 25%
 STR_COMPANY_VIEW_BUY_SHARE_TOOLTIP                              :{BLACK}Buy 25% share in this company. Shift+Click shows estimated cost without purchasing any share
 STR_COMPANY_VIEW_SELL_SHARE_TOOLTIP                             :{BLACK}Sell 25% share in this company. Shift+Click shows estimated income without selling any share
 
-STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Company Name
-STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Manager's Name
+STR_COMPANY_VIEW_COMPANY_NAME_QUERY_CAPTION                     :Company name
+STR_COMPANY_VIEW_PRESIDENT_S_NAME_QUERY_CAPTION                 :Manager's name
 STR_COMPANY_VIEW_GIVE_MONEY_QUERY_CAPTION                       :Enter the amount of money you want to give
 
 STR_BUY_COMPANY_MESSAGE                                         :{WHITE}We are looking for a transport company to take-over our company.{}{}Do you want to purchase {COMPANY} for {CURRENCY_LONG}?
@@ -3514,7 +3514,7 @@ STR_CONFIG_GAME_PRODUCTION_LEVEL                                :{WHITE}Change p
 
 # Vehicle lists
 STR_VEHICLE_LIST_TRAIN_CAPTION                                  :{WHITE}{STRING2} - {COMMA} Train{P "" s}
-STR_VEHICLE_LIST_ROAD_VEHICLE_CAPTION                           :{WHITE}{STRING2} - {COMMA} Road Vehicle{P "" s}
+STR_VEHICLE_LIST_ROAD_VEHICLE_CAPTION                           :{WHITE}{STRING2} - {COMMA} Road vehicle{P "" s}
 STR_VEHICLE_LIST_SHIP_CAPTION                                   :{WHITE}{STRING2} - {COMMA} Ship{P "" s}
 STR_VEHICLE_LIST_AIRCRAFT_CAPTION                               :{WHITE}{STRING2} - {COMMA} Aircraft
 
@@ -3525,21 +3525,21 @@ STR_VEHICLE_LIST_AIRCRAFT_TOOLTIP                               :{BLACK}Aircraft
 
 STR_VEHICLE_LIST_PROFIT_THIS_YEAR_LAST_YEAR                     :{TINY_FONT}{BLACK}Profit this year: {CURRENCY_LONG} (last year: {CURRENCY_LONG})
 
-STR_VEHICLE_LIST_AVAILABLE_TRAINS                               :Available Trains
-STR_VEHICLE_LIST_AVAILABLE_ROAD_VEHICLES                        :Available Vehicles
-STR_VEHICLE_LIST_AVAILABLE_SHIPS                                :Available Ships
-STR_VEHICLE_LIST_AVAILABLE_AIRCRAFT                             :Available Aircraft
+STR_VEHICLE_LIST_AVAILABLE_TRAINS                               :Available trains
+STR_VEHICLE_LIST_AVAILABLE_ROAD_VEHICLES                        :Available vehicles
+STR_VEHICLE_LIST_AVAILABLE_SHIPS                                :Available ships
+STR_VEHICLE_LIST_AVAILABLE_AIRCRAFT                             :Available aircraft
 STR_VEHICLE_LIST_AVAILABLE_ENGINES_TOOLTIP                      :{BLACK}See a list of available engine designs for this vehicle type
 
 STR_VEHICLE_LIST_MANAGE_LIST                                    :{BLACK}Manage list
 STR_VEHICLE_LIST_MANAGE_LIST_TOOLTIP                            :{BLACK}Send instructions to all vehicles in this list
 STR_VEHICLE_LIST_REPLACE_VEHICLES                               :Replace vehicles
-STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Send for Servicing
+STR_VEHICLE_LIST_SEND_FOR_SERVICING                             :Send for servicing
 
-STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Send to Depot
-STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Send to Depot
-STR_VEHICLE_LIST_SEND_SHIP_TO_DEPOT                             :Send to Depot
-STR_VEHICLE_LIST_SEND_AIRCRAFT_TO_HANGAR                        :Send to Hangar
+STR_VEHICLE_LIST_SEND_TRAIN_TO_DEPOT                            :Send to depot
+STR_VEHICLE_LIST_SEND_ROAD_VEHICLE_TO_DEPOT                     :Send to depot
+STR_VEHICLE_LIST_SEND_SHIP_TO_DEPOT                             :Send to depot
+STR_VEHICLE_LIST_SEND_AIRCRAFT_TO_HANGAR                        :Send to hangar
 
 STR_VEHICLE_LIST_MASS_STOP_LIST_TOOLTIP                         :{BLACK}Click to stop all the vehicles in the list
 STR_VEHICLE_LIST_MASS_START_LIST_TOOLTIP                        :{BLACK}Click to start all the vehicles in the list
@@ -3566,7 +3566,7 @@ STR_GROUP_RENAME_TOOLTIP                                        :{BLACK}Rename t
 STR_GROUP_LIVERY_TOOLTIP                                        :{BLACK}Change livery of the selected group
 STR_GROUP_REPLACE_PROTECTION_TOOLTIP                            :{BLACK}Click to protect this group from global autoreplace. Ctrl+Click to also protect sub-groups.
 
-STR_QUERY_GROUP_DELETE_CAPTION                                  :{WHITE}Delete Group
+STR_QUERY_GROUP_DELETE_CAPTION                                  :{WHITE}Delete group
 STR_GROUP_DELETE_QUERY_TEXT                                     :{WHITE}Are you sure you want to delete this group and any descendants?
 
 STR_GROUP_ADD_SHARED_VEHICLE                                    :Add shared vehicles
@@ -3580,19 +3580,19 @@ STR_GROUP_OCCUPANCY                                             :Current usage:
 STR_GROUP_OCCUPANCY_VALUE                                       :{NUM}%
 
 # Build vehicle window
-STR_BUY_VEHICLE_TRAIN_RAIL_CAPTION                              :New Rail Vehicles
-STR_BUY_VEHICLE_TRAIN_ELRAIL_CAPTION                            :New Electric Rail Vehicles
-STR_BUY_VEHICLE_TRAIN_MONORAIL_CAPTION                          :New Monorail Vehicles
-STR_BUY_VEHICLE_TRAIN_MAGLEV_CAPTION                            :New Maglev Vehicles
+STR_BUY_VEHICLE_TRAIN_RAIL_CAPTION                              :New rail vehicles
+STR_BUY_VEHICLE_TRAIN_ELRAIL_CAPTION                            :New electric rail vehicles
+STR_BUY_VEHICLE_TRAIN_MONORAIL_CAPTION                          :New monorail vehicles
+STR_BUY_VEHICLE_TRAIN_MAGLEV_CAPTION                            :New maglev vehicles
 
-STR_BUY_VEHICLE_ROAD_VEHICLE_CAPTION                            :New Road Vehicles
-STR_BUY_VEHICLE_TRAM_VEHICLE_CAPTION                            :New Tram Vehicles
+STR_BUY_VEHICLE_ROAD_VEHICLE_CAPTION                            :New road vehicles
+STR_BUY_VEHICLE_TRAM_VEHICLE_CAPTION                            :New tram vehicles
 
 ############ range for vehicle availability starts
-STR_BUY_VEHICLE_TRAIN_ALL_CAPTION                               :New Rail Vehicles
-STR_BUY_VEHICLE_ROAD_VEHICLE_ALL_CAPTION                        :New Road Vehicles
-STR_BUY_VEHICLE_SHIP_CAPTION                                    :New Ships
-STR_BUY_VEHICLE_AIRCRAFT_CAPTION                                :New Aircraft
+STR_BUY_VEHICLE_TRAIN_ALL_CAPTION                               :New rail vehicles
+STR_BUY_VEHICLE_ROAD_VEHICLE_ALL_CAPTION                        :New road vehicles
+STR_BUY_VEHICLE_SHIP_CAPTION                                    :New ships
+STR_BUY_VEHICLE_AIRCRAFT_CAPTION                                :New aircraft
 ############ range for vehicle availability ends
 
 STR_PURCHASE_INFO_COST_WEIGHT                                   :{BLACK}Cost: {GOLD}{CURRENCY_LONG}{BLACK} Weight: {GOLD}{WEIGHT_SHORT}
@@ -3601,11 +3601,11 @@ STR_PURCHASE_INFO_SPEED_POWER                                   :{BLACK}Speed: {
 STR_PURCHASE_INFO_SPEED                                         :{BLACK}Speed: {GOLD}{VELOCITY}
 STR_PURCHASE_INFO_SPEED_OCEAN                                   :{BLACK}Speed on ocean: {GOLD}{VELOCITY}
 STR_PURCHASE_INFO_SPEED_CANAL                                   :{BLACK}Speed on canal/river: {GOLD}{VELOCITY}
-STR_PURCHASE_INFO_RUNNINGCOST                                   :{BLACK}Running Cost: {GOLD}{CURRENCY_LONG}/yr
+STR_PURCHASE_INFO_RUNNINGCOST                                   :{BLACK}Running cost: {GOLD}{CURRENCY_LONG}/yr
 STR_PURCHASE_INFO_CAPACITY                                      :{BLACK}Capacity: {GOLD}{CARGO_LONG} {STRING}
 STR_PURCHASE_INFO_REFITTABLE                                    :(refittable)
 STR_PURCHASE_INFO_DESIGNED_LIFE                                 :{BLACK}Designed: {GOLD}{NUM}{BLACK} Life: {GOLD}{COMMA} year{P "" s}
-STR_PURCHASE_INFO_RELIABILITY                                   :{BLACK}Max. Reliability: {GOLD}{COMMA}%
+STR_PURCHASE_INFO_RELIABILITY                                   :{BLACK}Max. reliability: {GOLD}{COMMA}%
 STR_PURCHASE_INFO_COST                                          :{BLACK}Cost: {GOLD}{CURRENCY_LONG}
 STR_PURCHASE_INFO_COST_REFIT                                    :{BLACK}Cost: {GOLD}{CURRENCY_LONG}{BLACK} (Refit Cost: {GOLD}{CURRENCY_LONG}{BLACK})
 STR_PURCHASE_INFO_WEIGHT_CWEIGHT                                :{BLACK}Weight: {GOLD}{WEIGHT_SHORT} ({WEIGHT_SHORT})
@@ -3618,7 +3618,7 @@ STR_PURCHASE_INFO_ALL_TYPES                                     :All cargo types
 STR_PURCHASE_INFO_NONE                                          :None
 STR_PURCHASE_INFO_ENGINES_ONLY                                  :Engines only
 STR_PURCHASE_INFO_ALL_BUT                                       :All but {CARGO_LIST}
-STR_PURCHASE_INFO_MAX_TE                                        :{BLACK}Max. Tractive Effort: {GOLD}{FORCE}
+STR_PURCHASE_INFO_MAX_TE                                        :{BLACK}Max. tractive effort: {GOLD}{FORCE}
 STR_PURCHASE_INFO_AIRCRAFT_RANGE                                :{BLACK}Range: {GOLD}{COMMA} tiles
 STR_PURCHASE_INFO_AIRCRAFT_TYPE                                 :{BLACK}Aircraft type: {GOLD}{STRING}
 
@@ -3627,15 +3627,15 @@ STR_BUY_VEHICLE_ROAD_VEHICLE_LIST_TOOLTIP                       :{BLACK}Road veh
 STR_BUY_VEHICLE_SHIP_LIST_TOOLTIP                               :{BLACK}Ship selection list. Click on ship for information. Ctrl+Click for toggling hiding of the ship type
 STR_BUY_VEHICLE_AIRCRAFT_LIST_TOOLTIP                           :{BLACK}Aircraft selection list. Click on aircraft for information. Ctrl+Click for toggling hiding of the aircraft type
 
-STR_BUY_VEHICLE_TRAIN_BUY_VEHICLE_BUTTON                        :{BLACK}Buy Vehicle
-STR_BUY_VEHICLE_ROAD_VEHICLE_BUY_VEHICLE_BUTTON                 :{BLACK}Buy Vehicle
-STR_BUY_VEHICLE_SHIP_BUY_VEHICLE_BUTTON                         :{BLACK}Buy Ship
-STR_BUY_VEHICLE_AIRCRAFT_BUY_VEHICLE_BUTTON                     :{BLACK}Buy Aircraft
+STR_BUY_VEHICLE_TRAIN_BUY_VEHICLE_BUTTON                        :{BLACK}Buy vehicle
+STR_BUY_VEHICLE_ROAD_VEHICLE_BUY_VEHICLE_BUTTON                 :{BLACK}Buy vehicle
+STR_BUY_VEHICLE_SHIP_BUY_VEHICLE_BUTTON                         :{BLACK}Buy ship
+STR_BUY_VEHICLE_AIRCRAFT_BUY_VEHICLE_BUTTON                     :{BLACK}Buy aircraft
 
-STR_BUY_VEHICLE_TRAIN_BUY_REFIT_VEHICLE_BUTTON                  :{BLACK}Buy and Refit Vehicle
-STR_BUY_VEHICLE_ROAD_VEHICLE_BUY_REFIT_VEHICLE_BUTTON           :{BLACK}Buy and Refit Vehicle
-STR_BUY_VEHICLE_SHIP_BUY_REFIT_VEHICLE_BUTTON                   :{BLACK}Buy and Refit Ship
-STR_BUY_VEHICLE_AIRCRAFT_BUY_REFIT_VEHICLE_BUTTON               :{BLACK}Buy and Refit Aircraft
+STR_BUY_VEHICLE_TRAIN_BUY_REFIT_VEHICLE_BUTTON                  :{BLACK}Buy and refit vehicle
+STR_BUY_VEHICLE_ROAD_VEHICLE_BUY_REFIT_VEHICLE_BUTTON           :{BLACK}Buy and refit vehicle
+STR_BUY_VEHICLE_SHIP_BUY_REFIT_VEHICLE_BUTTON                   :{BLACK}Buy and refit ship
+STR_BUY_VEHICLE_AIRCRAFT_BUY_REFIT_VEHICLE_BUTTON               :{BLACK}Buy and refit aircraft
 
 STR_BUY_VEHICLE_TRAIN_BUY_VEHICLE_TOOLTIP                       :{BLACK}Buy the highlighted train vehicle. Shift+Click shows estimated cost without purchase
 STR_BUY_VEHICLE_ROAD_VEHICLE_BUY_VEHICLE_TOOLTIP                :{BLACK}Buy the highlighted road vehicle. Shift+Click shows estimated cost without purchase
@@ -3710,20 +3710,20 @@ STR_DEPOT_AUTOREPLACE_ROAD_VEHICLE_TOOLTIP                      :{BLACK}Autorepl
 STR_DEPOT_AUTOREPLACE_SHIP_TOOLTIP                              :{BLACK}Autoreplace all ships in the depot
 STR_DEPOT_AUTOREPLACE_AIRCRAFT_TOOLTIP                          :{BLACK}Autoreplace all aircraft in the hangar
 
-STR_DEPOT_TRAIN_NEW_VEHICLES_BUTTON                             :{BLACK}New Vehicles
-STR_DEPOT_ROAD_VEHICLE_NEW_VEHICLES_BUTTON                      :{BLACK}New Vehicles
-STR_DEPOT_SHIP_NEW_VEHICLES_BUTTON                              :{BLACK}New Ships
-STR_DEPOT_AIRCRAFT_NEW_VEHICLES_BUTTON                          :{BLACK}New Aircraft
+STR_DEPOT_TRAIN_NEW_VEHICLES_BUTTON                             :{BLACK}New vehicles
+STR_DEPOT_ROAD_VEHICLE_NEW_VEHICLES_BUTTON                      :{BLACK}New vehicles
+STR_DEPOT_SHIP_NEW_VEHICLES_BUTTON                              :{BLACK}New ships
+STR_DEPOT_AIRCRAFT_NEW_VEHICLES_BUTTON                          :{BLACK}New aircraft
 
 STR_DEPOT_TRAIN_NEW_VEHICLES_TOOLTIP                            :{BLACK}Buy new train vehicle
 STR_DEPOT_ROAD_VEHICLE_NEW_VEHICLES_TOOLTIP                     :{BLACK}Buy new road vehicle
 STR_DEPOT_SHIP_NEW_VEHICLES_TOOLTIP                             :{BLACK}Buy new ship
 STR_DEPOT_AIRCRAFT_NEW_VEHICLES_TOOLTIP                         :{BLACK}Buy new aircraft
 
-STR_DEPOT_CLONE_TRAIN                                           :{BLACK}Clone Train
-STR_DEPOT_CLONE_ROAD_VEHICLE                                    :{BLACK}Clone Vehicle
-STR_DEPOT_CLONE_SHIP                                            :{BLACK}Clone Ship
-STR_DEPOT_CLONE_AIRCRAFT                                        :{BLACK}Clone Aircraft
+STR_DEPOT_CLONE_TRAIN                                           :{BLACK}Clone train
+STR_DEPOT_CLONE_ROAD_VEHICLE                                    :{BLACK}Clone vehicle
+STR_DEPOT_CLONE_SHIP                                            :{BLACK}Clone ship
+STR_DEPOT_CLONE_AIRCRAFT                                        :{BLACK}Clone aircraft
 
 STR_DEPOT_CLONE_TRAIN_DEPOT_INFO                                :{BLACK}This will buy a copy of a train including all cars. Click this button and then on a train inside or outside the depot. Ctrl+Click will share the orders. Shift+Click shows estimated cost without purchase
 STR_DEPOT_CLONE_ROAD_VEHICLE_DEPOT_INFO                         :{BLACK}This will buy a copy of a road vehicle. Click this button and then on a road vehicle inside or outside the depot. Ctrl+Click will share the orders. Shift+Click shows estimated cost without purchase
@@ -3767,18 +3767,18 @@ STR_ENGINE_PREVIEW_TRAM_VEHICLE                                 :tramway vehicle
 STR_ENGINE_PREVIEW_AIRCRAFT                                     :aircraft
 STR_ENGINE_PREVIEW_SHIP                                         :ship
 
-STR_ENGINE_PREVIEW_COST_WEIGHT_SPEED_POWER                      :{BLACK}Cost: {CURRENCY_LONG} Weight: {WEIGHT_SHORT}{}Speed: {VELOCITY}  Power: {POWER}{}Running Cost: {CURRENCY_LONG}/yr{}Capacity: {CARGO_LONG}
-STR_ENGINE_PREVIEW_COST_WEIGHT_SPEED_POWER_MAX_TE               :{BLACK}Cost: {CURRENCY_LONG} Weight: {WEIGHT_SHORT}{}Speed: {VELOCITY}  Power: {POWER}  Max. T.E.: {6:FORCE}{}Running Cost: {4:CURRENCY_LONG}/yr{}Capacity: {5:CARGO_LONG}
-STR_ENGINE_PREVIEW_COST_MAX_SPEED_CAP_RUNCOST                   :{BLACK}Cost: {CURRENCY_LONG} Max. Speed: {VELOCITY}{}Capacity: {CARGO_LONG}{}Running Cost: {CURRENCY_LONG}/yr
-STR_ENGINE_PREVIEW_COST_MAX_SPEED_TYPE_CAP_CAP_RUNCOST          :{BLACK}Cost: {CURRENCY_LONG} Max. Speed: {VELOCITY}{}Aircraft type: {STRING}{}Capacity: {CARGO_LONG}, {CARGO_LONG}{}Running Cost: {CURRENCY_LONG}/yr
-STR_ENGINE_PREVIEW_COST_MAX_SPEED_TYPE_CAP_RUNCOST              :{BLACK}Cost: {CURRENCY_LONG} Max. Speed: {VELOCITY}{}Aircraft type: {STRING}{}Capacity: {CARGO_LONG}{}Running Cost: {CURRENCY_LONG}/yr
-STR_ENGINE_PREVIEW_COST_MAX_SPEED_TYPE_RANGE_CAP_CAP_RUNCOST    :{BLACK}Cost: {CURRENCY_LONG} Max. Speed: {VELOCITY}{}Aircraft type: {STRING} Range: {COMMA} tiles{}Capacity: {CARGO_LONG}, {CARGO_LONG}{}Running Cost: {CURRENCY_LONG}/yr
-STR_ENGINE_PREVIEW_COST_MAX_SPEED_TYPE_RANGE_CAP_RUNCOST        :{BLACK}Cost: {CURRENCY_LONG} Max. Speed: {VELOCITY}{}Aircraft type: {STRING} Range: {COMMA} tiles{}Capacity: {CARGO_LONG}{}Running Cost: {CURRENCY_LONG}/yr
+STR_ENGINE_PREVIEW_COST_WEIGHT_SPEED_POWER                      :{BLACK}Cost: {CURRENCY_LONG} Weight: {WEIGHT_SHORT}{}Speed: {VELOCITY}  Power: {POWER}{}Running cost: {CURRENCY_LONG}/yr{}Capacity: {CARGO_LONG}
+STR_ENGINE_PREVIEW_COST_WEIGHT_SPEED_POWER_MAX_TE               :{BLACK}Cost: {CURRENCY_LONG} Weight: {WEIGHT_SHORT}{}Speed: {VELOCITY}  Power: {POWER}  Max. T.E.: {6:FORCE}{}Running cost: {4:CURRENCY_LONG}/yr{}Capacity: {5:CARGO_LONG}
+STR_ENGINE_PREVIEW_COST_MAX_SPEED_CAP_RUNCOST                   :{BLACK}Cost: {CURRENCY_LONG} Max. speed: {VELOCITY}{}Capacity: {CARGO_LONG}{}Running Cost: {CURRENCY_LONG}/yr
+STR_ENGINE_PREVIEW_COST_MAX_SPEED_TYPE_CAP_CAP_RUNCOST          :{BLACK}Cost: {CURRENCY_LONG} Max. speed: {VELOCITY}{}Aircraft type: {STRING}{}Capacity: {CARGO_LONG}, {CARGO_LONG}{}Running cost: {CURRENCY_LONG}/yr
+STR_ENGINE_PREVIEW_COST_MAX_SPEED_TYPE_CAP_RUNCOST              :{BLACK}Cost: {CURRENCY_LONG} Max. speed: {VELOCITY}{}Aircraft type: {STRING}{}Capacity: {CARGO_LONG}{}Running cost: {CURRENCY_LONG}/yr
+STR_ENGINE_PREVIEW_COST_MAX_SPEED_TYPE_RANGE_CAP_CAP_RUNCOST    :{BLACK}Cost: {CURRENCY_LONG} Max. speed: {VELOCITY}{}Aircraft type: {STRING} Range: {COMMA} tiles{}Capacity: {CARGO_LONG}, {CARGO_LONG}{}Running cost: {CURRENCY_LONG}/yr
+STR_ENGINE_PREVIEW_COST_MAX_SPEED_TYPE_RANGE_CAP_RUNCOST        :{BLACK}Cost: {CURRENCY_LONG} Max. speed: {VELOCITY}{}Aircraft type: {STRING} Range: {COMMA} tiles{}Capacity: {CARGO_LONG}{}Running cost: {CURRENCY_LONG}/yr
 
 # Autoreplace window
 STR_REPLACE_VEHICLES_WHITE                                      :{WHITE}Replace {STRING} - {STRING1}
 STR_REPLACE_VEHICLE_TRAIN                                       :Train
-STR_REPLACE_VEHICLE_ROAD_VEHICLE                                :Road Vehicle
+STR_REPLACE_VEHICLE_ROAD_VEHICLE                                :Road vehicle
 STR_REPLACE_VEHICLE_SHIP                                        :Ship
 STR_REPLACE_VEHICLE_AIRCRAFT                                    :Aircraft
 
@@ -3790,14 +3790,14 @@ STR_REPLACE_VEHICLE_AVAILABLE_VEHICLES_TOOLTIP                  :{BLACK}Column w
 STR_REPLACE_HELP_LEFT_ARRAY                                     :{BLACK}Select the engine type to replace
 STR_REPLACE_HELP_RIGHT_ARRAY                                    :{BLACK}Select the new engine type you would like to use in place of the left selected engine type
 
-STR_REPLACE_VEHICLES_START                                      :{BLACK}Start Replacing Vehicles
+STR_REPLACE_VEHICLES_START                                      :{BLACK}Start replacing vehicles
 STR_REPLACE_VEHICLES_NOW                                        :Replace all vehicles now
 STR_REPLACE_VEHICLES_WHEN_OLD                                   :Replace only old vehicles
 STR_REPLACE_HELP_START_BUTTON                                   :{BLACK}Press to begin replacement of the left selected engine type with the right selected engine type
 STR_REPLACE_NOT_REPLACING                                       :{BLACK}Not replacing
 STR_REPLACE_NOT_REPLACING_VEHICLE_SELECTED                      :{BLACK}No vehicle selected
 STR_REPLACE_REPLACING_WHEN_OLD                                  :{ENGINE} when old
-STR_REPLACE_VEHICLES_STOP                                       :{BLACK}Stop Replacing Vehicles
+STR_REPLACE_VEHICLES_STOP                                       :{BLACK}Stop replacing vehicles
 STR_REPLACE_HELP_STOP_BUTTON                                    :{BLACK}Press to stop the replacement of the engine type selected on the left
 
 STR_REPLACE_ENGINE_WAGON_SELECT_HELP                            :{BLACK}Switch between engine and wagon replacement windows
@@ -3809,13 +3809,13 @@ STR_REPLACE_ALL_ROADTYPE                                        :All road vehicl
 STR_REPLACE_HELP_RAILTYPE                                       :{BLACK}Choose the rail type you want to replace engines for
 STR_REPLACE_HELP_ROADTYPE                                       :{BLACK}Choose the road type you want to replace engines for
 STR_REPLACE_HELP_REPLACE_INFO_TAB                               :{BLACK}Displays which engine the left selected engine is being replaced with, if any
-STR_REPLACE_RAIL_VEHICLES                                       :Rail Vehicles
-STR_REPLACE_ELRAIL_VEHICLES                                     :Electrified Rail Vehicles
-STR_REPLACE_MONORAIL_VEHICLES                                   :Monorail Vehicles
-STR_REPLACE_MAGLEV_VEHICLES                                     :Maglev Vehicles
+STR_REPLACE_RAIL_VEHICLES                                       :Rail vehicles
+STR_REPLACE_ELRAIL_VEHICLES                                     :Electrified rail vehicles
+STR_REPLACE_MONORAIL_VEHICLES                                   :Monorail vehicles
+STR_REPLACE_MAGLEV_VEHICLES                                     :Maglev vehicles
 
-STR_REPLACE_ROAD_VEHICLES                                       :Road Vehicles
-STR_REPLACE_TRAM_VEHICLES                                       :Tramway Vehicles
+STR_REPLACE_ROAD_VEHICLES                                       :Road vehicles
+STR_REPLACE_TRAM_VEHICLES                                       :Tramway vehicles
 
 STR_REPLACE_REMOVE_WAGON                                        :{BLACK}Wagon removal ({STRING1}): {ORANGE}{STRING}
 STR_REPLACE_REMOVE_WAGON_HELP                                   :{BLACK}Make autoreplace keep the length of a train the same by removing wagons (starting at the front), if replacing the engine would make the train longer
@@ -3918,7 +3918,7 @@ STR_VEHICLE_INFO_CAPACITY                                       :{BLACK}Capacity
 STR_VEHICLE_INFO_CAPACITY_MULT                                  :{BLACK}Capacity: {LTBLUE}{CARGO_LONG}{3:STRING} (x{4:NUM})
 STR_VEHICLE_INFO_CAPACITY_CAPACITY                              :{BLACK}Capacity: {LTBLUE}{CARGO_LONG}, {CARGO_LONG}{STRING}
 
-STR_VEHICLE_INFO_FEEDER_CARGO_VALUE                             :{BLACK}Transfer Credits: {LTBLUE}{CURRENCY_LONG}
+STR_VEHICLE_INFO_FEEDER_CARGO_VALUE                             :{BLACK}Transfer credits: {LTBLUE}{CURRENCY_LONG}
 
 STR_VEHICLE_DETAILS_SERVICING_INTERVAL_DAYS                     :{BLACK}Servicing interval: {LTBLUE}{COMMA}{NBSP}days{BLACK}   Last service: {LTBLUE}{DATE_LONG}
 STR_VEHICLE_DETAILS_SERVICING_INTERVAL_PERCENT                  :{BLACK}Servicing interval: {LTBLUE}{COMMA}%{BLACK}   Last service: {LTBLUE}{DATE_LONG}
@@ -3953,7 +3953,7 @@ STR_VEHICLE_DETAIL_TAB_INFORMATION                              :{BLACK}Informat
 STR_VEHICLE_DETAILS_TRAIN_INFORMATION_TOOLTIP                   :{BLACK}Show details of train vehicles
 STR_VEHICLE_DETAIL_TAB_CAPACITIES                               :{BLACK}Capacities
 STR_VEHICLE_DETAILS_TRAIN_CAPACITIES_TOOLTIP                    :{BLACK}Show capacities of each vehicle
-STR_VEHICLE_DETAIL_TAB_TOTAL_CARGO                              :{BLACK}Total Cargo
+STR_VEHICLE_DETAIL_TAB_TOTAL_CARGO                              :{BLACK}Total cargo
 STR_VEHICLE_DETAILS_TRAIN_TOTAL_CARGO_TOOLTIP                   :{BLACK}Show total capacity of train, split by cargo type
 
 STR_VEHICLE_DETAILS_TRAIN_ARTICULATED_RV_CAPACITY               :{BLACK}Capacity: {LTBLUE}
@@ -3991,8 +3991,8 @@ STR_ORDERS_LIST_TOOLTIP                                         :{BLACK}Order li
 STR_ORDER_INDEX                                                 :{COMMA}:{NBSP}
 STR_ORDER_TEXT                                                  :{STRING4} {STRING2} {STRING}
 
-STR_ORDERS_END_OF_ORDERS                                        :- - End of Orders - -
-STR_ORDERS_END_OF_SHARED_ORDERS                                 :- - End of Shared Orders - -
+STR_ORDERS_END_OF_ORDERS                                        :- - End of orders - -
+STR_ORDERS_END_OF_SHARED_ORDERS                                 :- - End of shared orders - -
 
 # Order bottom buttons
 STR_ORDER_NON_STOP                                              :{BLACK}Non-stop
@@ -4063,7 +4063,7 @@ STR_ORDERS_DELETE_ALL_TOOLTIP                                   :{BLACK}Delete a
 STR_ORDERS_STOP_SHARING_BUTTON                                  :{BLACK}Stop sharing
 STR_ORDERS_STOP_SHARING_TOOLTIP                                 :{BLACK}Stop sharing the order list. Ctrl+Click additionally deletes all orders for this vehicle
 
-STR_ORDERS_GO_TO_BUTTON                                         :{BLACK}Go To
+STR_ORDERS_GO_TO_BUTTON                                         :{BLACK}Go to
 STR_ORDER_GO_TO_NEAREST_DEPOT                                   :Go to nearest depot
 STR_ORDER_GO_TO_NEAREST_HANGAR                                  :Go to nearest hangar
 STR_ORDER_CONDITIONAL                                           :Conditional order jump
@@ -4080,10 +4080,10 @@ STR_ORDER_SERVICE_AT                                            :Service at
 STR_ORDER_SERVICE_NON_STOP_AT                                   :Service non-stop at
 
 STR_ORDER_NEAREST_DEPOT                                         :the nearest
-STR_ORDER_NEAREST_HANGAR                                        :the nearest Hangar
-STR_ORDER_TRAIN_DEPOT                                           :Train Depot
-STR_ORDER_ROAD_VEHICLE_DEPOT                                    :Road Vehicle Depot
-STR_ORDER_SHIP_DEPOT                                            :Ship Depot
+STR_ORDER_NEAREST_HANGAR                                        :the nearest hangar
+STR_ORDER_TRAIN_DEPOT                                           :train depot
+STR_ORDER_ROAD_VEHICLE_DEPOT                                    :road vehicle depot
+STR_ORDER_SHIP_DEPOT                                            :ship depot
 STR_ORDER_GO_TO_NEAREST_DEPOT_FORMAT                            :{STRING} {STRING} {STRING}
 STR_ORDER_GO_TO_DEPOT_FORMAT                                    :{STRING} {DEPOT}
 
@@ -4173,19 +4173,19 @@ STR_TIMETABLE_STATUS_START_AT                                   :{BLACK}This tim
 STR_TIMETABLE_STARTING_DATE                                     :{BLACK}Start date
 STR_TIMETABLE_STARTING_DATE_TOOLTIP                             :{BLACK}Select a date as starting point of this timetable. Ctrl+Click sets the starting point of this timetable and distributes all vehicles sharing this order evenly based on their relative order, if the order is completely timetabled
 
-STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Change Time
+STR_TIMETABLE_CHANGE_TIME                                       :{BLACK}Change time
 STR_TIMETABLE_WAIT_TIME_TOOLTIP                                 :{BLACK}Change the amount of time that the highlighted order should take
 
-STR_TIMETABLE_CLEAR_TIME                                        :{BLACK}Clear Time
+STR_TIMETABLE_CLEAR_TIME                                        :{BLACK}Clear time
 STR_TIMETABLE_CLEAR_TIME_TOOLTIP                                :{BLACK}Clear the amount of time for the highlighted order
 
-STR_TIMETABLE_CHANGE_SPEED                                      :{BLACK}Change Speed Limit
+STR_TIMETABLE_CHANGE_SPEED                                      :{BLACK}Change speed limit
 STR_TIMETABLE_CHANGE_SPEED_TOOLTIP                              :{BLACK}Change the maximum travel speed of the highlighted order
 
-STR_TIMETABLE_CLEAR_SPEED                                       :{BLACK}Clear Speed Limit
+STR_TIMETABLE_CLEAR_SPEED                                       :{BLACK}Clear speed limit
 STR_TIMETABLE_CLEAR_SPEED_TOOLTIP                               :{BLACK}Clear the maximum travel speed of the highlighted order
 
-STR_TIMETABLE_RESET_LATENESS                                    :{BLACK}Reset Late Counter
+STR_TIMETABLE_RESET_LATENESS                                    :{BLACK}Reset late counter
 STR_TIMETABLE_RESET_LATENESS_TOOLTIP                            :{BLACK}Reset the lateness counter, so the vehicle will be on time
 
 STR_TIMETABLE_AUTOFILL                                          :{BLACK}Autofill
@@ -4209,14 +4209,14 @@ STR_DATE_YEAR_TOOLTIP                                           :{BLACK}Select y
 
 
 # AI debug window
-STR_AI_DEBUG                                                    :{WHITE}AI/Game Script Debug
+STR_AI_DEBUG                                                    :{WHITE}AI/Game Script debug
 STR_AI_DEBUG_NAME_AND_VERSION                                   :{BLACK}{RAW_STRING} (v{NUM})
 STR_AI_DEBUG_NAME_TOOLTIP                                       :{BLACK}Name of the script
 STR_AI_DEBUG_SETTINGS                                           :{BLACK}Settings
 STR_AI_DEBUG_SETTINGS_TOOLTIP                                   :{BLACK}Change the settings of the script
 STR_AI_DEBUG_RELOAD                                             :{BLACK}Reload AI
 STR_AI_DEBUG_RELOAD_TOOLTIP                                     :{BLACK}Kill the AI, reload the script, and restart the AI
-STR_AI_DEBUG_BREAK_STR_ON_OFF_TOOLTIP                           :{BLACK}Enable/disable breaking when an AI log message matches the break string
+STR_AI_DEBUG_BREAK_STR_ON_OFF_TOOLTIP                           :{BLACK}Enable/Disable breaking when an AI log message matches the break string
 STR_AI_DEBUG_BREAK_ON_LABEL                                     :{BLACK}Break on:
 STR_AI_DEBUG_BREAK_STR_OSKTITLE                                 :{BLACK}Break on
 STR_AI_DEBUG_BREAK_STR_TOOLTIP                                  :{BLACK}When an AI log message matches this string, the game is paused
@@ -4228,21 +4228,21 @@ STR_AI_DEBUG_SELECT_AI_TOOLTIP                                  :{BLACK}View deb
 STR_AI_GAME_SCRIPT                                              :{BLACK}Game Script
 STR_AI_GAME_SCRIPT_TOOLTIP                                      :{BLACK}Check the Game Script log
 
-STR_ERROR_AI_NO_AI_FOUND                                        :No suitable AI found to load.{}This AI is a dummy AI and won't do anything.{}You can download several AIs via the 'Online Content' system
-STR_ERROR_AI_PLEASE_REPORT_CRASH                                :{WHITE}One of the running scripts crashed. Please report this to the script author with a screenshot of the AI/Game Script Debug Window
-STR_ERROR_AI_DEBUG_SERVER_ONLY                                  :{YELLOW}AI/Game Script Debug window is only available for the server
+STR_ERROR_AI_NO_AI_FOUND                                        :No suitable AI found to load.{}This AI is a dummy AI and won't do anything.{}You can download several AIs via the online content system
+STR_ERROR_AI_PLEASE_REPORT_CRASH                                :{WHITE}One of the running scripts crashed. Please report this to the script author with a screenshot of the AI/Game Script debug window
+STR_ERROR_AI_DEBUG_SERVER_ONLY                                  :{YELLOW}AI/Game Script debug window is only available for the server
 
 # AI configuration window
-STR_AI_CONFIG_CAPTION                                           :{WHITE}AI/Game Script Configuration
+STR_AI_CONFIG_CAPTION                                           :{WHITE}AI/Game Script configuration
 STR_AI_CONFIG_GAMELIST_TOOLTIP                                  :{BLACK}The Game Script that will be loaded in the next game
 STR_AI_CONFIG_AILIST_TOOLTIP                                    :{BLACK}The AIs that will be loaded in the next game
 STR_AI_CONFIG_HUMAN_PLAYER                                      :Human player
 STR_AI_CONFIG_RANDOM_AI                                         :Random AI
 STR_AI_CONFIG_NONE                                              :(none)
 
-STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Move Up
+STR_AI_CONFIG_MOVE_UP                                           :{BLACK}Move up
 STR_AI_CONFIG_MOVE_UP_TOOLTIP                                   :{BLACK}Move selected AI up in the list
-STR_AI_CONFIG_MOVE_DOWN                                         :{BLACK}Move Down
+STR_AI_CONFIG_MOVE_DOWN                                         :{BLACK}Move down
 STR_AI_CONFIG_MOVE_DOWN_TOOLTIP                                 :{BLACK}Move selected AI down in the list
 
 STR_AI_CONFIG_GAMESCRIPT                                        :{SILVER}Game Script
@@ -4328,9 +4328,9 @@ STR_MESSAGE_ESTIMATED_INCOME                                    :{WHITE}Estimate
 STR_ERROR_SAVE_STILL_IN_PROGRESS                                :{WHITE}Saving still in progress,{}please wait until it is finished!
 STR_ERROR_AUTOSAVE_FAILED                                       :{WHITE}Autosave failed
 STR_ERROR_UNABLE_TO_READ_DRIVE                                  :{BLACK}Unable to read drive
-STR_ERROR_GAME_SAVE_FAILED                                      :{WHITE}Game Save Failed{}{STRING1}
+STR_ERROR_GAME_SAVE_FAILED                                      :{WHITE}Game save failed{}{STRING1}
 STR_ERROR_UNABLE_TO_DELETE_FILE                                 :{WHITE}Unable to delete file
-STR_ERROR_GAME_LOAD_FAILED                                      :{WHITE}Game Load Failed{}{STRING1}
+STR_ERROR_GAME_LOAD_FAILED                                      :{WHITE}Game load failed{}{STRING1}
 STR_GAME_SAVELOAD_ERROR_BROKEN_INTERNAL_ERROR                   :Internal error: {RAW_STRING}
 STR_GAME_SAVELOAD_ERROR_BROKEN_SAVEGAME                         :Broken savegame - {RAW_STRING}
 STR_GAME_SAVELOAD_ERROR_TOO_NEW_SAVEGAME                        :Savegame is made with newer version
