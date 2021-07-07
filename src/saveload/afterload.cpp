@@ -1992,7 +1992,7 @@ bool AfterLoadGame()
 	if (IsSavegameVersionBefore(SLV_102)) {
 		for (TileIndex t = 0; t < map_size; t++) {
 			/* Now all crossings should be in correct state */
-			if (IsLevelCrossingTile(t)) UpdateLevelCrossing(t, false);
+			if (IsLevelCrossingTile(t)) UpdateLevelCrossing(t);
 		}
 	}
 

@@ -784,7 +784,7 @@ CommandCost CmdBuildRoad(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 
 				bool reserved = HasBit(GetRailReservationTrackBits(tile), railtrack);
 				MakeRoadCrossing(tile, company, company, GetTileOwner(tile), roaddir, GetRailType(tile), rtt == RTT_ROAD ? rt : INVALID_ROADTYPE, (rtt == RTT_TRAM) ? rt : INVALID_ROADTYPE, p2);
 				SetCrossingReservation(tile, reserved);
-				UpdateLevelCrossing(tile, false);
+				UpdateLevelCrossing(tile);
 				MarkTileDirtyByTile(tile);
 			}
 			return CommandCost(EXPENSES_CONSTRUCTION, 2 * RoadBuildCost(rt));
@@ -2055,7 +2055,19 @@ static TrackStatus GetTileTrackStatus_Road(TileIndex tile, TransportType mode, u
 					if (side != INVALID_DIAGDIR && axis != DiagDirToAxis(side)) break;
 
 					trackdirbits = TrackBitsToTrackdirBits(AxisToTrackBits(axis));
+					/* Block entry if level crossing is closed */
 					if (IsCrossingBarred(tile)) red_signals = trackdirbits;
+					/* Allow continuing if coming from a closed crossing */
+					if (IsLevelCrossingTile(TileAddByDiagDir(tile, AxisToDiagDir(axis))) &&
+							IsCrossingBarred(TileAddByDiagDir(tile, AxisToDiagDir(axis)))) {
+						/* If coming from south, allow travelling north */
+						red_signals &= ~(TRACKDIR_BIT_Y_NW | TRACKDIR_BIT_X_NE);
+					}
+					if (IsLevelCrossingTile(TileAddByDiagDir(tile, ReverseDiagDir(AxisToDiagDir(axis)))) &&
+							IsCrossingBarred(TileAddByDiagDir(tile, ReverseDiagDir(AxisToDiagDir(axis))))) {
+						/* If coming from north, allow travelling south */
+						red_signals &= ~(TRACKDIR_BIT_Y_SE | TRACKDIR_BIT_X_SW);
+					}
 					break;
 				}
 

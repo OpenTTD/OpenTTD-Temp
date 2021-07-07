@@ -1676,41 +1676,54 @@ static bool TrainApproachingCrossing(TileIndex tile)
 	return HasVehicleOnPos(tile_from, &tile, &TrainApproachingCrossingEnum);
 }
 
+/**
+ * Checks if the crossing should be closed
+ * @return true if the crossing has a path reservation, or if there is a vehicle on or approaching the crossing
+ */
+static inline bool ShouldCloseLevelCrossing(TileIndex tile)
+{
+	return HasCrossingReservation(tile) || HasVehicleOnPos(tile, nullptr, &TrainOnTileEnum) || TrainApproachingCrossing(tile);
+}
 
 /**
- * Sets correct crossing state
+ * Sets correct crossing closed state
  * @param tile tile to update
- * @param sound should we play sound?
+ * @param new_state close or open the level crossing
  * @pre tile is a rail-road crossing
  */
-void UpdateLevelCrossing(TileIndex tile, bool sound)
+static void UpdateLevelCrossingTile(TileIndex tile, bool new_state)
 {
 	assert(IsLevelCrossingTile(tile));
 
-	/* reserved || train on crossing || train approaching crossing */
-	bool new_state = HasCrossingReservation(tile) || HasVehicleOnPos(tile, nullptr, &TrainOnTileEnum) || TrainApproachingCrossing(tile);
+	if (new_state == IsCrossingBarred(tile)) return;
 
-	if (new_state != IsCrossingBarred(tile)) {
-		if (new_state && sound) {
-			if (_settings_client.sound.ambient) SndPlayTileFx(SND_0E_LEVEL_CROSSING, tile);
-		}
-		SetCrossingBarred(tile, new_state);
-		MarkTileDirtyByTile(tile);
-	}
+	SetCrossingBarred(tile, new_state);
+	MarkTileDirtyByTile(tile);
 }
 
-
 /**
- * Bars crossing and plays ding-ding sound if not barred already
- * @param tile tile with crossing
- * @pre tile is a rail-road crossing
+ * Iterates over the adjacent crossings, checks whether any should be closed, and then closes all or none of them
+ * @param tile tile to update
  */
-static inline void MaybeBarCrossingWithSound(TileIndex tile)
+void UpdateLevelCrossing(TileIndex tile)
 {
-	if (!IsCrossingBarred(tile)) {
-		BarCrossing(tile);
-		if (_settings_client.sound.ambient) SndPlayTileFx(SND_0E_LEVEL_CROSSING, tile);
-		MarkTileDirtyByTile(tile);
+	bool adjacent_state = false;
+	if (!IsLevelCrossingTile(tile)) return;
+
+	Axis axis = GetCrossingRoadAxis(tile);
+
+	for (TileIndex t = tile; !adjacent_state && IsLevelCrossingTile(t) && GetCrossingRoadAxis(t) == axis; t = TileAddByDiagDir(t, AxisToDiagDir(GetCrossingRoadAxis(t)))) {
+		adjacent_state |= ShouldCloseLevelCrossing(t);
+	}
+	for (TileIndex t = tile; !adjacent_state && IsLevelCrossingTile(t) && GetCrossingRoadAxis(t) == axis; t = TileAddByDiagDir(t, ReverseDiagDir(AxisToDiagDir(GetCrossingRoadAxis(t))))) {
+		adjacent_state |= ShouldCloseLevelCrossing(t);
+	}
+
+	for (TileIndex t = tile; IsLevelCrossingTile(t) && GetCrossingRoadAxis(t) == axis; t = TileAddByDiagDir(t, AxisToDiagDir(GetCrossingRoadAxis(t)))) {
+		UpdateLevelCrossingTile(t, adjacent_state);
+	}
+	for (TileIndex t = tile; IsLevelCrossingTile(t) && GetCrossingRoadAxis(t) == axis; t = TileAddByDiagDir(t, ReverseDiagDir(AxisToDiagDir(GetCrossingRoadAxis(t))))) {
+		UpdateLevelCrossingTile(t, adjacent_state);
 	}
 }
 
@@ -1849,7 +1862,11 @@ void ReverseTrainDirection(Train *v)
 
 	/* maybe we are approaching crossing now, after reversal */
 	crossing = TrainApproachingCrossingTile(v);
-	if (crossing != INVALID_TILE) MaybeBarCrossingWithSound(crossing);
+	if (crossing != INVALID_TILE) {
+		SetCrossingReservation(crossing, true);
+		UpdateLevelCrossing(crossing);
+	}
+
 
 	/* If we are inside a depot after reversing, don't bother with path reserving. */
 	if (v->track == TRACK_BIT_DEPOT) {
@@ -3311,9 +3328,9 @@ bool TrainController(Train *v, Vehicle *nomove, bool reverse)
 				if (v->IsFrontEngine()) {
 					v->wait_counter = 0;
 
-					/* If we are approaching a crossing that is reserved, play the sound now. */
+					/* If we are approaching a crossing, play the sound now. */
 					TileIndex crossing = TrainApproachingCrossingTile(v);
-					if (crossing != INVALID_TILE && HasCrossingReservation(crossing) && _settings_client.sound.ambient) SndPlayTileFx(SND_0E_LEVEL_CROSSING, crossing);
+					if (crossing != INVALID_TILE && _settings_client.sound.ambient) SndPlayTileFx(SND_0E_LEVEL_CROSSING, crossing);
 
 					/* Always try to extend the reservation when entering a tile. */
 					CheckNextTrainTile(v);
@@ -3731,7 +3748,10 @@ static bool TrainCheckIfLineEnds(Train *v, bool reverse)
 	if ((trackdirbits & red_signals) != 0) return TrainApproachingLineEnd(v, true, reverse);
 
 	/* approaching a rail/road crossing? then make it red */
-	if (IsLevelCrossingTile(tile)) MaybeBarCrossingWithSound(tile);
+	if (IsLevelCrossingTile(tile)) {
+		SetCrossingReservation(tile, true);
+		UpdateLevelCrossing(tile);
+	}
 
 	return true;
 }

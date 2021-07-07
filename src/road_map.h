@@ -431,24 +431,6 @@ static inline void SetCrossingBarred(TileIndex t, bool barred)
 	SB(_m[t].m5, 5, 1, barred ? 1 : 0);
 }
 
-/**
- * Unbar a level crossing.
- * @param t The tile to change.
- */
-static inline void UnbarCrossing(TileIndex t)
-{
-	SetCrossingBarred(t, false);
-}
-
-/**
- * Bar a level crossing.
- * @param t The tile to change.
- */
-static inline void BarCrossing(TileIndex t)
-{
-	SetCrossingBarred(t, true);
-}
-
 /** Check if a road tile has snow/desert. */
 #define IsOnDesert IsOnSnow
 /**
