@@ -5037,6 +5037,9 @@ static void NewSpriteGroup(ByteReader *buf)
 					adjust.parameter = IsInsideMM(adjust.variable, 0x60, 0x80) ? buf->ReadByte() : 0;
 				}
 
+				/* DSGA_OP_STOP has side-effects so should be processed even if there is no callback result. */
+				if (adjust.operation == DSGA_OP_STOP) group->has_cb_result |= true;
+
 				varadjust = buf->ReadByte();
 				adjust.shift_num = GB(varadjust, 0, 5);
 				adjust.type      = (DeterministicSpriteGroupAdjustType)GB(varadjust, 6, 2);
@@ -5065,6 +5068,9 @@ static void NewSpriteGroup(ByteReader *buf)
 			group->error_group = ranges.size() > 0 ? ranges[0].group : group->default_group;
 			/* nvar == 0 is a special case -- we turn our value into a callback result */
 			group->calculated_result = ranges.size() == 0;
+
+			group->has_cb_result |= group->default_group->has_cb_result;
+			group->has_cb_result |= group->error_group->has_cb_result;
 
 			/* Sort ranges ascending. When ranges overlap, this may required clamping or splitting them */
 			std::vector<uint32> bounds;
@@ -5098,6 +5104,7 @@ static void NewSpriteGroup(ByteReader *buf)
 						j++;
 					}
 					r.high = j < bounds.size() ? bounds[j] - 1 : UINT32_MAX;
+					group->has_cb_result |= r.group->has_cb_result;
 				} else {
 					j++;
 				}
@@ -5133,7 +5140,9 @@ static void NewSpriteGroup(ByteReader *buf)
 			}
 
 			for (uint i = 0; i < num_groups; i++) {
-				group->groups.push_back(GetGroupFromGroupID(setid, type, buf->ReadWord()));
+				const SpriteGroup *t = GetGroupFromGroupID(setid, type, buf->ReadWord());
+				group->groups.push_back(t);
+				group->has_cb_result |= t->has_cb_result;
 			}
 
 			break;
@@ -5205,11 +5214,13 @@ static void NewSpriteGroup(ByteReader *buf)
 					for (uint16 spriteid : loaded) {
 						const SpriteGroup *t = CreateGroupFromGroupID(feature, setid, type, spriteid);
 						group->loaded.push_back(t);
+						group->has_cb_result |= t->has_cb_result;
 					}
 
 					for (uint16 spriteid : loading) {
 						const SpriteGroup *t = CreateGroupFromGroupID(feature, setid, type, spriteid);
 						group->loading.push_back(t);
+						group->has_cb_result |= t->has_cb_result;
 					}
 
 					break;

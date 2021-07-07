@@ -56,7 +56,7 @@ extern SpriteGroupPool _spritegroup_pool;
 /* Common wrapper for all the different sprite group types */
 struct SpriteGroup : SpriteGroupPool::PoolItem<&_spritegroup_pool> {
 protected:
-	SpriteGroup(SpriteGroupType type) : nfo_line(0), type(type) {}
+	SpriteGroup(SpriteGroupType type) : nfo_line(0), type(type), has_cb_result(false) {}
 	/** Base sprite group resolver */
 	virtual const SpriteGroup *Resolve(ResolverObject &object) const { return this; };
 
@@ -65,6 +65,7 @@ public:
 
 	uint32 nfo_line;
 	SpriteGroupType type;
+	bool has_cb_result;
 
 	virtual SpriteID GetResult() const { return 0; }
 	virtual byte GetNumResults() const { return 0; }
@@ -224,6 +225,8 @@ struct CallbackResultSpriteGroup : SpriteGroup {
 		} else {
 			this->result &= ~0x8000;
 		}
+
+		has_cb_result = true;
 	}
 
 	uint16 result;
