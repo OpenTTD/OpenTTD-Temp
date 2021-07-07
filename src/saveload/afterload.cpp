@@ -2928,16 +2928,47 @@ bool AfterLoadGame()
 					case 2:
 						cur_skip++;
 						if (u->frame <= (roadside ? 9 : 5)) this_skip = cur_skip;
+						if (u->frame == (roadside ? 5 : 2)) {
+							if (u->direction == DIR_E) {
+								u->direction = DIR_SE;
+								u->y_pos++;
+								u->frame++;
+							}
+						} else if (u->frame >= (roadside ? 6 : 3)) {
+							u->x_pos++;
+						}
 						break;
 
 					case 4:
 						cur_skip++;
 						if (u->frame <= (roadside ? 5 : 9)) this_skip = cur_skip;
+						if (roadside) {
+							if (u->frame == 1) {
+								if (u->direction == DIR_S) {
+									u->direction = DIR_SE;
+									u->y_pos++;
+									u->frame++;
+								}
+							} else if (u->frame >= 2) {
+								u->x_pos--;
+							}
+						}
 						break;
 
 					case 5:
 						cur_skip++;
 						if (u->frame <= (roadside ? 4 : 2)) this_skip = cur_skip;
+						if (roadside) {
+							if (u->frame == 4) {
+								if (u->direction == DIR_S) {
+									u->direction = DIR_SW;
+									u->x_pos++;
+									u->frame++;
+								}
+							} else if (u->frame >= 4) {
+								u->y_pos--;
+							}
+						}
 						break;
 
 					default:
@@ -3144,6 +3175,270 @@ bool AfterLoadGame()
 				SetBit(g->flags, GroupFlags::GF_REPLACE_PROTECTION);
 			}
 			if (HasBit(wagon_removal, g->owner)) SetBit(g->flags, GroupFlags::GF_REPLACE_WAGON_REMOVAL);
+		}
+	}
+
+	if (IsSavegameVersionBefore(SLV_ROADVEH_MOVEMENT_DATA)) {
+		/* Equalise the number of frames needed for road vehicles to traverse different radius curves.
+		 * Convert old 'x' and 'y' positions to reflect the newer movement data.
+		 * Then, fix articulated road vehicles. Some curves were shorter than other curves.
+		 * Now they have the same length, but that means that trailing articulated parts will
+		 * take longer to go through the curve than the parts in front which already left the curve.
+		 * So, make articulated parts catch up. */
+		uint road_side = _settings_game.vehicle.road_side << RVS_DRIVE_SIDE;
+		std::vector<uint> skip_frames;
+		for (RoadVehicle *v : RoadVehicle::Iterate()) {
+			if (!v->IsFrontEngine()) continue;
+			bool changed = false;
+			skip_frames.clear();
+			TileIndex prev_tile = v->tile;
+			uint prev_state = (v->state + road_side) ^ v->overtaking;
+			uint prev_skip = 0;
+			uint cur_skip = 0;
+			for (RoadVehicle *u = v; u != nullptr; u = u->Next()) {
+				uint u_state = (u->state + road_side) ^ u->overtaking;
+				if (u->tile != prev_tile || u_state != prev_state) {
+					prev_skip = cur_skip;
+					prev_tile = u->tile;
+					prev_state = u_state;
+				} else {
+					cur_skip = prev_skip;
+				}
+
+				uint &this_skip = skip_frames.emplace_back(prev_skip);
+
+				switch (u_state) {
+					case 2: // Going SE -> E -> NE, in the inner curve.
+						cur_skip++;
+						this_skip = cur_skip;
+						if (IsSavegameVersionBefore(SLV_188)) break;
+						switch (u->frame) {
+							case 2:
+								if (u->direction == DIR_E) {
+									u->direction = DIR_SE;
+									u->y_pos++;
+									u->frame++;
+									changed = true;
+								}
+								break;
+
+							case 3:
+							case 4:
+							case 5:
+							case 6:
+							case 7:
+								u->x_pos++;
+								changed = true;
+								break;
+						}
+						break;
+
+					case 10: // Going SW -> W -> NW, in the outer curve.
+						cur_skip++;
+						this_skip = cur_skip;
+						switch (u->frame) {
+							case 5:
+								if (u->direction == DIR_W) {
+									u->direction = DIR_SW;
+									u->x_pos++;
+									u->frame++;
+									changed = true;
+								}
+								break;
+
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 12:
+							case 13:
+							case 14:
+								u->y_pos++;
+								changed = true;
+								break;
+						}
+						break;
+
+					case 12: // Going NE -> N -> NW, in the inner curve.
+						cur_skip++;
+						this_skip = cur_skip;
+						switch (u->frame) {
+							case 2:
+								if (u->direction == DIR_N) {
+									u->direction = DIR_NE;
+									u->x_pos--;
+									u->frame++;
+									changed = true;
+								}
+								break;
+
+							case 3:
+							case 4:
+							case 5:
+							case 6:
+							case 7:
+								u->y_pos++;
+								changed = true;
+								break;
+						}
+						break;
+
+					case 13: // Going NW -> N -> NE, in the outer curve.
+						cur_skip++;
+						this_skip = cur_skip;
+						switch (u->frame) {
+							case 5:
+								if (u->direction == DIR_N) {
+									u->direction = DIR_NW;
+									u->y_pos--;
+									u->frame++;
+									changed = true;
+								}
+								break;
+
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 12:
+							case 13:
+							case 14:
+								u->x_pos++;
+								changed = true;
+								break;
+						}
+						break;
+
+					case 18: // Going SE -> E -> NE, in the outer curve.
+						cur_skip++;
+						this_skip = cur_skip;
+						if (IsSavegameVersionBefore(SLV_188)) break;
+						switch (u->frame) {
+							case 5:
+								if (u->direction == DIR_E) {
+									u->direction = DIR_SE;
+									u->y_pos++;
+									u->frame++;
+									changed = true;
+								}
+								break;
+
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 12:
+							case 13:
+							case 14:
+								u->x_pos++;
+								changed = true;
+								break;
+						}
+						break;
+
+					case 20: // Going SE -> S -> SW, in the inner curve.
+						cur_skip++;
+						this_skip = cur_skip;
+						if (IsSavegameVersionBefore(SLV_188)) break;
+						switch (u->frame) {
+							case 1:
+								if (u->direction == DIR_S) {
+									u->direction = DIR_SE;
+									u->y_pos++;
+									u->frame++;
+									changed = true;
+								}
+								break;
+
+							case 2:
+							case 3:
+							case 4:
+							case 5:
+							case 6:
+							case 7:
+								u->x_pos--;
+								changed = true;
+								break;
+						}
+						break;
+
+					case 21: // Going SW -> S -> SE, in the outer curve.
+						cur_skip++;
+						this_skip = cur_skip;
+						if (IsSavegameVersionBefore(SLV_188)) break;
+						switch (u->frame) {
+							case 4:
+								if (u->direction == DIR_S) {
+									u->direction = DIR_SW;
+									u->x_pos++;
+									u->frame++;
+									changed = true;
+								}
+								break;
+
+							case 5:
+							case 6:
+							case 7:
+							case 8:
+							case 9:
+							case 10:
+							case 11:
+							case 12:
+							case 13:
+							case 14:
+								u->y_pos--;
+								changed = true;
+								break;
+						}
+						break;
+
+					case 26: // Going SW -> W -> NW, in the inner curve.
+						cur_skip++;
+						this_skip = cur_skip;
+						switch (u->frame) {
+							case 2:
+								if (u->direction == DIR_W) {
+									u->direction = DIR_SW;
+									u->x_pos++;
+									u->frame++;
+									changed = true;
+								}
+								break;
+
+							case 3:
+							case 4:
+							case 5:
+							case 6:
+							case 7:
+								u->y_pos++;
+								changed = true;
+								break;
+						}
+						break;
+				}
+				if (changed) {
+					u->UpdateInclination(false, true);
+					changed = false;
+				}
+			}
+			while (cur_skip > skip_frames[0]) {
+				RoadVehicle *u = v;
+				RoadVehicle *prev = nullptr;
+				for (uint sf : skip_frames) {
+					extern bool IndividualRoadVehicleController(RoadVehicle * v, const RoadVehicle * prev);
+					if (sf >= cur_skip) IndividualRoadVehicleController(u, prev);
+
+					prev = u;
+					u = u->Next();
+				}
+				cur_skip--;
+			}
 		}
 	}
 
