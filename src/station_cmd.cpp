@@ -4021,7 +4021,7 @@ uint MoveGoodsToStation(CargoID type, uint amount, SourceType source_type, Sourc
 	if (amount == 0) return 0;
 
 	Station *first_station = nullptr;
-	typedef std::pair<Station *, uint> StationInfo;
+	typedef std::tuple<Station *, uint, uint> StationInfo; // station, moved cargo, remainder
 	std::vector<StationInfo> used_stations;
 
 	for (Station *st : *all_stations) {
@@ -4036,9 +4036,9 @@ uint MoveGoodsToStation(CargoID type, uint amount, SourceType source_type, Sourc
 		}
 		if (used_stations.empty()) {
 			used_stations.reserve(2);
-			used_stations.emplace_back(std::make_pair(first_station, 0));
+			used_stations.emplace_back(first_station, 0, 0);
 		}
-		used_stations.emplace_back(std::make_pair(st, 0));
+		used_stations.emplace_back(st, 0, 0);
 	}
 
 	/* no stations around at all? */
@@ -4056,8 +4056,8 @@ uint MoveGoodsToStation(CargoID type, uint amount, SourceType source_type, Sourc
 	uint best_sum = 0;  // sum of best ratings for each company
 
 	for (auto &p : used_stations) {
-		auto owner = p.first->owner;
-		auto rating = p.first->goods[type].rating;
+		auto owner = std::get<0>(p)->owner;
+		auto rating = std::get<0>(p)->goods[type].rating;
 		if (rating > company_best[owner]) {
 			best_sum += rating - company_best[owner];  // it's usually faster than iterating companies later
 			company_best[owner] = rating;
@@ -4072,28 +4072,32 @@ uint MoveGoodsToStation(CargoID type, uint amount, SourceType source_type, Sourc
 
 	uint moving = 0;
 	for (auto &p : used_stations) {
-		uint owner = p.first->owner;
+		uint owner = std::get<0>(p)->owner;
 		/* Multiply the amount by (company best / sum of best for each company) to get cargo allocated to a company
 		 * and by (station rating / sum of ratings in a company) to get the result for a single station. */
-		p.second = amount * company_best[owner] * p.first->goods[type].rating / best_sum / company_sum[owner];
-		moving += p.second;
+		uint a = amount * company_best[owner] * std::get<0>(p)->goods[type].rating;
+		uint b = best_sum * company_sum[owner];
+		std::get<1>(p) = a / b;
+		moving += std::get<1>(p);
+		/* Normalize the remainder to a numerator in the fraction x/65535 that is closest to (a % b) / b */
+		std::get<2>(p) = 0xFFFFull * (a % b) / b;
 	}
 
-	/* If there is some cargo left due to rounding issues distribute it among the best rated stations. */
+	/* If there is some cargo left due to rounding issues distribute it according to the highest remainder. */
 	if (amount > moving) {
-		std::sort(used_stations.begin(), used_stations.end(), [type](const StationInfo &a, const StationInfo &b) {
-			return b.first->goods[type].rating < a.first->goods[type].rating;
+		std::sort(used_stations.begin(), used_stations.end(), [](const StationInfo &a, const StationInfo &b) {
+			return std::get<2>(b) < std::get<2>(a);
 		});
 
 		assert(amount - moving <= used_stations.size());
 		for (uint i = 0; i < amount - moving; i++) {
-			used_stations[i].second++;
+			std::get<1>(used_stations[i])++;
 		}
 	}
 
 	uint moved = 0;
 	for (auto &p : used_stations) {
-		moved += UpdateStationWaiting(p.first, type, p.second, source_type, source_id);
+		moved += UpdateStationWaiting(std::get<0>(p), type, std::get<1>(p), source_type, source_id);
 	}
 
 	return moved;
