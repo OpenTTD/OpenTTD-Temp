@@ -79,8 +79,8 @@ the array so you can quickly see what is used and what is not.
     <tr>
       <td rowspan="2">0</td>
       <td class="caption">ground</td>
-      <td class="bits" rowspan=27><span class="used" title="Tile type">XXXX</span> <span class="used" title="Presence and direction of bridge above">XX</span> <span class="used" title="Tropic Zone: only meaningfull in tropic climate. It contains the definition of the available zones">XX</span></td>
-      <td class="bits" rowspan=27><span class="used" title="Tile height">XXXX XXXX</span></td>
+      <td class="bits" rowspan=28><span class="used" title="Tile type">XXXX</span> <span class="used" title="Presence and direction of bridge above">XX</span> <span class="used" title="Tropic Zone: only meaningfull in tropic climate. It contains the definition of the available zones">XX</span></td>
+      <td class="bits" rowspan=28><span class="used" title="Tile height">XXXX XXXX</span></td>
       <td class="bits" rowspan=2><span class="free">OOO</span><span class="usable" title="Owner (always OWNER_NONE)">1 OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO OOOO OOOO</span></td>
       <td class="bits"><span class="used" title="Type of hedge on NE border">XXX</span> <span class="used" title="Snow presence">X</span><span class="free">OOOO</span></td>
@@ -211,7 +211,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="used" title="Graphics index">XXXX XXXX</span></td>
       <td class="bits"><span class="used" title="Animation frame">XXXX XXXX</span></td>
-      <td class="bits" rowspan=4><span class="free">OOOO OOOO OOOO OOOO</span></td>
+      <td class="bits"><span class="free">OOOO OOOO OOOO OOOO</span></td>
     </tr>
     <tr>
       <td class="caption">dock</td>
@@ -219,6 +219,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="usable" title="Graphics index">OOOO </span><span class="usable" title="Graphics index">O</span><span class="used" title="Graphics index">XXX</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
+      <td class="bits" rowspan=3><span class="used" title="Canal on river presence">X</span><span class="free">OOO OOOO OOOO OOOO</span></td>
     </tr>
     <tr>
       <td class="caption">buoy</td>
@@ -235,21 +236,25 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="free">OOOO OOOO</span></td>
     </tr>
     <tr>
-      <td rowspan=4>6</td>
+      <td rowspan=5>6</td>
       <td class="caption">sea, shore</td>
-      <td class="bits" rowspan=4><span class="used" title="Ship docking tile status">X</span> <span class="used" title="Water class">XX</span> <span class="used" title="Owner">XXXXX</span></td>
-      <td class="bits" rowspan=3><span class="free">OOOO OOOO OOOO OOOO</span></td>
-      <td class="bits" rowspan=4><span class="free">OOOO OOOO</span></td>
+      <td class="bits" rowspan=5><span class="used" title="Ship docking tile status">X</span> <span class="used" title="Water class">XX</span> <span class="used" title="Owner">XXXXX</span></td>
+      <td class="bits" rowspan=4><span class="free">OOOO OOOO OOOO OOOO</span></td>
+      <td class="bits" rowspan=5><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="used" title="Water tile type: coast, clear, lock, depot">O<span class="usable">OO</span>O</span> <span class="free">OOO</span><span class="used" title="Sea shore flag">X</span></td>
-      <td class="bits" rowspan=4><span class="free">OOOO OOOO</span></td>
-      <td class="bits" rowspan=4><span class="free">OOOO OOOO</td>
-      <td class="bits" rowspan=4><span class="free">OOOO OOOO OOOO OOOO</span></td>
+      <td class="bits" rowspan=5><span class="free">OOOO OOOO</span></td>
+      <td class="bits" rowspan=5><span class="free">OOOO OOOO</td>
+      <td class="bits" rowspan=2><span class="free">OOOO OOOO OOOO OOOO</span></td>
     </tr>
     <tr>
-      <td class="caption">canal, river</td>
-      <td class="bits"><span class="used" title="Canal/river random bits">XXXX XXXX</span></td>
-      <td class="bits"><span class="used" title="Water tile type: coast, clear, lock, depot">O<span class="usable">OO</span>O</span> <span class="free">OOOO</span></td>
+      <td class="caption">river</td>
+      <td class="bits" rowspan=2><span class="used" title="Canal/river random bits">XXXX XXXX</span></td>
+      <td class="bits" rowspan=2><span class="used" title="Water tile type: coast, clear, lock, depot">O<span class="usable">OO</span>O</span> <span class="free">OOOO</span></td>
+    </tr>
+    <tr>
+      <td class="caption">canal</td>
+      <td class="bits" rowspan=3><span class="used" title="Canal on river presence">X</span><span class="free">OOO OOOO OOOO OOOO</span></td>
     </tr>
     <tr>
       <td class="caption">lock</td>
@@ -272,7 +277,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits" rowspan=2><span class="used" title="Industry graphics ID (m5 + m6[2])">XXXX XXXX</span></td>
       <td class="bits" rowspan=2><span class="free">OO</span><span class="used" title="Random triggers (NewGRF)">XXX</span> <span class="used" title="Industry graphics ID (m5 + m6[2])">X</span><span class="free">OO</span></td>
       <td class="bits" rowspan=2><span class="used" title="Animation frame">XXXX XXXX</span></td>
-      <td class="bits" rowspan=2><span class="free">OOOO OOOO OOOO OOOO</span></td>
+      <td class="bits" rowspan=2><span class="used" title="Canal on river presence">X</span><span class="free">OOO OOOO OOOO OOOO</span></td>
     </tr>
     <tr>
       <td class="caption">industry under construction</td>
@@ -305,7 +310,7 @@ the array so you can quickly see what is used and what is not.
       <td class="bits"><span class="pool" title="Object index on pool (m2 + m5)">XXXX XXXX</span></td>
       <td class="bits"><span class="free">OOOO OOOO</span></td>
       <td class="bits"><span class="used" title="Animation counter">XXXX XXXX</span></td>
-      <td class="bits" rowspan=1><span class="free">OOOO OOOO OOOO OOOO</span></td>
+      <td class="bits"><span class="used" title="Canal on river presence">X</span><span class="free">OOO OOOO OOOO OOOO</span></td>
     </tr>
     <tr>
       <td colspan=2 class="caption">bits</td>

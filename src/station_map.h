@@ -542,7 +542,7 @@ static inline void MakeStation(TileIndex t, Owner o, StationID sid, StationType 
 	SB(_me[t].m6, 2, 1, 0);
 	SB(_me[t].m6, 3, 3, st);
 	_me[t].m7 = 0;
-	_me[t].m8 = 0;
+	SB(_me[t].m8, 0, 15, 0);
 }
 
 /**

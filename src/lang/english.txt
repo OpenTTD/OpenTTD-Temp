@@ -1231,6 +1231,8 @@ STR_CONFIG_SETTING_SERVE_NEUTRAL_INDUSTRIES                     :Company station
 STR_CONFIG_SETTING_SERVE_NEUTRAL_INDUSTRIES_HELPTEXT            :When enabled, industries with attached stations (such as Oil Rigs) may also be served by company owned stations built nearby. When disabled, these industries may only be served by their attached stations. Any nearby company stations won't be able to serve them, nor will the attached station serve anything else other than the industry
 STR_CONFIG_SETTING_EXTRADYNAMITE                                :Allow removal of more town-owned roads, bridges and tunnels: {STRING2}
 STR_CONFIG_SETTING_EXTRADYNAMITE_HELPTEXT                       :Make it easier to remove town-owned infrastructure and buildings
+STR_CONFIG_SETTING_DYNAMITE_RIVER                               :Allow removal of rivers: {STRING2}
+STR_CONFIG_SETTING_DYNAMITE_RIVER_HELPTEXT                      :If disabled, rivers are indestructible and become a permanent part of the landscape
 STR_CONFIG_SETTING_TRAIN_LENGTH                                 :Maximum length of trains: {STRING2}
 STR_CONFIG_SETTING_TRAIN_LENGTH_HELPTEXT                        :Set the maximum length of trains
 STR_CONFIG_SETTING_TILE_LENGTH                                  :{COMMA} tile{P 0 "" s}
@@ -2770,6 +2772,7 @@ STR_LAI_STATION_DESCRIPTION_WAYPOINT                            :Waypoint
 
 STR_LAI_WATER_DESCRIPTION_WATER                                 :Water
 STR_LAI_WATER_DESCRIPTION_CANAL                                 :Canal
+STR_LAI_WATER_DESCRIPTION_CANALISED_RIVER                       :Canalised river
 STR_LAI_WATER_DESCRIPTION_LOCK                                  :Lock
 STR_LAI_WATER_DESCRIPTION_RIVER                                 :River
 STR_LAI_WATER_DESCRIPTION_COAST_OR_RIVERBANK                    :Coast or riverbank
@@ -4593,6 +4596,7 @@ STR_ERROR_CAN_T_BUILD_ON_CANAL                                  :{WHITE}... can'
 STR_ERROR_CAN_T_BUILD_ON_RIVER                                  :{WHITE}... can't build on river
 STR_ERROR_MUST_DEMOLISH_CANAL_FIRST                             :{WHITE}Must demolish canal first
 STR_ERROR_CAN_T_BUILD_AQUEDUCT_HERE                             :{WHITE}Can't build aqueduct here...
+STR_ERROR_MUST_CLEAR_RIVER_FIRST                                :{WHITE}Must clear river first
 
 # Tree related errors
 STR_ERROR_TREE_ALREADY_HERE                                     :{WHITE}... tree already here
