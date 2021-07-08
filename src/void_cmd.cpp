@@ -12,6 +12,7 @@
 #include "command_func.h"
 #include "viewport_func.h"
 #include "slope_func.h"
+#include "water.h"
 
 #include "table/strings.h"
 #include "table/sprites.h"
@@ -53,7 +54,8 @@ static void GetTileDesc_Void(TileIndex tile, TileDesc *td)
 
 static void TileLoop_Void(TileIndex tile)
 {
-	/* not used */
+	/* Floods adjacent edge tile to prevent maps without water. */
+	TileLoop_Water(tile);
 }
 
 static void ChangeTileOwner_Void(TileIndex tile, Owner old_owner, Owner new_owner)
