@@ -69,7 +69,18 @@ EngineID EngineReplacement(EngineRenewList erl, EngineID engine, GroupID group, 
 		/* We didn't find anything useful in the vehicle's own group so we will try ALL_GROUP */
 		er = GetEngineReplacement(erl, engine, ALL_GROUP);
 	}
-	if (replace_when_old != nullptr) *replace_when_old = er == nullptr ? false : er->replace_when_old;
+	if (replace_when_old != nullptr) {
+		if (er == nullptr) {
+			/* Not replacing */
+			*replace_when_old = false;
+		} else if (er->to == engine) {
+			/* When replacing with same model, only ever do it when old */
+			*replace_when_old = true;
+		} else {
+			/* Use player setting */
+			*replace_when_old = er->replace_when_old;
+		}
+	}
 	return er == nullptr ? INVALID_ENGINE : er->to;
 }
 
