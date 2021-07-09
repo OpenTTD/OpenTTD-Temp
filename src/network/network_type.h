@@ -35,6 +35,16 @@ enum NetworkVehicleType {
 	NETWORK_VEH_END
 };
 
+/**
+ * Game type the server can be using.
+ * Used on the network protocol to communicate with Game Coordinator.
+ */
+enum ServerGameType : uint8 {
+	SERVER_GAME_TYPE_LOCAL = 0,
+	SERVER_GAME_TYPE_PUBLIC,
+	SERVER_GAME_TYPE_INVITE_ONLY,
+};
+
 /** 'Unique' identifier to be given to clients */
 enum ClientID : uint32 {
 	INVALID_CLIENT_ID = 0, ///< Client is not part of anything

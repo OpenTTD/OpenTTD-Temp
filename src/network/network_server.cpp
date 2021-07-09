@@ -354,8 +354,8 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::SendClientInfo(NetworkClientIn
 /** Send the client information about the server. */
 NetworkRecvStatus ServerNetworkGameSocketHandler::SendGameInfo()
 {
-	Packet *p = new Packet(PACKET_SERVER_GAME_INFO);
-	SerializeNetworkGameInfo(p, GetCurrentNetworkServerGameInfo());
+	Packet *p = new Packet(PACKET_SERVER_GAME_INFO, TCP_MTU);
+	SerializeNetworkGameInfo(p, GetCurrentNetworkServerGameInfo(), GAME_INFO_NEWGRF_MODE_FULL);
 
 	this->SendPacket(p);
 
@@ -470,7 +470,7 @@ NetworkRecvStatus ServerNetworkGameSocketHandler::SendError(NetworkErrorCode err
 /** Send the check for the NewGRFs. */
 NetworkRecvStatus ServerNetworkGameSocketHandler::SendNewGRFCheck()
 {
-	Packet *p = new Packet(PACKET_SERVER_CHECK_NEWGRFS);
+	Packet *p = new Packet(PACKET_SERVER_CHECK_NEWGRFS, TCP_MTU);
 	const GRFConfig *c;
 	uint grf_count = 0;
 
@@ -1879,9 +1879,6 @@ void NetworkServer_Tick(bool send_frame)
 #endif
 		}
 	}
-
-	/* See if we need to advertise */
-	NetworkUDPAdvertise();
 }
 
 /** Yearly "callback". Called whenever the year changes. */

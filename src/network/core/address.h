@@ -12,6 +12,7 @@
 
 #include "os_abstraction.h"
 #include "config.h"
+#include "../../company_type.h"
 #include "../../string_func.h"
 #include "../../core/smallmap_type.hpp"
 
@@ -174,7 +175,43 @@ public:
 
 	static const char *SocketTypeAsString(int socktype);
 	static const char *AddressFamilyAsString(int family);
+	static NetworkAddress GetPeerAddress(SOCKET sock);
+	static NetworkAddress GetSockAddress(SOCKET sock);
 	static const std::string GetPeerName(SOCKET sock);
+};
+
+/**
+ * Types of server addresses we know.
+ *
+ * Sorting will prefer entries at the top of this list above ones at the bottom.
+ */
+enum ServerAddressType {
+	SERVER_ADDRESS_DIRECT,   ///< Server-address is based on an IP:port.
+	SERVER_ADDRESS_JOIN_KEY, ///< Server-address is based on a join-key given by the Game Coordinator.
+};
+
+/**
+ * Address to a game server.
+ *
+ * This generalises addresses which are based on different identifiers.
+ */
+class ServerAddress {
+private:
+	/**
+	 * Create a new ServerAddress object.
+	 *
+	 * Please use ServerAddress::Parse() instead of calling this directly.
+	 *
+	 * @param type The type of the ServerAdress.
+	 * @param connection_string The connection_string that belongs to this ServerAddress type.
+	 */
+	ServerAddress(ServerAddressType type, const std::string &connection_string) : type(type), connection_string(connection_string) {}
+
+public:
+	ServerAddressType type;        ///< The type of this ServerAddress.
+	std::string connection_string; ///< The connection string for this ServerAddress.
+
+	static ServerAddress Parse(const std::string &connection_string, uint16 default_port, CompanyID *company_id = nullptr);
 };
 
 #endif /* NETWORK_CORE_ADDRESS_H */

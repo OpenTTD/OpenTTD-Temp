@@ -25,11 +25,14 @@
  * Version: Bytes:  Description:
  *   all      1       the version of this packet's structure
  *
- *   4+       1       number of GRFs attached (n)
- *   4+       n * 20  unique identifier for GRF files. Consists of:
- *                     - one 4 byte variable with the GRF ID
- *                     - 16 bytes (sent sequentially) for the MD5 checksum
+ *   5+       var     join key of the server
+ *   5+       1       NewGRF mode (0 = none: skip next two fields, 1 = short: skip name, 2 = full)
+ *   4+       1       number of NewGRFs attached
+ *   4+       n * M   unique identifier for NewGRF files. Consists of:
+ *   4+                - one 4 byte variable with the NewGRF ID
+ *   4+                - 16 bytes (sent sequentially) for the MD5 checksum
  *                       of the GRF
+ *   5+                - name of the NewGRF
  *
  *   3+       4       current game date in days since 1-1-0 (DMY)
  *   3+       4       game introduction date in days since 1-1-0 (DMY)
@@ -40,15 +43,15 @@
  *
  *   1+       var     string with the name of the server
  *   1+       var     string with the revision of the server
- *   1+       1       the language run on the server
+ *   1..4     1       the language run on the server
  *                    (0 = any, 1 = English, 2 = German, 3 = French)
  *   1+       1       whether the server uses a password (0 = no, 1 = yes)
  *   1+       1       maximum number of clients allowed on the server
  *   1+       1       number of clients on the server
  *   1+       1       number of spectators on the server
- *   1 & 2    2       current game date in days since 1-1-1920 (DMY)
- *   1 & 2    2       game introduction date in days since 1-1-1920 (DMY)
- *   1+       var     string with the name of the map
+ *   1..2     2       current game date in days since 1-1-1920 (DMY)
+ *   1..2     2       game introduction date in days since 1-1-1920 (DMY)
+ *   1..4     var     string with the name of the map
  *   1+       2       width of the map in tiles
  *   1+       2       height of the map in tiles
  *   1+       1       type of map:
@@ -67,6 +70,7 @@ struct NetworkServerGameInfo {
 	uint16 map_height;           ///< Map height
 	std::string server_name;     ///< Server name
 	std::string server_revision; ///< The version number the server is using (e.g.: 'r304' or 0.5.0)
+	std::string join_key;        ///< Join-key of the server
 	bool dedicated;              ///< Is this a dedicated server?
 	bool use_password;           ///< Is this server passworded?
 	byte clients_on;             ///< Current count of clients on server
@@ -76,6 +80,8 @@ struct NetworkServerGameInfo {
 	byte spectators_on;          ///< How many spectators do we have?
 	byte spectators_max;         ///< Max spectators allowed on server
 	byte landscape;              ///< The used landscape
+	int gamescript_version;      ///< Version of the gamescript.
+	std::string gamescript_name; ///< Name of the gamescript.
 };
 
 /**
@@ -85,6 +91,12 @@ struct NetworkServerGameInfo {
 struct NetworkGameInfo : NetworkServerGameInfo {
 	bool version_compatible;                        ///< Can we connect to this server or not? (based on server_revision)
 	bool compatible;                                ///< Can we connect to this server or not? (based on server_revision _and_ grf_match
+};
+
+enum GameInfoNewGRFMode : uint8 {
+	GAME_INFO_NEWGRF_MODE_NONE = 0, ///< Send/receive NetworkGameInfo without any NewGRF data.
+	GAME_INFO_NEWGRF_MODE_SHORT,    ///< Send/receive NetworkGameInfo with only the ID + MD5 of NewGRFs.
+	GAME_INFO_NEWGRF_MODE_FULL,     ///< Send/receive NetworkGameInfo with ID + MD5 + Name of NewGRFs.
 };
 
 extern NetworkServerGameInfo _network_game_info;
@@ -100,6 +112,6 @@ void DeserializeGRFIdentifier(Packet *p, GRFIdentifier *grf);
 void SerializeGRFIdentifier(Packet *p, const GRFIdentifier *grf);
 
 void DeserializeNetworkGameInfo(Packet *p, NetworkGameInfo *info);
-void SerializeNetworkGameInfo(Packet *p, const NetworkServerGameInfo *info);
+void SerializeNetworkGameInfo(Packet *p, const NetworkServerGameInfo *info, GameInfoNewGRFMode newgrf_mode);
 
 #endif /* NETWORK_CORE_GAME_INFO_H */

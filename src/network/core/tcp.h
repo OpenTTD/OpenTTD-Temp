@@ -82,10 +82,12 @@ private:
 		RESOLVING,  ///< The hostname is being resolved (threaded).
 		FAILURE,    ///< Resolving failed.
 		CONNECTING, ///< We are currently connecting.
+		HAS_RESULT, ///< Our connecter is finished ans "result_socket" contains the result (TCPServerConnecter only).
 	};
 
 	std::thread resolve_thread;                         ///< Thread used during resolving.
 	std::atomic<Status> status = Status::INIT;          ///< The current status of the connecter.
+	std::atomic<bool> killed = false;                   ///< Whether this connecter is marked as killed.
 
 	addrinfo *ai = nullptr;                             ///< getaddrinfo() allocated linked-list of resolved addresses.
 	std::vector<addrinfo *> addresses;                  ///< Addresses we can connect to.
@@ -96,17 +98,24 @@ private:
 	std::chrono::steady_clock::time_point last_attempt; ///< Time we last tried to connect.
 
 	std::string connection_string;                      ///< Current address we are connecting to (before resolving).
+	NetworkAddress bind_address;                        ///< Address we're binding to, if any.
+	int family = AF_UNSPEC;                             ///< Family we are using to connect with.
 
 	void Resolve();
 	void OnResolved(addrinfo *ai);
 	bool TryNextAddress();
 	void Connect(addrinfo *address);
-	bool CheckActivity();
+	virtual bool CheckActivity();
+
+	/* We do not want any other derived classes from this class being able to
+	 * access these private members, but it is okay for TCPServerConnecter. */
+	friend class TCPServerConnecter;
 
 	static void ResolveThunk(TCPConnecter *connecter);
 
 public:
-	TCPConnecter(const std::string &connection_string, uint16 default_port);
+	TCPConnecter() {};
+	TCPConnecter(const std::string &connection_string, uint16 default_port, NetworkAddress bind_address = {}, int family = AF_UNSPEC);
 	virtual ~TCPConnecter();
 
 	/**
@@ -120,8 +129,24 @@ public:
 	 */
 	virtual void OnFailure() {}
 
+	void Kill();
+
 	static void CheckCallbacks();
 	static void KillAll();
+};
+
+class TCPServerConnecter : public TCPConnecter {
+private:
+	SOCKET result_socket = INVALID_SOCKET; ///< The resulting socket for this connecter.
+
+	bool CheckActivity() override;
+
+public:
+	ServerAddress server_address; ///< Address we are connecting to.
+
+	TCPServerConnecter(const std::string &connection_string, uint16 default_port);
+
+	void SetResult(SOCKET sock);
 };
 
 #endif /* NETWORK_CORE_TCP_H */

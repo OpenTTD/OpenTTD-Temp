@@ -10,6 +10,7 @@
 #include "../../stdafx.h"
 
 #include "address.h"
+#include "../network_internal.h"
 #include "../../debug.h"
 
 #include "../../safeguards.h"
@@ -312,13 +313,12 @@ static SOCKET ListenLoopProc(addrinfo *runp)
 		Debug(net, 1, "Setting no-delay mode failed: {}", NetworkError::GetLast().AsString());
 	}
 
-	int on = 1;
-	/* The (const char*) cast is needed for windows!! */
-	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on)) == -1) {
+	if (!SetReusePort(sock)) {
 		Debug(net, 0, "Setting reuse-address mode failed: {}", NetworkError::GetLast().AsString());
 	}
 
 #ifndef __OS2__
+	int on = 1;
 	if (runp->ai_family == AF_INET6 &&
 			setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&on, sizeof(on)) == -1) {
 		Debug(net, 3, "Could not disable IPv4 over IPv6: {}", NetworkError::GetLast().AsString());
@@ -400,14 +400,65 @@ void NetworkAddress::Listen(int socktype, SocketList *sockets)
 }
 
 /**
+ * Get the peer address of a socket as NetworkAddress.
+ * @param sock The socket to get the peer address of.
+ * @return The NetworkAddress of the peer address.
+ */
+/* static */ NetworkAddress NetworkAddress::GetPeerAddress(SOCKET sock)
+{
+	sockaddr_storage addr = {};
+	socklen_t addr_len = sizeof(addr);
+	if (getpeername(sock, (sockaddr *)&addr, &addr_len) != 0) {
+		Debug(net, 0, "Failed to get address of the peer: {}", NetworkError::GetLast().AsString());
+		return NetworkAddress();
+	}
+	return NetworkAddress(addr, addr_len);
+}
+
+/**
+ * Get the local address of a socket as NetworkAddress.
+ * @param sock The socket to get the local address of.
+ * @return The NetworkAddress of the local address.
+ */
+/* static */ NetworkAddress NetworkAddress::GetSockAddress(SOCKET sock)
+{
+	sockaddr_storage addr = {};
+	socklen_t addr_len = sizeof(addr);
+	if (getsockname(sock, (sockaddr *)&addr, &addr_len) != 0) {
+		Debug(net, 0, "Failed to get address of the socket: {}", NetworkError::GetLast().AsString());
+		return NetworkAddress();
+	}
+	return NetworkAddress(addr, addr_len);
+}
+
+/**
  * Get the peer name of a socket in string format.
  * @param sock The socket to get the peer name of.
  * @return The string representation of the peer name.
  */
 /* static */ const std::string NetworkAddress::GetPeerName(SOCKET sock)
 {
-	sockaddr_storage addr;
-	socklen_t addr_len = sizeof(addr);
-	getpeername(sock, (sockaddr *)&addr, &addr_len);
-	return NetworkAddress(addr, addr_len).GetAddressAsString();
+	return NetworkAddress::GetPeerAddress(sock).GetAddressAsString();
+}
+
+/**
+ * Convert a string containing either "hostname" or "hostname:ip" to a
+ * ServerAddress, where the string can be postfixed with "#company" to
+ * indicate the requested company.
+ *
+ * @param connection_string The string to parse.
+ * @param default_port The default port to set port to if not in connection_string.
+ * @param company Pointer to the company variable to set iff indicted.
+ * @return A valid ServerAddress of the parsed information.
+ */
+/* static */ ServerAddress ServerAddress::Parse(const std::string &connection_string, uint16 default_port, CompanyID *company_id)
+{
+	if (!connection_string.empty() && connection_string[0] == '+') {
+		std::string_view ip = ParseCompanyFromConnectionString(connection_string, company_id);
+		return ServerAddress(SERVER_ADDRESS_JOIN_KEY, std::string(ip));
+	}
+
+	uint16 port = default_port;
+	std::string_view ip = ParseFullConnectionString(connection_string, port, company_id);
+	return ServerAddress(SERVER_ADDRESS_DIRECT, std::string(ip) + ":" + std::to_string(port));
 }

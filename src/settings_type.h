@@ -15,6 +15,7 @@
 #include "town_type.h"
 #include "transport_type.h"
 #include "network/core/config.h"
+#include "network/network_type.h"
 #include "company_type.h"
 #include "cargotype.h"
 #include "linkgraph/linkgraph_type.h"
@@ -266,6 +267,9 @@ struct NetworkSettings {
 	uint16      server_port;                              ///< port the server listens on
 	uint16      server_admin_port;                        ///< port the server listens on for the admin network
 	bool        server_admin_chat;                        ///< allow private chat for the server to be distributed to the admin network
+	ServerGameType server_game_type;                      ///< Server type: local / public / invite-only.
+	std::string server_join_key;                          ///< Join-key to use when registering as server.
+	std::string server_join_key_secret;                   ///< Secret to proof we got this join-key from the Game Coordinator.
 	std::string server_name;                              ///< name of the server
 	std::string server_password;                          ///< password for joining this server
 	std::string rcon_password;                            ///< password for rconsole (server side)

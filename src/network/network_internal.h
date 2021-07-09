@@ -11,6 +11,7 @@
 #define NETWORK_INTERNAL_H
 
 #include "network_func.h"
+#include "core/tcp_coordinator.h"
 #include "core/tcp_game.h"
 
 #include "../command_type.h"
@@ -82,6 +83,7 @@ extern NetworkJoinStatus _network_join_status;
 extern uint8 _network_join_waiting;
 extern uint32 _network_join_bytes;
 extern uint32 _network_join_bytes_total;
+extern ConnectionType _network_server_connection_type;
 
 extern uint8 _network_reconnect;
 
@@ -91,7 +93,7 @@ void NetworkQueryServer(const std::string &connection_string);
 void NetworkQueryLobbyServer(const std::string &connection_string);
 
 void GetBindAddresses(NetworkAddressList *addresses, uint16 port);
-struct NetworkGameList *NetworkAddServer(const std::string &connection_string, bool manually = true);
+struct NetworkGameList *NetworkAddServer(const std::string &connection_string, bool manually = true, bool never_expire = false);
 void NetworkRebuildHostList();
 void UpdateNetworkGameWindow();
 
@@ -120,6 +122,7 @@ StringID GetNetworkErrorMsg(NetworkErrorCode err);
 bool NetworkMakeClientNameUnique(std::string &new_name);
 std::string GenerateCompanyPasswordHash(const std::string &password, const std::string &password_server_id, uint32 password_game_seed);
 
+std::string_view ParseCompanyFromConnectionString(const std::string &connection_string, CompanyID *company_id);
 NetworkAddress ParseConnectionString(const std::string &connection_string, uint16 default_port);
 std::string NormalizeConnectionString(const std::string &connection_string, uint16 default_port);
 

@@ -20,11 +20,17 @@ add_files(
     tcp_content.cpp
     tcp_content.h
     tcp_content_type.h
+    tcp_coordinator.cpp
+    tcp_coordinator.h
     tcp_game.cpp
     tcp_game.h
     tcp_http.cpp
     tcp_http.h
     tcp_listen.h
+    tcp_stun.cpp
+    tcp_stun.h
+    tcp_turn.cpp
+    tcp_turn.h
     udp.cpp
     udp.h
 )

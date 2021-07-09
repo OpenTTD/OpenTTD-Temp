@@ -196,6 +196,7 @@ static inline socklen_t FixAddrLenForEmscripten(struct sockaddr_storage &address
 
 bool SetNonBlocking(SOCKET d);
 bool SetNoDelay(SOCKET d);
+bool SetReusePort(SOCKET d);
 NetworkError GetSocketError(SOCKET d);
 
 /* Make sure these structures have the size we expect them to be */

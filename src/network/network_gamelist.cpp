@@ -20,51 +20,13 @@
 
 #include "../safeguards.h"
 
-NetworkGameList *_network_game_list = nullptr;
-
-/** The games to insert when the GUI thread has time for us. */
-static std::atomic<NetworkGameList *> _network_game_delayed_insertion_list(nullptr);
-
-/**
- * Add a new item to the linked gamelist, but do it delayed in the next tick
- * or so to prevent race conditions.
- * @param item the item to add. Will be freed once added.
- */
-void NetworkGameListAddItemDelayed(NetworkGameList *item)
-{
-	item->next = _network_game_delayed_insertion_list.load(std::memory_order_relaxed);
-	while (!_network_game_delayed_insertion_list.compare_exchange_weak(item->next, item, std::memory_order_acq_rel)) {}
-}
-
-/** Perform the delayed (thread safe) insertion into the game list */
-static void NetworkGameListHandleDelayedInsert()
-{
-	while (true) {
-		NetworkGameList *ins_item = _network_game_delayed_insertion_list.load(std::memory_order_relaxed);
-		while (ins_item != nullptr && !_network_game_delayed_insertion_list.compare_exchange_weak(ins_item, ins_item->next, std::memory_order_acq_rel)) {}
-		if (ins_item == nullptr) break; // No item left.
-
-		NetworkGameList *item = NetworkGameListAddItem(ins_item->connection_string);
-
-		if (item != nullptr) {
-			if (item->info.server_name.empty()) {
-				ClearGRFConfigList(&item->info.grfconfig);
-				item->info = {};
-				item->info.server_name = ins_item->info.server_name;
-				item->online = false;
-			}
-			item->manually |= ins_item->manually;
-			if (item->manually) NetworkRebuildHostList();
-			UpdateNetworkGameWindow();
-		}
-		delete ins_item;
-	}
-}
+NetworkGameList *_network_game_list = nullptr; ///< Game list of this client.
+int _network_game_list_version = 0; ///< Current version of all items in the list.
 
 /**
  * Add a new item to the linked gamelist. If the IP and Port match
  * return the existing item instead of adding it again
- * @param address the address of the to-be added item
+ * @param connection_string the address of the to-be added item
  * @return a point to the newly added or already existing item
  */
 NetworkGameList *NetworkGameListAddItem(const std::string &connection_string)
@@ -72,7 +34,7 @@ NetworkGameList *NetworkGameListAddItem(const std::string &connection_string)
 	NetworkGameList *item, *prev_item;
 
 	/* Parse the connection string to ensure the default port is there. */
-	const std::string resolved_connection_string = ParseConnectionString(connection_string, NETWORK_DEFAULT_PORT).GetAddressAsString(false);
+	const std::string resolved_connection_string = ServerAddress::Parse(connection_string, NETWORK_DEFAULT_PORT).connection_string;
 
 	prev_item = nullptr;
 	for (item = _network_game_list; item != nullptr; item = item->next) {
@@ -81,6 +43,7 @@ NetworkGameList *NetworkGameListAddItem(const std::string &connection_string)
 	}
 
 	item = new NetworkGameList(resolved_connection_string);
+	item->version = _network_game_list_version;
 
 	if (prev_item == nullptr) {
 		_network_game_list = item;
@@ -120,29 +83,31 @@ void NetworkGameListRemoveItem(NetworkGameList *remove)
 	}
 }
 
-static const uint MAX_GAME_LIST_REQUERY_COUNT  = 10; ///< How often do we requery in number of times per server?
-static const uint REQUERY_EVERY_X_GAMELOOPS    = 60; ///< How often do we requery in time?
-static const uint REFRESH_GAMEINFO_X_REQUERIES = 50; ///< Refresh the game info itself after REFRESH_GAMEINFO_X_REQUERIES * REQUERY_EVERY_X_GAMELOOPS game loops
-
-/** Requeries the (game) servers we have not gotten a reply from */
-void NetworkGameListRequery()
+/**
+ * Remove all servers that have not recently been updated.
+ * Call this after you received all the servers from the Game Coordinator, so
+ * the ones that are no longer listed are removed.
+ */
+void NetworkGameListRemoveExpired()
 {
-	NetworkGameListHandleDelayedInsert();
+	NetworkGameList **prev_item = &_network_game_list;
 
-	static uint8 requery_cnt = 0;
+	for (NetworkGameList *item = _network_game_list; item != nullptr;) {
+		if (!item->manually && item->version < _network_game_list_version) {
+			NetworkGameList *remove = item;
+			item = item->next;
+			*prev_item = item;
 
-	if (++requery_cnt < REQUERY_EVERY_X_GAMELOOPS) return;
-	requery_cnt = 0;
-
-	for (NetworkGameList *item = _network_game_list; item != nullptr; item = item->next) {
-		item->retries++;
-		if (item->retries < REFRESH_GAMEINFO_X_REQUERIES && (item->online || item->retries >= MAX_GAME_LIST_REQUERY_COUNT)) continue;
-
-		/* item gets mostly zeroed by NetworkUDPQueryServer */
-		uint8 retries = item->retries;
-		NetworkUDPQueryServer(item->connection_string);
-		item->retries = (retries >= REFRESH_GAMEINFO_X_REQUERIES) ? 0 : retries;
+			/* Remove GRFConfig information */
+			ClearGRFConfigList(&remove->info.grfconfig);
+			delete remove;
+		} else {
+			prev_item = &item->next;
+			item = item->next;
+		}
 	}
+
+	UpdateNetworkGameWindow();
 }
 
 /**

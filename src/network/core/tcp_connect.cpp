@@ -13,6 +13,7 @@
 #include "../../thread.h"
 
 #include "tcp.h"
+#include "../network_coordinator.h"
 #include "../network_internal.h"
 
 #include <deque>
@@ -23,12 +24,40 @@
 static std::vector<TCPConnecter *> _tcp_connecters;
 
 /**
- * Create a new connecter for the given address
- * @param connection_string the address to connect to
+ * Create a new connecter for the given address.
+ * @param connection_string the address to connect to.
+ * @param default_port If not indicated in connection_string, what port to use.
+ * @param bind_address The local bind address to use. Defaults to letting the OS find one.
  */
-TCPConnecter::TCPConnecter(const std::string &connection_string, uint16 default_port)
+TCPConnecter::TCPConnecter(const std::string &connection_string, uint16 default_port, NetworkAddress bind_address, int family) :
+	bind_address(bind_address),
+	family(family)
 {
 	this->connection_string = NormalizeConnectionString(connection_string, default_port);
+
+	_tcp_connecters.push_back(this);
+}
+
+/**
+ * Create a new connecter for the server.
+ * @param connection_string The address to connect to.
+ * @param default_port If not indicated in connection_string, what port to use.
+ */
+TCPServerConnecter::TCPServerConnecter(const std::string &connection_string, uint16 default_port) :
+	server_address(ServerAddress::Parse(connection_string, default_port))
+{
+	switch (this->server_address.type) {
+		case SERVER_ADDRESS_DIRECT:
+			this->connection_string = this->server_address.connection_string;
+			break;
+
+		case SERVER_ADDRESS_JOIN_KEY:
+			_network_coordinator_client.ConnectToServer(this->server_address.connection_string, this);
+			break;
+
+		default:
+			NOT_REACHED();
+	}
 
 	_tcp_connecters.push_back(this);
 }
@@ -49,6 +78,16 @@ TCPConnecter::~TCPConnecter()
 }
 
 /**
+ * Kill this connecter.
+ * It will abort as soon as it can and not call any of the callbacks.
+ */
+void TCPConnecter::Kill()
+{
+	/* Delay the removing of the socket till the next CheckActivity(). */
+	this->killed = true;
+}
+
+/**
  * Start a connection to the indicated address.
  * @param address The address to connection to.
  */
@@ -58,6 +97,18 @@ void TCPConnecter::Connect(addrinfo *address)
 	if (sock == INVALID_SOCKET) {
 		Debug(net, 0, "Could not create {} {} socket: {}", NetworkAddress::SocketTypeAsString(address->ai_socktype), NetworkAddress::AddressFamilyAsString(address->ai_family), NetworkError::GetLast().AsString());
 		return;
+	}
+
+	if (!SetReusePort(sock)) {
+		Debug(net, 0, "Setting reuse-port mode failed: {}", NetworkError::GetLast().AsString());
+	}
+
+	if (this->bind_address.GetPort() > 0) {
+		if (bind(sock, (const sockaddr *)this->bind_address.GetAddress(), this->bind_address.GetAddressLength()) != 0) {
+			Debug(net, 1, "Could not bind socket on {}: {}", this->bind_address.GetAddressAsString(), NetworkError::GetLast().AsString());
+			closesocket(sock);
+			return;
+		}
 	}
 
 	if (!SetNoDelay(sock)) {
@@ -123,6 +174,9 @@ void TCPConnecter::OnResolved(addrinfo *ai)
 
 	/* Convert the addrinfo into NetworkAddresses. */
 	for (addrinfo *runp = ai; runp != nullptr; runp = runp->ai_next) {
+		/* Skip entries if the family is set and it is not matching. */
+		if (this->family != AF_UNSPEC && this->family != runp->ai_family) continue;
+
 		if (resort) {
 			if (runp->ai_family == AF_INET6) {
 				addresses_ipv6.emplace_back(runp);
@@ -219,6 +273,8 @@ void TCPConnecter::Resolve()
  */
 bool TCPConnecter::CheckActivity()
 {
+	if (this->killed.load()) return true;
+
 	switch (this->status.load()) {
 		case Status::INIT:
 			/* Start the thread delayed, so the vtable is loaded. This allows classes
@@ -247,6 +303,10 @@ bool TCPConnecter::CheckActivity()
 
 		case Status::CONNECTING:
 			break;
+
+		/* This status is never reached for SERVER_ADDRESS_DIRECT. */
+		case Status::HAS_RESULT:
+			NOT_REACHED();
 	}
 
 	/* If there are no attempts pending, connect to the next. */
@@ -345,6 +405,44 @@ bool TCPConnecter::CheckActivity()
 
 	this->OnConnect(connected_socket);
 	return true;
+}
+
+/**
+ * Check if there was activity for this connecter.
+ * @return True iff the TCPConnecter is done and can be cleaned up.
+ */
+bool TCPServerConnecter::CheckActivity()
+{
+	if (this->killed.load()) return true;
+
+	switch (this->server_address.type) {
+		case SERVER_ADDRESS_DIRECT:
+			return TCPConnecter::CheckActivity();
+
+		case SERVER_ADDRESS_JOIN_KEY:
+			if (this->status.load() != Status::HAS_RESULT) return false;
+
+			if (this->result_socket == INVALID_SOCKET) {
+				this->OnFailure();
+			} else {
+				this->OnConnect(this->result_socket);
+			}
+			return true;
+
+		default:
+			NOT_REACHED();
+	}
+}
+
+/**
+ * Set the resulting socket of the connection attempt.
+ * This socket is fully setup and ready to send/recv game protocol packets.
+ * @param sock The socket, or INVALID_SOCKET if no connection could be established.
+ */
+void TCPServerConnecter::SetResult(SOCKET sock)
+{
+	this->result_socket = sock;
+	this->status = Status::HAS_RESULT;
 }
 
 /**
