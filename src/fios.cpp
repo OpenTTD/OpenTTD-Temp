@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <functional>
 #include <optional>
+#include <charconv>
 
 #ifndef _WIN32
 # include <unistd.h>
@@ -744,4 +745,60 @@ bool HasScenario(const ContentInfo *ci, bool md5sum)
 void ScanScenarios()
 {
 	_scanner.Scan(true);
+}
+
+/**
+ * Constructs FiosNumberedSaveName. Initial number is the most recent save, or -1 if not found.
+ * @param prefix The prefix to use to generate a filename.
+*/
+FiosNumberedSaveName::FiosNumberedSaveName(const std::string &prefix) : prefix(prefix), number(-1)
+{
+	static std::optional<std::string> _autosave_path;
+	if (!_autosave_path) _autosave_path = FioFindDirectory(AUTOSAVE_DIR);
+
+	static std::string _prefix; ///< Static as the lambda needs access to it.
+
+	/* Callback for FiosFileScanner. */
+	static fios_getlist_callback_proc *proc = [](SaveLoadOperation fop, const std::string &file, const char *ext, char *title, const char *last) {
+		if (strcasecmp(ext, ".sav") == 0 && StrStartsWith(file, _prefix)) return FIOS_TYPE_FILE;
+		return FIOS_TYPE_INVALID;
+	};
+
+	/* Prefix to check in the callback. */
+	_prefix = *_autosave_path + this->prefix;
+
+	/* Get the save list. */
+	FileList list;
+	FiosFileScanner scanner(SLO_SAVE, proc, list);
+	scanner.Scan(".sav", _autosave_path->c_str(), false);
+
+	/* Find the number for the most recent save, if any. */
+	if (list.begin() != list.end()) {
+		SortingBits order = _savegame_sort_order;
+		_savegame_sort_order = SORT_BY_DATE | SORT_DESCENDING;
+		std::sort(list.begin(), list.end());
+		_savegame_sort_order = order;
+
+		std::string_view name = list.begin()->title;
+		std::from_chars(name.data() + this->prefix.size(), name.data() + name.size(), this->number);
+	}
+}
+
+/**
+ * Generate a savegame name and number according to _settings_client.gui.max_num_autosaves.
+ * @return A filename in format "<prefix><number>.sav".
+*/
+std::string FiosNumberedSaveName::Filename()
+{
+	if (++this->number >= _settings_client.gui.max_num_autosaves) this->number = 0;
+	return fmt::format("{}{}.sav", this->prefix, this->number);
+}
+
+/**
+ * Generate an extension for a savegame name.
+ * @return An extension in format "-<prefix>.sav".
+*/
+std::string FiosNumberedSaveName::Extension()
+{
+	return fmt::format("-{}.sav", this->prefix);
 }

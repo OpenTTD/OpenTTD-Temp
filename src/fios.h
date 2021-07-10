@@ -125,4 +125,16 @@ std::string FiosMakeSavegameName(const char *name);
 
 FiosType FiosGetSavegameListCallback(SaveLoadOperation fop, const std::string &file, const char *ext, char *title, const char *last);
 
+/**
+ * A savegame name automatically numbered.
+ */
+struct FiosNumberedSaveName {
+	FiosNumberedSaveName(const std::string &prefix);
+	std::string Filename();
+	std::string Extension();
+private:
+	std::string prefix;
+	int number;
+};
+
 #endif /* FIOS_H */

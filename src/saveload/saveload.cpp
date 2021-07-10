@@ -3328,26 +3328,15 @@ SaveOrLoadResult SaveOrLoad(const std::string &filename, SaveLoadOperation fop, 
  * @param counter A reference to the counter variable to be used for rotating the file name.
  * @param netsave Indicates if this is a regular autosave or a netsave.
  */
-void DoAutoOrNetsave(int &counter, bool netsave)
+void DoAutoOrNetsave(FiosNumberedSaveName &counter)
 {
 	char buf[MAX_PATH];
 
 	if (_settings_client.gui.keep_all_autosave) {
 		GenerateDefaultSaveName(buf, lastof(buf));
-		if (!netsave) {
-			strecat(buf, ".sav", lastof(buf));
-		} else {
-			strecat(buf, "-netsave.sav", lastof(buf));
-		}
+		strecat(buf, counter.Extension().c_str(), lastof(buf));
 	} else {
-		/* Generate a savegame name and number according to _settings_client.gui.max_num_autosaves. */
-		if (!netsave) {
-			seprintf(buf, lastof(buf), "autosave%d.sav", counter);
-		} else {
-			seprintf(buf, lastof(buf), "netsave%d.sav", counter);
-		}
-
-		if (++counter >= _settings_client.gui.max_num_autosaves) counter = 0;
+		strecpy(buf, counter.Filename().c_str(), lastof(buf));
 	}
 
 	Debug(sl, 2, "Autosaving to '{}'", buf);

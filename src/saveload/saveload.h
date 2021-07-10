@@ -11,6 +11,7 @@
 #define SAVELOAD_H
 
 #include "../fileio_type.h"
+#include "../fios.h"
 #include "../strings_type.h"
 #include "../core/span_type.hpp"
 #include <optional>
@@ -381,7 +382,7 @@ void WaitTillSaved();
 void ProcessAsyncSaveFinish();
 void DoExitSave();
 
-void DoAutoOrNetsave(int &counter, bool netsave = false);
+void DoAutoOrNetsave(FiosNumberedSaveName &counter);
 
 SaveOrLoadResult SaveWithFilter(struct SaveFilter *writer, bool threaded);
 SaveOrLoadResult LoadWithFilter(struct LoadFilter *reader);

@@ -1392,7 +1392,7 @@ void StateGameLoop()
  */
 static void DoAutosave()
 {
-	static int _autosave_ctr = 0;
+	static FiosNumberedSaveName _autosave_ctr("autosave");
 	DoAutoOrNetsave(_autosave_ctr);
 }
 

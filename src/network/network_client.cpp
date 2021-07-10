@@ -132,8 +132,8 @@ struct PacketReader : LoadFilter {
  */
 void ClientNetworkEmergencySave()
 {
-	static int _netsave_ctr = 0;
-	DoAutoOrNetsave(_netsave_ctr, true);
+	static FiosNumberedSaveName _netsave_ctr("netsave");
+	DoAutoOrNetsave(_netsave_ctr);
 }
 
 
