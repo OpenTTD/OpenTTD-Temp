@@ -10,6 +10,15 @@
 #ifndef WIDGETS_RAIL_WIDGET_H
 #define WIDGETS_RAIL_WIDGET_H
 
+/** Global hotkeys modifiers for #RailToolbarWidgets */
+enum RailToolbarWidgetModifiers {
+	GHK_MOD_RAT_PREV_RAILTYPE = 9, ///< bit added to WID_RAT_AUTORAIL to select previous railtype
+	GHK_MOD_RAT_NEXT_RAILTYPE = 10, ///< bit added to WID_RAT_AUTORAIL to select next railtype
+
+	GHK_MODB_RAT_PREV_RAILTYPE = 1 << GHK_MOD_RAT_PREV_RAILTYPE, ///< bitmask for GHK_MOD_RAT_PREV_RAILTYPE
+	GHK_MODB_RAT_NEXT_RAILTYPE = 1 << GHK_MOD_RAT_NEXT_RAILTYPE, ///< bitmask for GHK_MOD_RAT_NEXT_RAILTYPE
+};
+
 /** Widgets of the #BuildRailToolbarWindow class. */
 enum RailToolbarWidgets {
 	/* Name starts with RA instead of R, because of collision with RoadToolbarWidgets */

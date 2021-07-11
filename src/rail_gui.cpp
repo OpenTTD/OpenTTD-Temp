@@ -768,6 +768,45 @@ struct BuildRailToolbarWindow : Window {
 };
 
 /**
+ * Selects RailType based on _last_built_railtype and global modifiers from RailToolbarWidgetModifiers
+ *
+ * If GHK_MOD_* modifiers were used hotkey replaced with last selected widget
+ * or WID_RAT_AUTORAIL (if toolbar was closed).
+ *
+ * Without wrapping, so if you're on RAILTYPE_RAIL you'll stay there. Same for upper boundary.
+ *
+ * @param [out] hotkey Replaced by last user selected widget or WID_RAT_AUTORAIL if prev/next railtype used
+ * @return selected RailType
+ */
+static RailType ChooseRailTypeOnGlobalHotkey(int &hotkey)
+{
+	extern RailType _last_built_railtype;
+	RailType rt = _last_built_railtype;
+	bool change_rt = false;
+	if (HasBit(hotkey, GHK_MOD_RAT_PREV_RAILTYPE)) {
+		ClrBit(hotkey, GHK_MOD_RAT_PREV_RAILTYPE);
+		change_rt = true;
+		do {
+			rt--;
+		} while (rt > RAILTYPE_BEGIN && !HasRailtypeAvail(_local_company, rt));
+	} else if (HasBit(hotkey, GHK_MOD_RAT_NEXT_RAILTYPE)) {
+		ClrBit(hotkey, GHK_MOD_RAT_NEXT_RAILTYPE);
+		change_rt = true;
+		do {
+			rt++;
+		} while (rt < RAILTYPE_END && !HasRailtypeAvail(_local_company, rt));
+		if (rt >= RAILTYPE_END) rt = _last_built_railtype;
+	}
+	if (change_rt) {
+		// get previous selected widget from current build toolbar if present
+		auto *w = dynamic_cast<BuildRailToolbarWindow *>(FindWindowById(WC_BUILD_TOOLBAR, TRANSPORT_RAIL));
+		hotkey = (w == nullptr || w->last_user_action < WID_RAT_BUILD_NS) ? WID_RAT_AUTORAIL : w->last_user_action;
+	}
+	_last_built_railtype = rt;
+	return rt;
+}
+
+/**
  * Handler for global hotkeys of the BuildRailToolbarWindow.
  * @param hotkey Hotkey
  * @return ES_HANDLED if hotkey was accepted.
@@ -775,8 +814,8 @@ struct BuildRailToolbarWindow : Window {
 static EventState RailToolbarGlobalHotkeys(int hotkey)
 {
 	if (_game_mode != GM_NORMAL) return ES_NOT_HANDLED;
-	extern RailType _last_built_railtype;
-	Window *w = ShowBuildRailToolbar(_last_built_railtype);
+	RailType railtype = ChooseRailTypeOnGlobalHotkey(hotkey);
+	Window *w = ShowBuildRailToolbar(railtype);
 	if (w == nullptr) return ES_NOT_HANDLED;
 	return w->OnHotkey(hotkey);
 }
@@ -798,6 +837,8 @@ static Hotkey railtoolbar_hotkeys[] = {
 	Hotkey('T', "tunnel", WID_RAT_BUILD_TUNNEL),
 	Hotkey('R', "remove", WID_RAT_REMOVE),
 	Hotkey('C', "convert", WID_RAT_CONVERT_RAIL),
+	Hotkey(WKC_L_BRACKET | WKC_GLOBAL_HOTKEY, "prev_railtype", GHK_MODB_RAT_PREV_RAILTYPE),
+	Hotkey(WKC_R_BRACKET | WKC_GLOBAL_HOTKEY, "next_railtype", GHK_MODB_RAT_NEXT_RAILTYPE),
 	HOTKEY_LIST_END
 };
 HotkeyList BuildRailToolbarWindow::hotkeys("railtoolbar", railtoolbar_hotkeys, RailToolbarGlobalHotkeys);
