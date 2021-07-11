@@ -61,7 +61,10 @@ enum VehicleDetailsWidgets {
 
 /** Widgets of the #VehicleListWindow class. */
 enum VehicleListWidgets {
-	WID_VL_CAPTION,                  ///< Caption of window.
+	WID_VL_CAPTION,                  ///< Caption of window (for non shared orders windows).
+	WID_VL_CAPTION_SHARED_ORDERS,    ///< Caption of window (for shared orders windows).
+	WID_VL_CAPTION_SELECTION,        ///< Selection for caption.
+	WID_VL_ORDER_VIEW,               ///< Button to open order window (for shared orders windows).
 	WID_VL_GROUP_ORDER,              ///< Group order.
 	WID_VL_GROUP_BY_PULLDOWN,        ///< Group by dropdown list.
 	WID_VL_SORT_ORDER,               ///< Sort order.
