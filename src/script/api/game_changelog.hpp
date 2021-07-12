@@ -15,6 +15,13 @@
  *
  * \b 1.12.0
  *
+ * API additions:
+ * \li GSMarine::BT_LOCK
+ * \li GSMarine::BT_CANAL
+ * \li GSTile::IsSeaTile
+ * \li GSTile::IsRiverTile
+ * \li GSTile::BT_CLEAR_WATER
+ *
  * This version is not yet released. The following changes are not set in stone yet.
  *
  * \b 1.11.0

@@ -36,6 +36,8 @@ public:
 		BT_DOCK,  ///< Build a dock
 		BT_DEPOT, ///< Build a ship depot
 		BT_BUOY,  ///< Build a buoy
+		BT_LOCK,  ///< Build a lock
+		BT_CANAL, ///< Build a canal
 	};
 
 	/**

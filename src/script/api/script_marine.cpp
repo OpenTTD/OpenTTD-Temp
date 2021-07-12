@@ -167,6 +167,8 @@
 		case BT_DOCK:  return ::GetPrice(PR_BUILD_STATION_DOCK, 1, nullptr);
 		case BT_DEPOT: return ::GetPrice(PR_BUILD_DEPOT_SHIP, 1, nullptr);
 		case BT_BUOY:  return ::GetPrice(PR_BUILD_WAYPOINT_BUOY, 1, nullptr);
+		case BT_LOCK:  return ::GetPrice(PR_BUILD_LOCK, 1, nullptr);
+		case BT_CANAL: return ::GetPrice(PR_BUILD_CANAL, 1, nullptr);
 		default: return -1;
 	}
 }

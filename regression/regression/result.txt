@@ -7365,6 +7365,9 @@ ERROR: IsEnd() is invalid as Begin() is never called
   GetBankBalance():     1999959285
   BuildWaterDepot():    true
   BuildDock():          true
+  BuildBuoy():          true
+  BuildLock():          true
+  BuildCanal():         true
 
 --Prices--
  -Rail-
@@ -7391,6 +7394,8 @@ ERROR: IsEnd() is invalid as Begin() is never called
   BT_DOCK:  262
   BT_DEPOT: 525
   BT_BUOY:  262
+  BT_LOCK:  5625
+  BT_CANAL: 3750
  -Tile-
   BT_FOUNDATION:   187
   BT_TERRAFORM:    187
@@ -7400,6 +7405,7 @@ ERROR: IsEnd() is invalid as Begin() is never called
   BT_CLEAR_ROCKY:  150
   BT_CLEAR_FIELDS: 375
   BT_CLEAR_HOUSE:  1200
+  BT_CLEAR_WATER:  7500
 
 --Rail--
     IsRailTile():                  false
@@ -8450,54 +8456,221 @@ ERROR: IsEnd() is invalid as Begin() is never called
   KeepValue(1):        done
   Count():             0
   ListDump:
-  Water():             done
-  Count():             45
+  IsWaterTile():       done
+  Count():             40
   ListDump:
-    54941 => 1
-    54940 => 1
-    54939 => 1
-    54938 => 1
-    54937 => 1
-    54936 => 1
-    54935 => 1
-    54934 => 1
-    54933 => 1
-    54685 => 1
-    54684 => 1
-    54683 => 1
-    54682 => 1
-    54681 => 1
-    54680 => 1
-    54679 => 1
-    54678 => 1
-    54677 => 1
-    54429 => 1
-    54428 => 1
-    54427 => 1
-    54426 => 1
-    54425 => 1
-    54424 => 1
-    54423 => 1
-    54422 => 1
-    54421 => 1
-    54173 => 1
-    54172 => 1
-    54171 => 1
-    54170 => 1
-    54169 => 1
-    54168 => 0
-    54167 => 0
-    54166 => 0
-    54165 => 0
-    53917 => 0
-    53916 => 0
-    53915 => 0
-    53914 => 0
-    53913 => 0
-    53912 => 0
-    53911 => 0
-    53910 => 0
-    53909 => 0
+    29251 => 1
+    29250 => 1
+    29249 => 1
+    29248 => 1
+    29247 => 1
+    28996 => 1
+    28995 => 1
+    28994 => 1
+    28993 => 1
+    28992 => 1
+    28991 => 1
+    28744 => 1
+    28741 => 1
+    28740 => 1
+    28739 => 1
+    28738 => 1
+    28737 => 1
+    28736 => 1
+    28735 => 1
+    28488 => 1
+    28487 => 1
+    28486 => 1
+    28485 => 1
+    28484 => 1
+    28483 => 1
+    28482 => 1
+    28480 => 1
+    28479 => 1
+    29256 => 0
+    29255 => 0
+    29254 => 0
+    29253 => 0
+    29252 => 0
+    29000 => 0
+    28999 => 0
+    28998 => 0
+    28997 => 0
+    28743 => 0
+    28742 => 0
+    28481 => 0
+  IsSeaTile():         done
+  Count():             40
+  ListDump:
+    29251 => 1
+    29250 => 1
+    29249 => 1
+    29248 => 1
+    29247 => 1
+    28996 => 1
+    28995 => 1
+    28994 => 1
+    28993 => 1
+    28992 => 1
+    28991 => 1
+    28741 => 1
+    28740 => 1
+    28739 => 1
+    28738 => 1
+    28737 => 1
+    28736 => 1
+    28735 => 1
+    28485 => 1
+    28484 => 1
+    28483 => 1
+    28482 => 1
+    29256 => 0
+    29255 => 0
+    29254 => 0
+    29253 => 0
+    29252 => 0
+    29000 => 0
+    28999 => 0
+    28998 => 0
+    28997 => 0
+    28744 => 0
+    28743 => 0
+    28742 => 0
+    28488 => 0
+    28487 => 0
+    28486 => 0
+    28481 => 0
+    28480 => 0
+    28479 => 0
+  IsRiverTile()        done
+  Count():             40
+  ListDump:
+    29256 => 0
+    29255 => 0
+    29254 => 0
+    29253 => 0
+    29252 => 0
+    29251 => 0
+    29250 => 0
+    29249 => 0
+    29248 => 0
+    29247 => 0
+    29000 => 0
+    28999 => 0
+    28998 => 0
+    28997 => 0
+    28996 => 0
+    28995 => 0
+    28994 => 0
+    28993 => 0
+    28992 => 0
+    28991 => 0
+    28744 => 0
+    28743 => 0
+    28742 => 0
+    28741 => 0
+    28740 => 0
+    28739 => 0
+    28738 => 0
+    28737 => 0
+    28736 => 0
+    28735 => 0
+    28488 => 0
+    28487 => 0
+    28486 => 0
+    28485 => 0
+    28484 => 0
+    28483 => 0
+    28482 => 0
+    28481 => 0
+    28480 => 0
+    28479 => 0
+  IsCanalTile()        done
+  Count():             40
+  ListDump:
+    28744 => 1
+    29256 => 0
+    29255 => 0
+    29254 => 0
+    29253 => 0
+    29252 => 0
+    29251 => 0
+    29250 => 0
+    29249 => 0
+    29248 => 0
+    29247 => 0
+    29000 => 0
+    28999 => 0
+    28998 => 0
+    28997 => 0
+    28996 => 0
+    28995 => 0
+    28994 => 0
+    28993 => 0
+    28992 => 0
+    28991 => 0
+    28743 => 0
+    28742 => 0
+    28741 => 0
+    28740 => 0
+    28739 => 0
+    28738 => 0
+    28737 => 0
+    28736 => 0
+    28735 => 0
+    28488 => 0
+    28487 => 0
+    28486 => 0
+    28485 => 0
+    28484 => 0
+    28483 => 0
+    28482 => 0
+    28481 => 0
+    28480 => 0
+    28479 => 0
+  IsCoastTile()        done
+  Count():             40
+  ListDump:
+    28998 => 1
+    28997 => 1
+    28743 => 1
+    28742 => 1
+    29256 => 0
+    29255 => 0
+    29254 => 0
+    29253 => 0
+    29252 => 0
+    29251 => 0
+    29250 => 0
+    29249 => 0
+    29248 => 0
+    29247 => 0
+    29000 => 0
+    28999 => 0
+    28996 => 0
+    28995 => 0
+    28994 => 0
+    28993 => 0
+    28992 => 0
+    28991 => 0
+    28744 => 0
+    28741 => 0
+    28740 => 0
+    28739 => 0
+    28738 => 0
+    28737 => 0
+    28736 => 0
+    28735 => 0
+    28488 => 0
+    28487 => 0
+    28486 => 0
+    28485 => 0
+    28484 => 0
+    28483 => 0
+    28482 => 0
+    28481 => 0
+    28480 => 0
+    28479 => 0
 
 --TileList_IndustryAccepting--
   Count():             47
@@ -9099,12 +9272,12 @@ ERROR: IsEnd() is invalid as Begin() is never called
     GetLocation():       33417
     GetEngineType():     153
     GetUnitNumber():     1
-    GetAge():            0
+    GetAge():            1
     GetMaxAge():         5490
-    GetAgeLeft():        5490
+    GetAgeLeft():        5489
     GetCurrentSpeed():   7
     GetRunningCost():    421
-    GetProfitThisYear(): 0
+    GetProfitThisYear(): -1
     GetProfitLastYear(): 0
     GetCurrentValue():   5947
     GetVehicleType():    1
@@ -9114,7 +9287,7 @@ ERROR: IsEnd() is invalid as Begin() is never called
     IsInDepot():         false
     GetNumWagons():      1
     GetWagonEngineType(): 153
-    GetWagonAge():       0
+    GetWagonAge():       1
     GetLength():         8
   GetOwner():           1
   BuildVehicle():       14
@@ -9139,9 +9312,9 @@ ERROR: IsEnd() is invalid as Begin() is never called
   GetNumWagons():       3
   GetLength():          24
   GetWagonEngineType(): 9
-  GetWagonAge():        1
+  GetWagonAge():        0
   GetWagonEngineType(): 27
-  GetWagonAge():        1
+  GetWagonAge():        0
   GetWagonEngineType(): 27
   GetWagonAge():        0
   GetWagonEngineType(): 65535
@@ -9187,11 +9360,11 @@ ERROR: IsEnd() is invalid as Begin() is never called
     14 => 1
     12 => 1
   Age ListDump:
-    17 => 1
-    16 => 1
-    14 => 1
     13 => 1
     12 => 1
+    17 => 0
+    16 => 0
+    14 => 0
   MaxAge ListDump:
     16 => 10980
     14 => 10980
@@ -9199,9 +9372,9 @@ ERROR: IsEnd() is invalid as Begin() is never called
     13 => 5490
     12 => 5490
   AgeLeft ListDump:
-    16 => 10979
-    14 => 10979
-    17 => 7319
+    16 => 10980
+    14 => 10980
+    17 => 7320
     13 => 5489
     12 => 5489
   CurrentSpeed ListDump:

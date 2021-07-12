@@ -119,6 +119,7 @@ public:
 		BT_CLEAR_ROCKY,  ///< Clear a tile with rocks
 		BT_CLEAR_FIELDS, ///< Clear a tile with farm fields
 		BT_CLEAR_HOUSE,  ///< Clear a tile with a house
+		BT_CLEAR_WATER,  ///< Clear a tile with either river or sea
 	};
 
 	/**
@@ -159,10 +160,27 @@ public:
 	static bool IsBuildableRectangle(TileIndex tile, uint width, uint height);
 
 	/**
+	 * Checks whether the given tile is actually a sea tile.
+	 * @param tile The tile to check on.
+	 * @pre ScriptMap::IsValidTile(tile).
+	 * @return True if and only if the tile is a sea tile.
+	 */
+	static bool IsSeaTile(TileIndex tile);
+
+	/**
+	 * Checks whether the given tile is actually a river tile.
+	 * @param tile The tile to check on.
+	 * @pre ScriptMap::IsValidTile(tile).
+	 * @return True if and only if the tile is a river tile.
+	 */
+	static bool IsRiverTile(TileIndex tile);
+
+	/**
 	 * Checks whether the given tile is actually a water tile.
 	 * @param tile The tile to check on.
 	 * @pre ScriptMap::IsValidTile(tile).
 	 * @return True if and only if the tile is a water tile.
+	 * @note Returns false when a buoy was placed on the tile.
 	 */
 	static bool IsWaterTile(TileIndex tile);
 
