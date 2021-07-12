@@ -59,6 +59,7 @@ struct RailVehicleInfo {
 	byte tractive_effort;           ///< Tractive effort coefficient
 	byte air_drag;                  ///< Coefficient of air drag
 	byte user_def_data;             ///< Property 0x25: "User-defined bit mask" Used only for (very few) NewGRF vehicles
+	int16 curve_speed_mod;          ///< Modifier to maximum speed in curves (fixed-point binary with 8 fractional bits)
 };
 
 /** Information about a ship vehicle. */
