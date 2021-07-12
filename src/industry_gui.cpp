@@ -1309,7 +1309,7 @@ protected:
 	/* Runtime saved values */
 	static Listing last_sorting;
 
-	/* Constants for sorting stations */
+	/* Constants for sorting industries */
 	static const StringID sorter_names[];
 	static GUIIndustryList::SortFunction * const sorter_funcs[];
 
@@ -1320,6 +1320,14 @@ protected:
 	StringID cargo_filter_texts[NUM_CARGO + 3]; ///< Texts for filter_cargo, terminated by INVALID_STRING_ID
 	byte produced_cargo_filter_criteria;        ///< Selected produced cargo filter index
 	byte accepted_cargo_filter_criteria;        ///< Selected accepted cargo filter index
+	static CargoID produced_cargo_filter;
+
+	enum class SorterType : uint8 {
+		IDW_SORT_BY_NAME,                       ///< Sorter type to sort by name
+		IDW_SORT_BY_TYPE,                       ///< Sorter type to sort by type
+		IDW_SORT_BY_PRODUCTION,                 ///< Sorter type to sort by production amount
+		IDW_SORT_BY_TRANSPORTED,                ///< Sorter type to sort by transported percentage
+	};
 
 	/**
 	 * Set cargo filter list item index.
@@ -1409,6 +1417,8 @@ protected:
 		                             this->cargo_filter[this->produced_cargo_filter_criteria]);
 
 		this->industries.Filter(filter);
+
+		IndustryDirectoryWindow::produced_cargo_filter = this->cargo_filter[this->produced_cargo_filter_criteria];
 		this->industries.Sort();
 
 		this->vscroll->SetCount((uint)this->industries.size()); // Update scrollbar as well.
@@ -1427,7 +1437,7 @@ protected:
 	{
 		assert(id < lengthof(i->produced_cargo));
 
-		if (i->produced_cargo[id] == CT_INVALID) return 101;
+		if (i->produced_cargo[id] == CT_INVALID) return -1;
 		return ToPercent8(i->last_month_pct_transported[id]);
 	}
 
@@ -1440,12 +1450,27 @@ protected:
 	 */
 	static int GetCargoTransportedSortValue(const Industry *i)
 	{
-		int p1 = GetCargoTransportedPercentsIfValid(i, 0);
-		int p2 = GetCargoTransportedPercentsIfValid(i, 1);
+		CargoID filter = IndustryDirectoryWindow::produced_cargo_filter;
+		if (filter == CF_NONE) return 0;
 
-		if (p1 > p2) Swap(p1, p2); // lower value has higher priority
+		int percentage = 0, produced_cargo_count = 0;
+		for (uint id = 0; id < lengthof(i->produced_cargo); id++) {
+			if (filter == CF_ANY) {
+				int transported = GetCargoTransportedPercentsIfValid(i, id);
+				if (transported != -1) {
+					produced_cargo_count++;
+					percentage += transported;
+				}
+				if (produced_cargo_count == 0 && id == lengthof(i->produced_cargo) - 1 && percentage == 0) {
+					return transported;
+				}
+			} else if (filter == i->produced_cargo[id]) {
+				return GetCargoTransportedPercentsIfValid(i, id);
+			}
+		}
 
-		return (p1 << 8) + p2;
+		if (produced_cargo_count == 0) return percentage;
+		return percentage / produced_cargo_count;
 	}
 
 	/** Sort industries by name */
@@ -1470,10 +1495,18 @@ protected:
 	/** Sort industries by production and name */
 	static bool IndustryProductionSorter(const Industry * const &a, const Industry * const &b)
 	{
+		CargoID filter = IndustryDirectoryWindow::produced_cargo_filter;
+		if (filter == CF_NONE) return IndustryTypeSorter(a, b);
+
 		uint prod_a = 0, prod_b = 0;
 		for (uint i = 0; i < lengthof(a->produced_cargo); i++) {
-			if (a->produced_cargo[i] != CT_INVALID) prod_a += a->last_month_production[i];
-			if (b->produced_cargo[i] != CT_INVALID) prod_b += b->last_month_production[i];
+			if (filter == CF_ANY) {
+				if (a->produced_cargo[i] != CT_INVALID) prod_a += a->last_month_production[i];
+				if (b->produced_cargo[i] != CT_INVALID) prod_b += b->last_month_production[i];
+			} else {
+				if (a->produced_cargo[i] == filter) prod_a += a->last_month_production[i];
+				if (b->produced_cargo[i] == filter) prod_b += b->last_month_production[i];
+			}
 		}
 		int r = prod_a - prod_b;
 
@@ -1504,26 +1537,45 @@ protected:
 		GetAllCargoSuffixes(CARGOSUFFIX_OUT, CST_DIR, i, i->type, indsp, i->produced_cargo, cargo_suffix);
 
 		/* Get industry productions (CargoID, production, suffix, transported) */
-		typedef std::tuple<CargoID, uint16, const char*, uint> CargoInfo;
+		struct CargoInfo {
+			CargoID cargo_id;
+			uint16 production;
+			const char *suffix;
+			uint transported;
+		};
 		std::vector<CargoInfo> cargos;
 
 		for (byte j = 0; j < lengthof(i->produced_cargo); j++) {
 			if (i->produced_cargo[j] == CT_INVALID) continue;
-			cargos.emplace_back(i->produced_cargo[j], i->last_month_production[j], cargo_suffix[j].text, ToPercent8(i->last_month_pct_transported[j]));
+			cargos.push_back({ i->produced_cargo[j], i->last_month_production[j], cargo_suffix[j].text, ToPercent8(i->last_month_pct_transported[j]) });
 		}
 
-		/* Sort by descending production, then descending transported */
-		std::sort(cargos.begin(), cargos.end(), [](const CargoInfo a, const CargoInfo b) {
-			if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) > std::get<1>(b);
-			return std::get<3>(a) > std::get<3>(b);
-		});
+		switch (static_cast<IndustryDirectoryWindow::SorterType>(this->industries.SortType())) {
+			case IndustryDirectoryWindow::SorterType::IDW_SORT_BY_NAME:
+			case IndustryDirectoryWindow::SorterType::IDW_SORT_BY_TYPE:
+			case IndustryDirectoryWindow::SorterType::IDW_SORT_BY_PRODUCTION:
+				/* Sort by descending production, then descending transported */
+				std::sort(cargos.begin(), cargos.end(), [](const CargoInfo &a, const CargoInfo &b) {
+					if (a.production != b.production) return a.production > b.production;
+					return a.transported > b.transported;
+				});
+				break;
+
+			case IndustryDirectoryWindow::SorterType::IDW_SORT_BY_TRANSPORTED:
+				/* Sort by descending transported, then descending production */
+				std::sort(cargos.begin(), cargos.end(), [](const CargoInfo &a, const CargoInfo &b) {
+					if (a.transported != b.transported) return a.transported > b.transported;
+					return a.production > b.production;
+				});
+				break;
+		}
 
 		/* If the produced cargo filter is active then move the filtered cargo to the beginning of the list,
 		 * because this is the one the player interested in, and that way it is not hidden in the 'n' more cargos */
 		const CargoID cid = this->cargo_filter[this->produced_cargo_filter_criteria];
 		if (cid != CF_ANY && cid != CF_NONE) {
-			auto filtered_ci = std::find_if(cargos.begin(), cargos.end(), [cid](const CargoInfo& ci) -> bool {
-				return std::get<0>(ci) == cid;
+			auto filtered_ci = std::find_if(cargos.begin(), cargos.end(), [cid](const CargoInfo &ci) -> bool {
+				return ci.cargo_id == cid;
 			});
 			if (filtered_ci != cargos.end()) {
 				std::rotate(cargos.begin(), filtered_ci, filtered_ci + 1);
@@ -1534,10 +1586,10 @@ protected:
 		for (size_t j = 0; j < std::min<size_t>(3, cargos.size()); j++) {
 			CargoInfo ci = cargos[j];
 			SetDParam(p++, STR_INDUSTRY_DIRECTORY_ITEM_INFO);
-			SetDParam(p++, std::get<0>(ci));
-			SetDParam(p++, std::get<1>(ci));
-			SetDParamStr(p++, std::get<2>(ci));
-			SetDParam(p++, std::get<3>(ci));
+			SetDParam(p++, ci.cargo_id);
+			SetDParam(p++, ci.production);
+			SetDParamStr(p++, ci.suffix);
+			SetDParam(p++, ci.transported);
 		}
 
 		/* Undisplayed cargos if any */
@@ -1784,6 +1836,8 @@ const StringID IndustryDirectoryWindow::sorter_names[] = {
 	STR_SORT_BY_TRANSPORTED,
 	INVALID_STRING_ID
 };
+
+CargoID IndustryDirectoryWindow::produced_cargo_filter = CF_ANY;
 
 
 /** Window definition of the industry directory gui */
