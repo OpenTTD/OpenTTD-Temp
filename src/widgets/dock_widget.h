@@ -23,6 +23,7 @@ enum DockToolbarWidgets {
 	WID_DT_LOCK,           ///< Build lock button.
 	WID_DT_DEMOLISH,       ///< Demolish aka dynamite button.
 	WID_DT_DEPOT,          ///< Build depot button.
+	WID_DT_BIG_DEPOT,      ///< Build big depot button.
 	WID_DT_STATION,        ///< Build station button.
 	WID_DT_BUOY,           ///< Build buoy button.
 	WID_DT_RIVER,          ///< Build river button (in scenario editor).

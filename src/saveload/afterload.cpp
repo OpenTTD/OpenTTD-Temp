@@ -289,6 +289,10 @@ static void InitializeWindowsAndCaches()
 		}
 	}
 
+	for (Depot *dep : Depot::Iterate()) {
+		dep->RescanDepotTiles();
+	}
+
 	RecomputePrices();
 
 	GroupStatistics::UpdateAfterLoad();
@@ -760,6 +764,15 @@ bool AfterLoadGame()
 
 	if (IsSavegameVersionBefore(SLV_ENDING_YEAR)) {
 		_settings_game.game_creation.ending_year = DEF_END_YEAR;
+	}
+
+	if (IsSavegameVersionBefore(SLV_MULTITILE_DEPOTS)) {
+		_settings_game.depot.rail_depot_types = 1;
+		_settings_game.depot.road_depot_types = 1;
+		_settings_game.depot.water_depot_types = 1;
+
+		_settings_game.depot.allow_no_comp_railtype_replacements = false;
+		_settings_game.depot.allow_no_comp_roadtype_replacements = false;
 	}
 
 	/* Load the sprites */
@@ -2424,28 +2437,6 @@ bool AfterLoadGame()
 		for (Depot *d : Depot::Iterate()) d->build_date = _date;
 	}
 
-	/* In old versions it was possible to remove an airport while a plane was
-	 * taking off or landing. This gives all kind of problems when building
-	 * another airport in the same station so we don't allow that anymore.
-	 * For old savegames with such aircraft we just throw them in the air and
-	 * treat the aircraft like they were flying already. */
-	if (IsSavegameVersionBefore(SLV_146)) {
-		for (Aircraft *v : Aircraft::Iterate()) {
-			if (!v->IsNormalAircraft()) continue;
-			Station *st = GetTargetAirportIfValid(v);
-			if (st == nullptr && v->state != FLYING) {
-				v->state = FLYING;
-				UpdateAircraftCache(v);
-				AircraftNextAirportPos_and_Order(v);
-				/* get aircraft back on running altitude */
-				if ((v->vehstatus & VS_CRASHED) == 0) {
-					GetAircraftFlightLevelBounds(v, &v->z_pos, nullptr);
-					SetAircraftPosition(v, v->x_pos, v->y_pos, GetAircraftFlightLevel(v));
-				}
-			}
-		}
-	}
-
 	/* Move the animation frame to the same location (m7) for all objects. */
 	if (IsSavegameVersionBefore(SLV_147)) {
 		for (TileIndex t = 0; t < map_size; t++) {
@@ -2768,6 +2759,64 @@ bool AfterLoadGame()
 					delete st->airport.psa;
 					st->airport.psa = nullptr;
 
+				}
+			}
+		}
+	}
+
+	if (IsSavegameVersionBefore(SLV_MULTITILE_DEPOTS)) {
+		for (Station *st : Station::Iterate()) {
+			if ((st->facilities & FACIL_AIRPORT) && st->airport.HasHangar()) {
+				/* Add a built-in hangar for some airport types. */
+				assert(Depot::CanAllocateItem());
+				st->airport.SetHangar(true);
+			}
+		}
+
+		for (Depot *depot : Depot::Iterate()) {
+			depot->company = GetTileOwner(depot->xy);
+			depot->veh_type = GetDepotVehicleType(depot->xy);
+			switch (depot->veh_type) {
+				case VEH_SHIP:
+					depot->AfterAddRemove(TileArea(depot->xy, 2, 2), true);
+					break;
+				case VEH_ROAD:
+				case VEH_TRAIN:
+					depot->AfterAddRemove(TileArea(depot->xy, 1, 1), true);
+					break;
+				default:
+					break;
+			}
+		}
+
+		for (TileIndex t = 0; t < map_size; t++) {
+			if (!IsRoadDepotTile(t)) continue;
+			DiagDirection dir = (DiagDirection)GB(_m[t].m5, 0, 2);
+			SB(_m[t].m5, 0, 6, 0);
+			RoadBits rb = DiagDirToRoadBits(dir);
+			SetRoadBits(t, rb, HasRoadTypeRoad(t) ? RTT_ROAD : RTT_TRAM);
+			SB(_me[t].m6, 6, 2, dir);
+			if (IsBigRoadDepot(t)) NOT_REACHED();
+		}
+	}
+
+	/* In old versions it was possible to remove an airport while a plane was
+	 * taking off or landing. This gives all kind of problems when building
+	 * another airport in the same station so we don't allow that anymore.
+	 * For old savegames with such aircraft we just throw them in the air and
+	 * treat the aircraft like they were flying already. */
+	if (IsSavegameVersionBefore(SLV_146)) {
+		for (Aircraft *v : Aircraft::Iterate()) {
+			if (!v->IsNormalAircraft()) continue;
+			Station *st = GetTargetAirportIfValid(v);
+			if (st == nullptr && v->state != FLYING) {
+				v->state = FLYING;
+				UpdateAircraftCache(v);
+				AircraftNextAirportPos_and_Order(v);
+				/* get aircraft back on running altitude */
+				if ((v->vehstatus & VS_CRASHED) == 0) {
+					GetAircraftFlightLevelBounds(v, &v->z_pos, nullptr);
+					SetAircraftPosition(v, v->x_pos, v->y_pos, GetAircraftFlightLevel(v));
 				}
 			}
 		}

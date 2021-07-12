@@ -332,6 +332,12 @@ public:
 	Window *parent;                  ///< Parent window.
 	WindowList::iterator z_position;
 
+	inline bool HasWidget(uint widnum) const
+	{
+		return widnum < this->nested_array_size &&
+				this->nested_array[widnum] != NULL;
+	}
+
 	template <class NWID>
 	inline const NWID *GetWidget(uint widnum) const;
 	template <class NWID>

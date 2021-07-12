@@ -276,4 +276,14 @@ static inline bool IsDiagonalDirection(Direction dir)
 	return (dir & 1) != 0;
 }
 
+/**
+ * Checks if a given DiagDirection is facing south.
+ * @param diag_dir Diagonal direction to check
+ * @return true iff the diagonal direction is facing south.
+ */
+static inline bool IsDiagDirFacingSouth(DiagDirection diag_dir)
+{
+	return diag_dir == DIAGDIR_SE || diag_dir == DIAGDIR_SW;
+}
+
 #endif /* DIRECTION_FUNC_H */

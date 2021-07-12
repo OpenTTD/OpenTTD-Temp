@@ -222,8 +222,6 @@ static const int INVALID_PRICE_MODIFIER = MIN_PRICE_MODIFIER - 1;
 static const uint TUNNELBRIDGE_TRACKBIT_FACTOR = 4;
 /** Multiplier for how many regular track bits a level crossing counts. */
 static const uint LEVELCROSSING_TRACKBIT_FACTOR = 2;
-/** Multiplier for how many regular track bits a road depot counts. */
-static const uint ROAD_DEPOT_TRACKBIT_FACTOR = 2;
 /** Multiplier for how many regular track bits a bay stop counts. */
 static const uint ROAD_STOP_TRACKBIT_FACTOR = 2;
 /** Multiplier for how many regular tiles a lock counts. */

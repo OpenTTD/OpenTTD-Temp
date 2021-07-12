@@ -18,6 +18,7 @@
 #include "../pathfinder_type.h"
 #include "../follow_track.hpp"
 #include "aystar.h"
+#include "../../platform_func.h"
 
 #include "../../safeguards.h"
 
@@ -30,7 +31,8 @@ static const uint NPF_HASH_HALFMASK = (1 << NPF_HASH_HALFBITS) - 1;
 /** Meant to be stored in AyStar.targetdata */
 struct NPFFindStationOrTileData {
 	TileIndex dest_coords;    ///< An indication of where the station is, for heuristic purposes, or the target tile
-	StationID station_index;  ///< station index we're heading for, or INVALID_STATION when we're heading for a tile
+	StationID station_index;  ///< station index we're heading for, or INVALID_STATION if not heading to a station
+	DepotID depot_index;      ///< depot index we're heading for, or INVALID_DEPOT if not heading to a depot
 	bool reserve_path;        ///< Indicates whether the found path should be reserved
 	StationType station_type; ///< The type of station we're heading for
 	bool not_articulated;     ///< The (road) vehicle is not articulated
@@ -165,9 +167,11 @@ static int32 NPFCalcStationOrTileHeuristic(AyStar *as, AyStarNode *current, Open
 	uint dist;
 	AyStarUserData *user = (AyStarUserData *)as->user_data;
 
-	/* aim for the closest station tile */
+	/* aim for the closest station/depot tile */
 	if (fstd->station_index != INVALID_STATION) {
 		to = CalcClosestStationTile(fstd->station_index, from, fstd->station_type);
+	} else if (fstd->depot_index != INVALID_DEPOT) {
+		to = CalcClosestDepotTile(fstd->depot_index, from);
 	}
 
 	if (user->type == TRANSPORT_ROAD) {
@@ -320,8 +324,18 @@ static int32 NPFWaterPathCost(AyStar *as, AyStarNode *current, OpenListNode *par
 
 	cost = _trackdir_length[trackdir]; // Should be different for diagonal tracks
 
-	if (IsBuoyTile(current->tile) && IsDiagonalTrackdir(trackdir)) {
-		cost += _settings_game.pf.npf.npf_buoy_penalty; // A small penalty for going over buoys
+	switch (GetTileType(current->tile)) {
+		default: NOT_REACHED();
+
+		case MP_STATION:
+			if (IsBuoy(current->tile) && IsDiagonalTrackdir(trackdir)) cost += _settings_game.pf.npf.npf_buoy_penalty;
+			break;
+
+		case MP_WATER:
+			if (IsShipDepot(current->tile)) {
+				if (IsBigDepot(current->tile) && IsDepotFullWithStoppedVehicles(current->tile)) cost += NPF_INFINITE_PENALTY;
+			}
+			break;
 	}
 
 	if (current->direction != NextTrackdir((Trackdir)parent->path.node.direction)) {
@@ -355,7 +369,22 @@ static int32 NPFRoadPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 		case MP_ROAD:
 			cost = NPF_TILE_LENGTH;
 			/* Increase the cost for level crossings */
-			if (IsLevelCrossing(tile)) cost += _settings_game.pf.npf.npf_crossing_penalty;
+			if (IsLevelCrossing(tile)) {
+				cost += _settings_game.pf.npf.npf_crossing_penalty;
+			} else if (IsRoadDepot(tile) && IsBigRoadDepot(tile)) {
+				switch (GetDepotReservation(tile, current->direction)) {
+					case DEPOT_RESERVATION_FULL_STOPPED_VEH:
+						cost += 32 * NPF_TILE_LENGTH;
+						break;
+					case DEPOT_RESERVATION_IN_USE:
+						cost += 8 * NPF_TILE_LENGTH;
+						break;
+					case DEPOT_RESERVATION_EMPTY:
+						cost += NPF_TILE_LENGTH;
+						break;
+					default: NOT_REACHED();
+				}
+			}
 			break;
 
 		case MP_STATION: {
@@ -398,6 +427,19 @@ static int32 NPFRoadPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 	return cost;
 }
 
+/* Return a small penalty for longer platform than needed and a bigger penalty for a too short one. */
+inline int PlatformLengthPenalty(NPFFindStationOrTileData *fstd, int platform_length)
+{
+	const Train *v = Train::From(fstd->v);
+	assert(v != nullptr);
+	assert(v->type == VEH_TRAIN);
+	assert(v->gcache.cached_total_length != 0);
+
+	int missing_platform_length = CeilDiv(v->gcache.cached_total_length, TILE_SIZE) - platform_length;
+
+	return _settings_game.pf.npf.npf_rail_station_penalty * (missing_platform_length < 0 ? missing_platform_length : 64);
+}
+
 
 /* Determine the cost of this node, for railway tracks */
 static int32 NPFRailPathCost(AyStar *as, AyStarNode *current, OpenListNode *parent)
@@ -416,6 +458,23 @@ static int32 NPFRailPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 
 		case MP_RAILWAY:
 			cost = _trackdir_length[trackdir]; // Should be different for diagonal tracks
+			if (IsBigRailDepotTile(tile)) {
+				DepotReservation depot_reservation = GetDepotReservation(tile);
+				if (depot_reservation == DEPOT_RESERVATION_FULL_STOPPED_VEH) {
+					cost += NPF_INFINITE_PENALTY;
+				} else {
+					uint platform_length = GetPlatformLength(tile, TrackdirToExitdir(trackdir));
+					cost += (HasDepotReservation(tile) ? 2 : 1) * platform_length * _settings_game.pf.npf.npf_rail_station_penalty;
+
+					/* Add additional length penalties if train has to visit this depot. */
+					NPFFindStationOrTileData *fstd = (NPFFindStationOrTileData*)as->user_target;
+					if (fstd->v->current_order.IsType(OT_GOTO_DEPOT) &&
+							GetDepotIndex(tile) == fstd->v->current_order.GetDestination() &&
+							IsAnyStartPlatformTile(tile)) {
+						cost += PlatformLengthPenalty(fstd, platform_length);
+					}
+				}
+			}
 			break;
 
 		case MP_ROAD: // Railway crossing
@@ -535,7 +594,7 @@ static int32 NPFRailPathCost(AyStar *as, AyStarNode *current, OpenListNode *pare
 	 *      curves should be taken into account, as this affects the speed limit. */
 
 	/* Check for reverse in depot */
-	if (IsRailDepotTile(tile) && as->EndNodeCheck(as, &new_node) != AYSTAR_FOUND_END_NODE) {
+	if (IsSmallRailDepotTile(tile) && as->EndNodeCheck(as, &new_node) != AYSTAR_FOUND_END_NODE) {
 		/* Penalise any depot tile that is not the last tile in the path. This
 		 * _should_ penalise every occurrence of reversing in a depot (and only
 		 * that) */
@@ -574,14 +633,19 @@ static int32 NPFFindSafeTile(const AyStar *as, const OpenListNode *current)
 static int32 NPFFindStationOrTile(const AyStar *as, const OpenListNode *current)
 {
 	NPFFindStationOrTileData *fstd = (NPFFindStationOrTileData*)as->user_target;
+	const AyStarUserData *user = (AyStarUserData *)as->user_data;
 	const AyStarNode *node = &current->path.node;
 	TileIndex tile = node->tile;
 
-	if (fstd->station_index == INVALID_STATION && tile == fstd->dest_coords) return AYSTAR_FOUND_END_NODE;
+	if (fstd->station_index == INVALID_STATION && fstd->depot_index == INVALID_DEPOT &&
+			tile == fstd->dest_coords) {
+		return AYSTAR_FOUND_END_NODE;
+	}
 
 	if (fstd->v->type == VEH_SHIP) {
 		/* Ships do not actually reach the destination station, so we check for a docking tile instead. */
 		if (IsDockingTile(tile) && IsShipDestinationTile(tile, fstd->station_index)) return AYSTAR_FOUND_END_NODE;
+		if (IsDepotTypeTile(tile, user->type) && GetDepotIndex(tile) == fstd->depot_index) return AYSTAR_FOUND_END_NODE;
 		return AYSTAR_DONE;
 	}
 
@@ -589,9 +653,15 @@ static int32 NPFFindStationOrTile(const AyStar *as, const OpenListNode *current)
 		if (fstd->v->type == VEH_TRAIN) return AYSTAR_FOUND_END_NODE;
 
 		assert(fstd->v->type == VEH_ROAD);
+		assert(user->type == TRANSPORT_ROAD);
 		/* Only if it is a valid station *and* we can stop there */
-		if (GetStationType(tile) == fstd->station_type && (fstd->not_articulated || IsDriveThroughStopTile(tile))) return AYSTAR_FOUND_END_NODE;
+		if (GetStationType(tile) == fstd->station_type &&
+				(fstd->not_articulated || IsDriveThroughStopTile(tile)))
+			return AYSTAR_FOUND_END_NODE;
+	} else if (IsDepotTypeTile(tile, user->type) && GetDepotIndex(tile) == fstd->depot_index) {
+		return AYSTAR_FOUND_END_NODE;
 	}
+
 	return AYSTAR_DONE;
 }
 
@@ -623,8 +693,8 @@ static void ClearPathReservation(const PathNode *start, const PathNode *end)
 {
 	bool first_run = true;
 	for (; start != end; start = start->parent) {
-		if (IsRailStationTile(start->node.tile) && first_run) {
-			SetRailStationPlatformReservation(start->node.tile, TrackdirToExitdir(start->node.direction), false);
+		if (IsPlatformTile(start->node.tile) && first_run) {
+			SetPlatformReservation(start->node.tile, TrackdirToExitdir(start->node.direction), false);
 		} else {
 			UnreserveRailTrack(start->node.tile, TrackdirToTrack(start->node.direction));
 		}
@@ -656,16 +726,21 @@ static void NPFSaveTargetData(AyStar *as, OpenListNode *current)
 		ftd->node = target->node;
 
 		/* If the target is a station skip to platform end. */
-		if (IsRailStationTile(target->node.tile)) {
+		if (IsRailStationTile(target->node.tile) || IsBigRailDepotTile(target->node.tile)) {
 			DiagDirection dir = TrackdirToExitdir(target->node.direction);
-			uint len = Station::GetByTile(target->node.tile)->GetPlatformLength(target->node.tile, dir);
+			uint len = GetPlatformLength(target->node.tile, dir);
 			TileIndex end_tile = TILE_ADD(target->node.tile, (len - 1) * TileOffsByDiagDir(dir));
 
 			/* Update only end tile, trackdir of a station stays the same. */
 			ftd->node.tile = end_tile;
 			if (!IsWaitingPositionFree(v, end_tile, target->node.direction, _settings_game.pf.forbid_90_deg)) return;
-			SetRailStationPlatformReservation(target->node.tile, dir, true);
-			SetRailStationReservation(target->node.tile, false);
+			SetPlatformReservation(target->node.tile, dir, true);
+			if (IsDepotTile(target->node.tile)) {
+				SetDepotReservation(target->node.tile, false);
+			} else {
+				assert(IsTileType(target->node.tile, MP_STATION));
+				SetRailStationReservation(target->node.tile, false);
+			}
 		} else {
 			if (!IsWaitingPositionFree(v, target->node.tile, target->node.direction, _settings_game.pf.forbid_90_deg)) return;
 		}
@@ -766,7 +841,7 @@ static DiagDirection GetSingleTramBit(TileIndex tile)
  */
 static DiagDirection GetTileSingleEntry(TileIndex tile, TransportType type, uint subtype)
 {
-	if (type != TRANSPORT_WATER && IsDepotTypeTile(tile, type)) return GetDepotDirection(tile, type);
+	if (type != TRANSPORT_WATER && IsDepotTypeTile(tile, type) && !IsBigDepotTile(tile)) return GetDepotDirection(tile, type);
 
 	if (type == TRANSPORT_ROAD) {
 		if (IsStandardRoadStopTile(tile)) return GetRoadStopDir(tile);
@@ -1122,13 +1197,18 @@ void InitializeNPF()
 
 static void NPFFillWithOrderData(NPFFindStationOrTileData *fstd, const Vehicle *v, bool reserve_path = false)
 {
-	/* Ships don't really reach their stations, but the tile in front. So don't
-	 * save the station id for ships. For roadvehs we don't store it either,
-	 * because multistop depends on vehicles actually reaching the exact
-	 * dest_tile, not just any stop of that station.
-	 * So only for train orders to stations we fill fstd->station_index, for all
-	 * others only dest_coords */
-	if (v->current_order.IsType(OT_GOTO_STATION) || v->current_order.IsType(OT_GOTO_WAYPOINT)) {
+	fstd->station_index = INVALID_STATION;
+	fstd->depot_index = INVALID_DEPOT;
+
+	if (v->current_order.IsType(OT_GOTO_DEPOT)) {
+		fstd->depot_index = v->current_order.GetDestination();
+	} else if (v->current_order.IsType(OT_GOTO_STATION) || v->current_order.IsType(OT_GOTO_WAYPOINT)) {
+		/* Ships don't really reach their stations, but the tile in front. So don't
+		 * save the station id for ships. For roadvehs we don't store it either,
+		 * because multistop depends on vehicles actually reaching the exact
+		 * dest_tile, not just any stop of that station.
+		 * So only for train orders to stations we fill fstd->station_index, for all
+		 * others only dest_coords */
 		fstd->station_index = v->current_order.GetDestination();
 		if (v->type == VEH_TRAIN) {
 			fstd->station_type = v->current_order.IsType(OT_GOTO_STATION) ? STATION_RAIL : STATION_WAYPOINT;
@@ -1137,13 +1217,20 @@ static void NPFFillWithOrderData(NPFFindStationOrTileData *fstd, const Vehicle *
 		} else if (v->type == VEH_SHIP) {
 			fstd->station_type = v->current_order.IsType(OT_GOTO_STATION) ? STATION_DOCK : STATION_BUOY;
 		}
+	}
 
+	if(fstd->station_index != INVALID_STATION || fstd->depot_index != INVALID_DEPOT) {
 		fstd->not_articulated = v->type == VEH_ROAD && !RoadVehicle::From(v)->HasArticulatedPart();
 		/* Let's take the closest tile of the station as our target for vehicles */
-		fstd->dest_coords = CalcClosestStationTile(fstd->station_index, v->tile, fstd->station_type);
+		if (fstd->station_index != INVALID_STATION) {
+			fstd->dest_coords = CalcClosestStationTile(fstd->station_index, v->tile, fstd->station_type);
+		} else {
+			fstd->dest_coords = CalcClosestDepotTile(fstd->depot_index, v->tile);
+		}
 	} else {
 		fstd->dest_coords = v->dest_tile;
 		fstd->station_index = INVALID_STATION;
+		fstd->depot_index = INVALID_DEPOT;
 	}
 	fstd->reserve_path = reserve_path;
 	fstd->v = v;

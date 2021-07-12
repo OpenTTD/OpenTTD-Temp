@@ -15,6 +15,7 @@
 #include "../map_func.h"
 #include "../core/bitmath_func.hpp"
 #include "../fios.h"
+#include "../rail_map.h"
 #include <array>
 
 #include "../safeguards.h"
@@ -243,6 +244,19 @@ struct MAP5ChunkHandler : ChunkHandler {
 		for (TileIndex i = 0; i != size;) {
 			SlCopy(buf.data(), MAP_SL_BUF_SIZE, SLE_UINT8);
 			for (uint j = 0; j != MAP_SL_BUF_SIZE; j++) _m[i++].m5 = buf[j];
+		}
+
+		if (IsSavegameVersionBefore(SLV_MULTITILE_DEPOTS)) {
+			/* Move some bits for alignment purposes. */
+			for (TileIndex i = 0; i != size; i++) {
+				if (IsTileType(i, MP_WATER)) {
+					SB(_m[i].m5, 6, 1, GB(_m[i].m5, 4, 1));
+					SB(_m[i].m5, 4, 1, 0);
+				}  else if (IsTileType(i, MP_RAILWAY) && GetRailTileType(i) == 3) {
+					/* Change the rail type for depots from old value 3 to new value 2. */
+					SB(_m[i].m5, 6, 2, RAIL_TILE_DEPOT);
+				}
+			}
 		}
 	}
 

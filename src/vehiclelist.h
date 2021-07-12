@@ -13,6 +13,7 @@
 #include "core/smallvec_type.hpp"
 #include "vehicle_type.h"
 #include "company_type.h"
+#include "depot_type.h"
 #include "tile_type.h"
 
 /** Vehicle List type flags */
@@ -53,7 +54,7 @@ struct VehicleListIdentifier {
 typedef std::vector<const Vehicle *> VehicleList;
 
 bool GenerateVehicleSortList(VehicleList *list, const VehicleListIdentifier &identifier);
-void BuildDepotVehicleList(VehicleType type, TileIndex tile, VehicleList *engine_list, VehicleList *wagon_list, bool individual_wagons = false);
+void BuildDepotVehicleList(VehicleType type, DepotID depot_id, VehicleList *engine_list, VehicleList *wagon_list, bool individual_wagons = false);
 uint GetUnitNumberDigits(VehicleList &vehicles);
 
 #endif /* VEHICLELIST_H */

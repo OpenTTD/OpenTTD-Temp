@@ -15,6 +15,7 @@
 #include "window_type.h"
 #include "tile_map.h"
 #include "station_type.h"
+#include "depot_type.h"
 
 static const int TILE_HEIGHT_STEP = 50; ///< One Z unit tile height difference is displayed as 50m.
 
@@ -98,5 +99,6 @@ struct Town;
 
 void SetViewportCatchmentStation(const Station *st, bool sel);
 void SetViewportCatchmentTown(const Town *t, bool sel);
+void SetViewportHighlightDepot(const DepotID dep, bool sel);
 
 #endif /* VIEWPORT_FUNC_H */

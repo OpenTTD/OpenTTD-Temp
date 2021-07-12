@@ -520,7 +520,7 @@
        <li>m2 bit 11: opposite track is reserved, too</li>
       </ul>
      </li>
-     <li>m5 bit 7 set, bit 6 set: railway depot
+     <li>m5 bit 7 set, bit 6 clear: railway depot
       <ul>
        <li>m2: Depot index</li>
        <li>m5 bits 1..0: exit towards
@@ -547,6 +547,11 @@
         </table>
        </li>
        <li>m5 bit 4: pbs reservation state</li>
+       <li>m5 bit 5 clear: small depot</li>
+       <li>m5 bit 5 set: big depot
+        <ul>
+         <li>m4 bits 6..7: depot reservation state</li>
+        </ul>
       </ul>
      </li>
     </ul>
@@ -666,7 +671,7 @@
       <ul>
        <li>m1 bits 4..0: <a href="#OwnershipInfo">owner</a> of the depot</li>
        <li>m2: Depot index</li>
-       <li>m5 bits 1..0: exit towards:
+       <li>m6 bits 6..7: exit towards:
         <table>
          <tr>
           <td><tt>0</tt>&nbsp; </td>
@@ -688,6 +693,15 @@
           <td>NW</td>
          </tr>
         </table>
+       </li>
+       <li>m3 bits 0..3: road layout road type 1 (tram)</li>
+       <li>m5 bits 0..3: road layout road type 0 (normal road)</li>
+       <li>m5 bit 5 clear: small depot</li>
+       <li>m5 bit 5 set: big depot
+        <ul>
+         <li>m4 bits 6..7: depot reservation state towards north direction</li>
+         <li>m6 bits 4..5: depot reservation state towards south direction</li>
+        </ul>
        </li>
        <li>m7 bits 4..0: <a href="#OwnershipInfo">owner</a> of the road type 0 (normal road)</li>
       </ul>
@@ -1108,6 +1122,11 @@
        </tr>
       </table>
      </li>
+     <li>m5 bit 5 clear: small depot (for depots only)</li>
+     <li>m5 bit 5 set: big depot
+      <ul>
+       <li>m4 bits 6..7: depot reservation state (for depots only)</li>
+      </ul>
     </ul>
    </td>
   </tr>

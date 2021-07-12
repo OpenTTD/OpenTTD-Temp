@@ -26,8 +26,11 @@
 #include "vehiclelist.h"
 #include "order_backup.h"
 #include "zoom_func.h"
+#include "core/geometry_func.hpp"
+#include "train_placement.h"
 
 #include "widgets/depot_widget.h"
+#include "widgets/station_widget.h"
 
 #include "table/strings.h"
 
@@ -72,6 +75,7 @@ static const NWidgetPart _nested_train_depot_widgets[] = {
 	NWidget(NWID_HORIZONTAL, NC_EQUALSIZE),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_D_BUILD), SetDataTip(0x0, STR_NULL), SetFill(1, 1), SetResize(1, 0),
 		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_D_CLONE), SetDataTip(0x0, STR_NULL), SetFill(1, 1), SetResize(1, 0),
+		NWidget(WWT_TEXTBTN, COLOUR_GREY, WID_D_HIGHLIGHT), SetDataTip(STR_BUTTON_HIGHLIGHT_DEPOT, STR_TOOLTIP_HIGHLIGHT_DEPOT), SetFill(1, 1), SetResize(1, 0),
 		NWidget(WWT_PUSHTXTBTN, COLOUR_GREY, WID_D_VEHICLE_LIST), SetDataTip(0x0, STR_NULL), SetFill(0, 1),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_D_STOP_ALL), SetDataTip(SPR_FLAG_VEH_STOPPED, STR_NULL), SetFill(0, 1),
 		NWidget(WWT_PUSHIMGBTN, COLOUR_GREY, WID_D_START_ALL), SetDataTip(SPR_FLAG_VEH_RUNNING, STR_NULL), SetFill(0, 1),
@@ -256,6 +260,7 @@ struct DepotWindow : Window {
 	VehicleType type;
 	bool generate_list;
 	int hovered_widget; ///< Index of the widget being hovered during drag/drop. -1 if no drag is in progress.
+	std::vector<bool> problematic_vehicles;  ///< Vector associated to vehicle_list, with a value of true for vehicles that cannot leave the depot.
 	VehicleList vehicle_list;
 	VehicleList wagon_list;
 	uint unitnumber_digits;
@@ -263,9 +268,11 @@ struct DepotWindow : Window {
 	Scrollbar *hscroll;     ///< Only for trains.
 	Scrollbar *vscroll;
 
-	DepotWindow(WindowDesc *desc, TileIndex tile, VehicleType type) : Window(desc)
+	DepotWindow(WindowDesc *desc, DepotID depot_id, VehicleType type) : Window(desc), type(type)
 	{
 		assert(IsCompanyBuildableVehicleType(type)); // ensure that we make the call with a valid type
+		Depot *depot = Depot::Get(depot_id);
+		assert(type == depot->veh_type);
 
 		this->sel = INVALID_VEHICLE;
 		this->vehicle_over = INVALID_VEHICLE;
@@ -285,17 +292,18 @@ struct DepotWindow : Window {
 		this->GetWidget<NWidgetStacked>(WID_D_SHOW_H_SCROLL)->SetDisplayedPlane(type == VEH_TRAIN ? 0 : SZSP_HORIZONTAL);
 		this->GetWidget<NWidgetStacked>(WID_D_SHOW_SELL_CHAIN)->SetDisplayedPlane(type == VEH_TRAIN ? 0 : SZSP_NONE);
 		this->SetupWidgetData(type);
-		this->FinishInitNested(tile);
+		this->FinishInitNested(depot_id);
 
-		this->owner = GetTileOwner(tile);
+		this->owner = depot->company;
 		OrderBackup::Reset();
 	}
 
 	void Close() override
 	{
 		CloseWindowById(WC_BUILD_VEHICLE, this->window_number);
-		CloseWindowById(GetWindowClassForVehicleType(this->type), VehicleListIdentifier(VL_DEPOT_LIST, this->type, this->owner, this->GetDepotIndex()).Pack(), false);
+		CloseWindowById(GetWindowClassForVehicleType(this->type), VehicleListIdentifier(VL_DEPOT_LIST, this->type, this->owner, this->window_number).Pack(), false);
 		OrderBackup::Reset(this->window_number);
+		SetViewportHighlightDepot(this->window_number, false);
 		this->Window::Close();
 	}
 
@@ -401,6 +409,11 @@ struct DepotWindow : Window {
 		int y;
 		for (y = r.top + 1; num < maxval; y += this->resize.step_height) { // Draw the rows
 			for (uint i = 0; i < this->num_columns && num < maxval; i++, num++) {
+				/* Draw a dark red background if train cannot be placed. */
+				if (this->type == VEH_TRAIN && this->problematic_vehicles[num] == 1) {
+					GfxFillRect(r.left, y, r.right, y + this->resize.step_height - 1, PC_DARK_GREY);
+				}
+
 				/* Draw all vehicles in the current row */
 				const Vehicle *v = this->vehicle_list[num];
 				if (this->num_columns == 1) {
@@ -426,7 +439,7 @@ struct DepotWindow : Window {
 		if (widget != WID_D_CAPTION) return;
 
 		SetDParam(0, this->type);
-		SetDParam(1, this->GetDepotIndex());
+		SetDParam(1, (this->type == VEH_AIRCRAFT) ? GetStationIndex(Depot::Get(this->window_number)->xy) : this->window_number);
 	}
 
 	struct GetDepotVehiclePtData {
@@ -705,12 +718,23 @@ struct DepotWindow : Window {
 
 	void OnPaint() override
 	{
+		extern DepotID _viewport_highlight_depot;
+		this->SetWidgetLoweredState(WID_D_HIGHLIGHT, _viewport_highlight_depot == this->window_number);
+
 		if (this->generate_list) {
 			/* Generate the vehicle list
 			 * It's ok to use the wagon pointers for non-trains as they will be ignored */
 			BuildDepotVehicleList(this->type, this->window_number, &this->vehicle_list, &this->wagon_list);
 			this->generate_list = false;
 			DepotSortList(&this->vehicle_list);
+			if (this->type == VEH_TRAIN) {
+				this->problematic_vehicles.clear();
+				TrainPlacement tp;
+				for (uint num = 0; num < this->vehicle_list.size(); ++num) {
+					const Vehicle *v = this->vehicle_list[num];
+					this->problematic_vehicles.push_back(!tp.CanFindAppropriatePlatform(Train::From(v), false));
+				}
+			}
 
 			uint new_unitnumber_digits = GetUnitNumberDigits(this->vehicle_list);
 			/* Only increase the size; do not decrease to prevent constant changes */
@@ -739,8 +763,7 @@ struct DepotWindow : Window {
 		}
 
 		/* Setup disabled buttons. */
-		TileIndex tile = this->window_number;
-		this->SetWidgetsDisabledState(!IsTileOwner(tile, _local_company),
+		this->SetWidgetsDisabledState(this->owner != _local_company,
 			WID_D_STOP_ALL,
 			WID_D_START_ALL,
 			WID_D_SELL,
@@ -757,6 +780,8 @@ struct DepotWindow : Window {
 
 	void OnClick(Point pt, int widget, int click_count) override
 	{
+		TileIndex tile = Depot::Get(this->window_number)->xy;
+
 		switch (widget) {
 			case WID_D_MATRIX: { // List
 				NWidgetBase *nwi = this->GetWidget<NWidgetBase>(WID_D_MATRIX);
@@ -789,20 +814,25 @@ struct DepotWindow : Window {
 				if (_ctrl_pressed) {
 					ShowExtraViewportWindow(this->window_number);
 				} else {
-					ScrollMainWindowToTile(this->window_number);
+					ScrollMainWindowToTile(tile);
 				}
 				break;
 
 			case WID_D_RENAME: // Rename button
 				SetDParam(0, this->type);
-				SetDParam(1, Depot::GetByTile((TileIndex)this->window_number)->index);
+				SetDParam(1, this->window_number);
 				ShowQueryString(STR_DEPOT_NAME, STR_DEPOT_RENAME_DEPOT_CAPTION, MAX_LENGTH_DEPOT_NAME_CHARS, this, CS_ALPHANUMERAL, QSF_ENABLE_DEFAULT | QSF_LEN_IN_CHARS);
+				break;
+
+			case WID_D_HIGHLIGHT:
+				this->SetWidgetDirty(WID_D_HIGHLIGHT);
+				SetViewportHighlightDepot(this->window_number, !this->IsWidgetLowered(WID_D_HIGHLIGHT));
 				break;
 
 			case WID_D_STOP_ALL:
 			case WID_D_START_ALL: {
 				VehicleListIdentifier vli(VL_DEPOT_LIST, this->type, this->owner);
-				DoCommandP(this->window_number, (widget == WID_D_START_ALL ? (1 << 0) : 0), vli.Pack(), CMD_MASS_START_STOP);
+				DoCommandP(tile, (widget == WID_D_START_ALL ? (1 << 0) : 0), vli.Pack(), CMD_MASS_START_STOP | CMD_MSG(STR_ERROR_CAN_T_START_STOP_VEHICLES));
 				break;
 			}
 
@@ -810,7 +840,7 @@ struct DepotWindow : Window {
 				/* Only open the confirmation window if there are anything to sell */
 				if (this->vehicle_list.size() != 0 || this->wagon_list.size() != 0) {
 					SetDParam(0, this->type);
-					SetDParam(1, this->GetDepotIndex());
+					SetDParam(1, this->window_number);
 					ShowQuery(
 						STR_DEPOT_CAPTION,
 						STR_DEPOT_SELL_CONFIRMATION_TEXT,
@@ -821,11 +851,11 @@ struct DepotWindow : Window {
 				break;
 
 			case WID_D_VEHICLE_LIST:
-				ShowVehicleListWindow(GetTileOwner(this->window_number), this->type, (TileIndex)this->window_number);
+				ShowVehicleListWindowDepot(this->owner, this->type, this->window_number);
 				break;
 
 			case WID_D_AUTOREPLACE:
-				DoCommandP(this->window_number, this->type, 0, CMD_DEPOT_MASS_AUTOREPLACE);
+				DoCommandP(tile, this->type, 0, CMD_DEPOT_MASS_AUTOREPLACE | CMD_MSG(STR_ERROR_CAN_T_REPLACE_VEHICLES));
 				break;
 
 		}
@@ -836,7 +866,7 @@ struct DepotWindow : Window {
 		if (str == nullptr) return;
 
 		/* Do depot renaming */
-		DoCommandP(0, this->GetDepotIndex(), 0, CMD_RENAME_DEPOT | CMD_MSG(STR_ERROR_CAN_T_RENAME_DEPOT), nullptr, str);
+		DoCommandP(0, this->window_number, 0, CMD_RENAME_DEPOT | CMD_MSG(STR_ERROR_CAN_T_RENAME_DEPOT), nullptr, str);
 	}
 
 	bool OnRightClick(Point pt, int widget) override
@@ -904,10 +934,10 @@ struct DepotWindow : Window {
 	{
 		if (_ctrl_pressed) {
 			/* Share-clone, do not open new viewport, and keep tool active */
-			DoCommandP(this->window_number, v->index, 1, CMD_CLONE_VEHICLE | CMD_MSG(STR_ERROR_CAN_T_BUY_TRAIN + v->type), nullptr);
+			DoCommandP(Depot::Get(this->window_number)->xy, v->index, 1, CMD_CLONE_VEHICLE | CMD_MSG(STR_ERROR_CAN_T_BUY_TRAIN + v->type), nullptr);
 		} else {
 			/* Copy-clone, open viewport for new vehicle, and deselect the tool (assume player wants to changs things on new vehicle) */
-			if (DoCommandP(this->window_number, v->index, 0, CMD_CLONE_VEHICLE | CMD_MSG(STR_ERROR_CAN_T_BUY_TRAIN + v->type), CcCloneVehicle)) {
+			if (DoCommandP(Depot::Get(this->window_number)->xy, v->index, 0, CMD_CLONE_VEHICLE | CMD_MSG(STR_ERROR_CAN_T_BUY_TRAIN + v->type), CcCloneVehicle)) {
 				ResetObjectToPlace();
 			}
 		}
@@ -1073,25 +1103,13 @@ struct DepotWindow : Window {
 
 		return ES_NOT_HANDLED;
 	}
-
-	/**
-	 * Gets the DepotID of the current window.
-	 * In the case of airports, this is the station ID.
-	 * @return Depot or station ID of this window.
-	 */
-	inline uint16 GetDepotIndex() const
-	{
-		return (this->type == VEH_AIRCRAFT) ? ::GetStationIndex(this->window_number) : ::GetDepotIndex(this->window_number);
-	}
 };
 
 static void DepotSellAllConfirmationCallback(Window *win, bool confirmed)
 {
 	if (confirmed) {
 		DepotWindow *w = (DepotWindow*)win;
-		TileIndex tile = w->window_number;
-		byte vehtype = w->type;
-		DoCommandP(tile, vehtype, 0, CMD_DEPOT_SELL_ALL_VEHICLES);
+		DoCommandP(Depot::Get(w->window_number)->xy, w->type, 0, CMD_DEPOT_SELL_ALL_VEHICLES);
 	}
 }
 
@@ -1102,7 +1120,10 @@ static void DepotSellAllConfirmationCallback(Window *win, bool confirmed)
  */
 void ShowDepotWindow(TileIndex tile, VehicleType type)
 {
-	if (BringWindowToFrontById(WC_VEHICLE_DEPOT, tile) != nullptr) return;
+	assert(IsDepotTile(tile));
+	DepotID depot_id = GetDepotIndex(tile);
+	assert(Depot::IsValidID(depot_id));
+	if (BringWindowToFrontById(WC_VEHICLE_DEPOT, depot_id) != nullptr) return;
 
 	WindowDesc *desc;
 	switch (type) {
@@ -1113,7 +1134,7 @@ void ShowDepotWindow(TileIndex tile, VehicleType type)
 		case VEH_AIRCRAFT: desc = &_aircraft_depot_desc; break;
 	}
 
-	new DepotWindow(desc, tile, type);
+	new DepotWindow(desc, depot_id, type);
 }
 
 /**
@@ -1129,8 +1150,358 @@ void DeleteDepotHighlightOfVehicle(const Vehicle *v)
 	 */
 	if (_special_mouse_mode != WSM_DRAGDROP) return;
 
-	w = dynamic_cast<DepotWindow*>(FindWindowById(WC_VEHICLE_DEPOT, v->tile));
+	assert(IsDepotTile(v->tile));
+	w = dynamic_cast<DepotWindow*>(FindWindowById(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile)));
 	if (w != nullptr) {
 		if (w->sel == v->index) ResetObjectToPlace();
+	}
+}
+
+static std::vector<DepotID> _depots_nearby_list;
+
+/**
+ * Add depot on this tile to _depots_nearby_list if it's fully within the
+ * depot spread.
+ * @param tile Tile just being checked
+ * @param user_data Pointer to TileArea context
+ */
+static bool AddNearbyDepot(TileIndex tile, void *user_data)
+{
+	TileArea *ctx = (TileArea *)user_data;
+
+	/* Check if own depot and if we stay within station spread */
+	if (!IsDepotTile(tile)) return false;
+	Depot *dep = Depot::GetByTile(tile);
+	if (dep->company != _local_company ||
+			(find(_depots_nearby_list.begin(), _depots_nearby_list.end(), dep->index) != _depots_nearby_list.end())) {
+		return false;
+	}
+
+	CommandCost cost = dep->BeforeAddTiles(*ctx);
+	if (cost.Succeeded()) {
+		_depots_nearby_list.push_back(dep->index);
+	}
+
+	return false; // We want to include *all* nearby depots
+}
+
+/**
+ * Circulate around the to-be-built depot to find depots we could join.
+ * Make sure that only depots are returned where joining wouldn't exceed
+ * depot spread and are our own depot.
+ * @param ta Base tile area of the to-be-built depot
+ * @param veh_type Vehicle type depots to look for
+ * @param distant_join Search for adjacent depots (false) or depots fully
+ *                     within depot spread
+ */
+static const Depot *FindDepotsNearby(TileArea ta, VehicleType veh_type, bool distant_join)
+{
+	TileArea ctx = ta;
+
+	_depots_nearby_list.clear();
+
+	/* Check the inside, to return, if we sit on another big depot */
+	Depot *depot;
+	for (TileIndex t : ta) {
+		if (!IsDepotTile(t)) continue;
+		depot = Depot::GetByTile(t);
+		if (depot->veh_type == veh_type && depot->company == _current_company) return depot;
+	}
+
+	/* Only search tiles where we have a chance to stay within the depot spread.
+	 * The complete check needs to be done in the callback as we don't know the
+	 * extent of the found depot, yet. */
+	if (distant_join && std::min(ta.w, ta.h) >= _settings_game.station.station_spread) return nullptr;
+	uint max_dist = distant_join ? _settings_game.station.station_spread - std::min(ta.w, ta.h) : 1;
+
+	TileIndex tile = TileAddByDir(ctx.tile, DIR_N);
+	CircularTileSearch(&tile, max_dist, ta.w, ta.h, AddNearbyDepot, &ctx);
+
+	for (std::vector<DepotID>::iterator it = _depots_nearby_list.begin(); it != _depots_nearby_list.end(); ) {
+		DepotID depot_id = *it;
+		if (Depot::Get(depot_id)->veh_type != veh_type) {
+			_depots_nearby_list.erase(it);
+		} else {
+			++it;
+		}
+	}
+
+	return nullptr;
+}
+
+/**
+ * Check whether we need to show the depot selection window.
+ * @param cmd Command to build the depot.
+ * @param ta Tile area of the to-be-built depot.
+ * @tparam T the type of depot.
+ * @return whether we need to show the depot selection window.
+ */
+static bool DepotJoinerNeeded(CommandContainer cmd, VehicleType veh_type, TileArea ta)
+{
+	/* Only show selection when distant join is enabled. */
+	if (!_settings_game.station.distant_join_stations) return false;
+
+	/* If a window is already opened and we didn't ctrl-click,
+	 * return true (i.e. just flash the old window) */
+	Window *selection_window = FindWindowById(WC_SELECT_DEPOT, veh_type);
+	if (selection_window != nullptr) {
+		/* Abort current distant-join and start new one */
+		selection_window->Close();
+		UpdateTileSelection();
+	}
+
+	/* Only show the popup if we press ctrl. */
+	if (!_ctrl_pressed) return false;
+
+	/* Now check if we could build there. */
+	CommandCost cost = DoCommand(&cmd, CommandFlagsToDCFlags(GetCommandFlags(cmd.cmd)));
+	if (cost.Failed() && cost.GetErrorMessage() != STR_ERROR_DEPOT_TOO_SPREAD_OUT) return false;
+
+	/* Test for adjacent depot or depot below selection.
+	 * If adjacent-stations is disabled and we are building next to a depot, do not show the selection window.
+	 * but join the other depot immediately. */
+	const Depot *depot = FindDepotsNearby(ta, veh_type, false);
+	return depot == nullptr && (_settings_game.station.adjacent_stations || _depots_nearby_list.size() == 0);
+}
+
+/**
+ * Window for selecting depots to (distant) join to.
+ */
+struct SelectDepotWindow : Window {
+	CommandContainer select_depot_cmd; ///< Command for building a new depot
+	TileArea area; ///< Location of new depot
+	Scrollbar *vscroll;
+
+	SelectDepotWindow(WindowDesc *desc, CommandContainer cmd, TileArea ta, VehicleType veh_type) :
+		Window(desc),
+		select_depot_cmd(cmd),
+		area(ta)
+	{
+		this->CreateNestedTree();
+		this->vscroll = this->GetScrollbar(WID_JS_SCROLLBAR);
+		this->GetWidget<NWidgetCore>(WID_JS_CAPTION)->widget_data = STR_JOIN_DEPOT_CAPTION;
+		this->FinishInitNested(veh_type);
+		this->OnInvalidateData(0);
+
+		_thd.freeze = true;
+	}
+
+	~SelectDepotWindow()
+	{
+		SetViewportHighlightDepot(INVALID_DEPOT, true);
+
+		_thd.freeze = false;
+	}
+
+	void UpdateWidgetSize(int widget, Dimension *size, const Dimension &padding, Dimension *fill, Dimension *resize) override
+	{
+		if (widget != WID_JS_PANEL) return;
+
+		resize->height = FONT_HEIGHT_NORMAL;
+		size->height = WD_FRAMERECT_TOP + 5 * resize->height + WD_FRAMERECT_BOTTOM;
+
+		/* Determine the widest string. */
+		Dimension d = GetStringBoundingBox(STR_JOIN_DEPOT_CREATE_SPLITTED_DEPOT);
+		for (uint i = 0; i < _depots_nearby_list.size(); i++) {
+			assert(Depot::IsValidID(_depots_nearby_list[i]));
+			SetDParam(0, this->window_number);
+			SetDParam(1, _depots_nearby_list[i]);
+			d = maxdim(d, GetStringBoundingBox(STR_DEPOT_LIST_DEPOT));
+		}
+
+		d.height = 5 * resize->height;
+		d.width += WD_FRAMERECT_RIGHT + WD_FRAMERECT_LEFT;
+		d.height += WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM;
+		*size = d;
+	}
+
+	void DrawWidget(const Rect &r, int widget) const override
+	{
+		if (widget != WID_JS_PANEL) return;
+
+		uint y = r.top + WD_FRAMERECT_TOP;
+		if (this->vscroll->GetPosition() == 0) {
+			DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_JOIN_DEPOT_CREATE_SPLITTED_DEPOT);
+			y += this->resize.step_height;
+		}
+
+		for (uint i = std::max<uint>(1, this->vscroll->GetPosition()); i <= _depots_nearby_list.size(); ++i, y += this->resize.step_height) {
+			/* Don't draw anything if it extends past the end of the window. */
+			if (i - this->vscroll->GetPosition() >= this->vscroll->GetCapacity()) break;
+
+			SetDParam(0, this->window_number);
+			SetDParam(1, _depots_nearby_list[i - 1]);
+			Depot *depot = Depot::GetIfValid(_depots_nearby_list[i - 1]);
+			assert(depot != nullptr);
+			DrawString(r.left + WD_FRAMERECT_LEFT, r.right - WD_FRAMERECT_RIGHT, y, STR_DEPOT_LIST_DEPOT);
+		}
+	}
+
+	void OnClick(Point pt, int widget, int click_count) override
+	{
+		if (widget != WID_JS_PANEL) return;
+
+		uint st_index = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_JS_PANEL, WD_FRAMERECT_TOP);
+		bool distant_join = (st_index > 0);
+		if (distant_join) st_index--;
+
+		if (distant_join && st_index >= _depots_nearby_list.size()) return;
+
+		/* Insert depot to be joined into stored command. */
+		SB(this->select_depot_cmd.p1, 16, 16,
+				(distant_join ? _depots_nearby_list[st_index] : NEW_DEPOT));
+
+		/* Execute stored Command */
+		DoCommandP(&this->select_depot_cmd);
+
+		/* Close Window; this might cause double frees! */
+		InvalidateWindowData(WC_SELECT_DEPOT, window_number);
+		delete this;
+	}
+
+	void OnRealtimeTick(uint delta_ms) override
+	{
+		if (_thd.dirty & 2) {
+			_thd.dirty &= ~2;
+			this->SetDirty();
+		}
+	}
+
+	void OnResize() override
+	{
+		this->vscroll->SetCapacityFromWidget(this, WID_JS_PANEL, WD_FRAMERECT_TOP + WD_FRAMERECT_BOTTOM);
+	}
+
+	/**
+	 * Some data on this window has become invalid.
+	 * @param data Information about the changed data.
+	 * @param gui_scope Whether the call is done from GUI scope. You may not do everything when not in GUI scope. See #InvalidateWindowData() for details.
+	 */
+	void OnInvalidateData(int data = 0, bool gui_scope = true) override
+	{
+		if (!gui_scope) return;
+		FindDepotsNearby(this->area, (VehicleType)this->window_number, true);
+		this->vscroll->SetCount((uint)_depots_nearby_list.size() + 1);
+		this->SetDirty();
+	}
+
+	void OnMouseOver(Point pt, int widget) override
+	{
+		if (widget != WID_JS_PANEL) {
+			SetViewportHighlightDepot(INVALID_DEPOT, true);
+			return;
+		}
+
+		/* Highlight depot under cursor */
+		uint dep_index = this->vscroll->GetScrolledRowFromWidget(pt.y, this, WID_JS_PANEL, WD_FRAMERECT_TOP);
+		if (dep_index == 0 || dep_index > _depots_nearby_list.size()) {
+			SetViewportHighlightDepot(INVALID_DEPOT, true);
+		} else {
+			dep_index--;
+			SetViewportHighlightDepot(Depot::Get(_depots_nearby_list[dep_index])->index, true);
+		}
+	}
+
+};
+
+
+static const NWidgetPart _nested_select_depot_widgets[] = {
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_CLOSEBOX, COLOUR_DARK_GREEN),
+		NWidget(WWT_CAPTION, COLOUR_DARK_GREEN, WID_JS_CAPTION), SetDataTip(STR_JOIN_STATION_CAPTION, STR_TOOLTIP_WINDOW_TITLE_DRAG_THIS),
+		NWidget(WWT_DEFSIZEBOX, COLOUR_DARK_GREEN),
+	EndContainer(),
+	NWidget(NWID_HORIZONTAL),
+		NWidget(WWT_PANEL, COLOUR_DARK_GREEN, WID_JS_PANEL), SetResize(1, 0), SetScrollbar(WID_JS_SCROLLBAR), EndContainer(),
+		NWidget(NWID_VERTICAL),
+			NWidget(NWID_VSCROLLBAR, COLOUR_DARK_GREEN, WID_JS_SCROLLBAR),
+			NWidget(WWT_RESIZEBOX, COLOUR_DARK_GREEN),
+		EndContainer(),
+	EndContainer(),
+};
+
+static WindowDesc _select_depot_desc(
+	WDP_AUTO, "build_station_join", 200, 180,
+	WC_SELECT_DEPOT, WC_NONE,
+	WDF_CONSTRUCTION,
+	_nested_select_depot_widgets, lengthof(_nested_select_depot_widgets)
+);
+
+/**
+ * Show the depot selection window when needed. If not, build the depot.
+ * @param cmd Command to build the depot.
+ * @param ta Area to build the depot in.
+ */
+void ShowSelectDepotIfNeeded(CommandContainer cmd, TileArea ta, VehicleType veh_type)
+{
+	if (DepotJoinerNeeded(cmd, veh_type, ta)) {
+		if (!_settings_client.gui.persistent_buildingtools) ResetObjectToPlace();
+		new SelectDepotWindow(&_select_depot_desc, cmd, ta, veh_type);
+	} else {
+		DoCommandP(&cmd);
+	}
+}
+
+/**
+ * Find depots adjacent to the current tile highlight area, so that all depot tiles
+ * can be highlighted.
+ */
+static void HighlightSingleAdjacentDepot(VehicleType v_type)
+{
+	/* With distant join we don't know which depot will be selected, so don't show any */
+	if (_ctrl_pressed) {
+		SetViewportHighlightDepot(INVALID_DEPOT, true);
+		return;
+	}
+
+	/* Tile area for TileHighlightData */
+	TileArea location(TileVirtXY(_thd.pos.x, _thd.pos.y), _thd.size.x / TILE_SIZE - 1, _thd.size.y / TILE_SIZE - 1);
+
+	/* Extended area by one tile */
+	uint x = TileX(location.tile);
+	uint y = TileY(location.tile);
+
+	int max_c = 1;
+	TileArea ta(TileXY(std::max<int>(0, x - max_c), std::max<int>(0, y - max_c)), TileXY(std::min<int>(MapMaxX(), x + location.w + max_c), std::min<int>(MapMaxY(), y + location.h + max_c)));
+
+	DepotID adjacent = INVALID_DEPOT;
+
+	for (TileIndex tile : ta) {
+		if (IsDepotTile(tile) && GetTileOwner(tile) == _local_company) {
+			Depot *depot = Depot::GetByTile(tile);
+			if (depot == nullptr) continue;
+			if (depot->veh_type != v_type) continue;
+			if (adjacent != INVALID_DEPOT && depot->index != adjacent) {
+				/* Multiple nearby, distant join is required. */
+				adjacent = INVALID_DEPOT;
+				break;
+			}
+			adjacent = depot->index;
+		}
+	}
+	SetViewportHighlightDepot(adjacent, true);
+}
+
+/**
+ * Check whether we need to redraw the depot highlight.
+ * If it is needed actually make the window for redrawing.
+ * @param w the window to check.
+ */
+void CheckRedrawDepotHighlight(const Window *w, VehicleType veh_type)
+{
+	/* Test if ctrl state changed */
+	static bool _last_ctrl_pressed;
+	if (_ctrl_pressed != _last_ctrl_pressed) {
+		_thd.dirty = 0xff;
+		_last_ctrl_pressed = _ctrl_pressed;
+	}
+
+	if (_thd.dirty & 1) {
+		_thd.dirty &= ~1;
+		w->SetDirty();
+
+		if (_thd.drawstyle == HT_RECT) {
+			HighlightSingleAdjacentDepot(veh_type);
+		}
 	}
 }

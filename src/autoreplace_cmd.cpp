@@ -19,9 +19,13 @@
 #include "core/random_func.hpp"
 #include "vehiclelist.h"
 #include "road.h"
+#include "ship.h"
 #include "ai/ai.hpp"
 #include "news_func.h"
 #include "strings_func.h"
+#include "depot_map.h"
+#include "train_placement.h"
+#include "news_func.h"
 
 #include "table/strings.h"
 
@@ -68,7 +72,7 @@ bool CheckAutoreplaceValidity(EngineID from, EngineID to, CompanyID company)
 	switch (type) {
 		case VEH_TRAIN: {
 			/* make sure the railtypes are compatible */
-			if ((GetRailTypeInfo(e_from->u.rail.railtype)->compatible_railtypes & GetRailTypeInfo(e_to->u.rail.railtype)->compatible_railtypes) == 0) return false;
+			if (!_settings_game.depot.allow_no_comp_railtype_replacements && (GetRailTypeInfo(e_from->u.rail.railtype)->compatible_railtypes & GetRailTypeInfo(e_to->u.rail.railtype)->compatible_railtypes) == 0) return false;
 
 			/* make sure we do not replace wagons with engines or vice versa */
 			if ((e_from->u.rail.railveh_type == RAILVEH_WAGON) != (e_to->u.rail.railveh_type == RAILVEH_WAGON)) return false;
@@ -76,11 +80,13 @@ bool CheckAutoreplaceValidity(EngineID from, EngineID to, CompanyID company)
 		}
 
 		case VEH_ROAD:
-			/* make sure the roadtypes are compatible */
-			if ((GetRoadTypeInfo(e_from->u.road.roadtype)->powered_roadtypes & GetRoadTypeInfo(e_to->u.road.roadtype)->powered_roadtypes) == ROADTYPES_NONE) return false;
+			if (!_settings_game.depot.allow_no_comp_roadtype_replacements) {
+				/* make sure the roadtypes are compatible */
+				if ((GetRoadTypeInfo(e_from->u.road.roadtype)->powered_roadtypes & GetRoadTypeInfo(e_to->u.road.roadtype)->powered_roadtypes) == ROADTYPES_NONE) return false;
 
-			/* make sure that we do not replace a tram with a normal road vehicles or vice versa */
-			if (HasBit(e_from->info.misc_flags, EF_ROAD_TRAM) != HasBit(e_to->info.misc_flags, EF_ROAD_TRAM)) return false;
+				/* make sure that we do not replace a tram with a normal road vehicles or vice versa */
+				if (HasBit(e_from->info.misc_flags, EF_ROAD_TRAM) != HasBit(e_to->info.misc_flags, EF_ROAD_TRAM)) return false;
+			}
 			break;
 
 		case VEH_AIRCRAFT:
@@ -350,13 +356,13 @@ static CommandCost BuildReplacementVehicle(Vehicle *old_veh, Vehicle **new_vehic
 	if (refit_cargo != CT_NO_REFIT) {
 		byte subtype = GetBestFittingSubType(old_veh, new_veh, refit_cargo);
 
-		cost.AddCost(DoCommand(0, new_veh->index, refit_cargo | (subtype << 8), DC_EXEC, GetCmdRefitVeh(new_veh)));
+		cost.AddCost(DoCommand(0, new_veh->index, refit_cargo | (subtype << 8), DC_EXEC | DC_AUTOREPLACE, GetCmdRefitVeh(new_veh)));
 		assert(cost.Succeeded()); // This should be ensured by GetNewCargoTypeForReplace()
 	}
 
 	/* Try to reverse the vehicle, but do not care if it fails as the new type might not be reversible */
 	if (new_veh->type == VEH_TRAIN && HasBit(Train::From(old_veh)->flags, VRF_REVERSE_DIRECTION)) {
-		DoCommand(0, new_veh->index, true, DC_EXEC, CMD_REVERSE_TRAIN_DIRECTION);
+		DoCommand(0, new_veh->index, true, DC_EXEC | DC_AUTOREPLACE, CMD_REVERSE_TRAIN_DIRECTION);
 	}
 
 	return cost;
@@ -450,7 +456,7 @@ static CommandCost ReplaceFreeUnit(Vehicle **single_unit, DoCommandFlag flags, b
 
 		if ((flags & DC_EXEC) != 0) {
 			/* Move the new vehicle behind the old */
-			CmdMoveVehicle(new_v, old_v, DC_EXEC, false);
+			CmdMoveVehicle(new_v, old_v, DC_EXEC | DC_AUTOREPLACE, false);
 
 			/* Take over cargo
 			 * Note: We do only transfer cargo from the old to the new vehicle.
@@ -470,11 +476,30 @@ static CommandCost ReplaceFreeUnit(Vehicle **single_unit, DoCommandFlag flags, b
 
 		/* If we are not in DC_EXEC undo everything */
 		if ((flags & DC_EXEC) == 0) {
-			DoCommand(0, new_v->index, 0, DC_EXEC, GetCmdSellVeh(new_v));
+			DoCommand(0, new_v->index, 0, DC_EXEC | DC_AUTOREPLACE, GetCmdSellVeh(new_v));
 		}
 	}
 
 	return cost;
+}
+
+/**
+ * When replacing a ship in an extended depot, copy the direction as well.
+ * @param old_ship The ship being replaced.
+ * @param new_ship The new ship that will replace the old one.
+ */
+void CopyShipStatusInExtendedDepot(const Ship *old_ship, Ship *new_ship)
+{
+	assert(IsBigDepotTile(old_ship->tile));
+	assert(old_ship->tile == new_ship->tile);
+
+	new_ship->x_pos = old_ship->x_pos;
+	new_ship->y_pos = old_ship->y_pos;
+	new_ship->z_pos = old_ship->z_pos;
+	new_ship->state = old_ship->state;
+	new_ship->direction = old_ship->direction;
+	new_ship->rotation = old_ship->rotation;
+	new_ship->GetImage(new_ship->direction, EIT_ON_MAP, &new_ship->sprite_cache.sprite_seq);
 }
 
 /**
@@ -487,8 +512,11 @@ static CommandCost ReplaceFreeUnit(Vehicle **single_unit, DoCommandFlag flags, b
  */
 static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon_removal, bool *nothing_to_do)
 {
+	assert(flags & DC_AUTOREPLACE);
+
 	Vehicle *old_head = *chain;
 	assert(old_head->IsPrimaryVehicle());
+	TileIndex tile = old_head->tile;
 
 	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, 0);
 
@@ -547,7 +575,7 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 					}
 
 					if (last_engine == nullptr) last_engine = append;
-					cost.AddCost(CmdMoveVehicle(append, new_head, DC_EXEC, false));
+					cost.AddCost(CmdMoveVehicle(append, new_head, DC_EXEC | DC_AUTOREPLACE, false));
 					if (cost.Failed()) break;
 				}
 				if (last_engine == nullptr) last_engine = new_head;
@@ -566,7 +594,7 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 
 					if (RailVehInfo(append->engine_type)->railveh_type == RAILVEH_WAGON) {
 						/* Insert wagon after 'last_engine' */
-						CommandCost res = CmdMoveVehicle(append, last_engine, DC_EXEC, false);
+						CommandCost res = CmdMoveVehicle(append, last_engine, DC_EXEC | DC_AUTOREPLACE, false);
 
 						/* When we allow removal of wagons, either the move failing due
 						 * to the train becoming too long, or the train becoming longer
@@ -597,7 +625,7 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 					assert(RailVehInfo(wagon->engine_type)->railveh_type == RAILVEH_WAGON);
 
 					/* Sell wagon */
-					[[maybe_unused]] CommandCost ret = DoCommand(0, wagon->index, 0, DC_EXEC, GetCmdSellVeh(wagon));
+					[[maybe_unused]] CommandCost ret = DoCommand(0, wagon->index, 0, DC_EXEC | DC_AUTOREPLACE, GetCmdSellVeh(wagon));
 					assert(ret.Succeeded());
 					new_vehs[i] = nullptr;
 
@@ -639,6 +667,9 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 				if ((flags & DC_EXEC) != 0) CheckCargoCapacity(new_head);
 			}
 
+			assert(IsValidTile(tile));
+			if (!HasCompatibleDepotTile(tile, new_head)) cost.MakeError(STR_ERROR_UNABLE_TO_FIND_APPROPRIATE_DEPOT_TILE);
+
 			/* If we are not in DC_EXEC undo everything, i.e. rearrange old vehicles.
 			 * We do this from back to front, so that the head of the temporary vehicle chain does not change all the time.
 			 * Note: The vehicle attach callback is disabled here :) */
@@ -660,7 +691,7 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 		if ((flags & DC_EXEC) == 0) {
 			for (int i = num_units - 1; i >= 0; i--) {
 				if (new_vehs[i] != nullptr) {
-					DoCommand(0, new_vehs[i]->index, 0, DC_EXEC, GetCmdSellVeh(new_vehs[i]));
+					DoCommand(0, new_vehs[i]->index, 0, DC_EXEC | DC_AUTOREPLACE, GetCmdSellVeh(new_vehs[i]));
 					new_vehs[i] = nullptr;
 				}
 			}
@@ -682,6 +713,11 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 			cost.AddCost(CopyHeadSpecificThings(old_head, new_head, flags));
 
 			if (cost.Succeeded()) {
+				/* Copy position and direction for ships in extended depots. */
+				if (old_head->type == VEH_SHIP && IsBigDepotTile(old_head->tile)) {
+					CopyShipStatusInExtendedDepot(Ship::From(old_head), Ship::From(new_head));
+				}
+
 				/* The new vehicle is constructed, now take over cargo */
 				if ((flags & DC_EXEC) != 0) {
 					TransferCargo(old_head, new_head, true);
@@ -696,11 +732,12 @@ static CommandCost ReplaceChain(Vehicle **chain, DoCommandFlag flags, bool wagon
 
 			/* If we are not in DC_EXEC undo everything */
 			if ((flags & DC_EXEC) == 0) {
-				DoCommand(0, new_head->index, 0, DC_EXEC, GetCmdSellVeh(new_head));
+				DoCommand(0, new_head->index, 0, DC_EXEC | DC_AUTOREPLACE, GetCmdSellVeh(new_head));
 			}
 		}
 	}
 
+	assert(!(cost.Failed() && (DC_EXEC & flags) != 0));
 	return cost;
 }
 
@@ -751,46 +788,78 @@ CommandCost CmdAutoreplaceVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1
 		any_replacements |= (e != INVALID_ENGINE);
 		w = (!free_wagon && w->type == VEH_TRAIN ? Train::From(w)->GetNextUnit() : nullptr);
 	}
+	if (!any_replacements) return_cmd_error(STR_ERROR_AUTOREPLACE_NOTHING_TO_DO);
 
 	CommandCost cost = CommandCost(EXPENSES_NEW_VEHICLES, 0);
 	bool nothing_to_do = true;
+	bool was_stopped = free_wagon || ((v->vehstatus & VS_STOPPED) != 0);
 
-	if (any_replacements) {
-		bool was_stopped = free_wagon || ((v->vehstatus & VS_STOPPED) != 0);
+	/* Stop the vehicle */
+	if (!was_stopped) cost.AddCost(CmdStartStopVehicle(v, true));
+	if (cost.Failed()) return cost;
 
-		/* Stop the vehicle */
-		if (!was_stopped) cost.AddCost(CmdStartStopVehicle(v, true));
-		if (cost.Failed()) return cost;
+	assert(free_wagon || v->IsStoppedInDepot());
+	if (flags & DC_EXEC) v->StopServicing();
 
-		assert(free_wagon || v->IsStoppedInDepot());
-
-		/* We have to construct the new vehicle chain to test whether it is valid.
-		 * Vehicle construction needs random bits, so we have to save the random seeds
-		 * to prevent desyncs and to replay newgrf callbacks during DC_EXEC */
-		SavedRandomSeeds saved_seeds;
-		SaveRandomSeeds(&saved_seeds);
-		if (free_wagon) {
-			cost.AddCost(ReplaceFreeUnit(&v, flags & ~DC_EXEC, &nothing_to_do));
-		} else {
-			cost.AddCost(ReplaceChain(&v, flags & ~DC_EXEC, wagon_removal, &nothing_to_do));
-		}
-		RestoreRandomSeeds(saved_seeds);
-
-		if (cost.Succeeded() && (flags & DC_EXEC) != 0) {
-			CommandCost ret;
-			if (free_wagon) {
-				ret = ReplaceFreeUnit(&v, flags, &nothing_to_do);
-			} else {
-				ret = ReplaceChain(&v, flags, wagon_removal, &nothing_to_do);
-			}
-			assert(ret.Succeeded() && ret.GetCost() == cost.GetCost());
-		}
-
-		/* Restart the vehicle */
-		if (!was_stopped) cost.AddCost(CmdStartStopVehicle(v, false));
+	TrainPlacement train_placement;
+	if (v->type == VEH_TRAIN) {
+		train_placement.LiftTrain(Train::From(v), flags);
+	} else if (IsBigDepotTile(v->tile)) {
+		UpdateExtendedDepotReservation(v, false);
 	}
 
-	if (cost.Succeeded() && nothing_to_do) cost = CommandCost(STR_ERROR_AUTOREPLACE_NOTHING_TO_DO);
+	/* Start autoreplacing the vehicle. */
+	flags |= DC_AUTOREPLACE;
+
+	/* We have to construct the new vehicle chain to test whether it is valid.
+	 * Vehicle construction needs random bits, so we have to save the random seeds
+	 * to prevent desyncs and to replay newgrf callbacks during DC_EXEC */
+	SavedRandomSeeds saved_seeds;
+	SaveRandomSeeds(&saved_seeds);
+	if (free_wagon) {
+		cost.AddCost(ReplaceFreeUnit(&v, flags & ~DC_EXEC, &nothing_to_do));
+	} else {
+		cost.AddCost(ReplaceChain(&v, flags & ~DC_EXEC, wagon_removal, &nothing_to_do));
+	}
+	RestoreRandomSeeds(saved_seeds);
+
+	if (cost.Succeeded() && (flags & DC_EXEC) != 0) {
+		CommandCost ret;
+		if (free_wagon) {
+			ret = ReplaceFreeUnit(&v, flags, &nothing_to_do);
+		} else {
+			ret = ReplaceChain(&v, flags, wagon_removal, &nothing_to_do);
+		}
+		assert(ret.Succeeded());
+		assert(ret.GetCost() == cost.GetCost());
+	}
+
+	/* Check whether the train can be placed on tracks. */
+	bool platform_error = false;
+
+	/* Autoreplacing is done. */
+	flags &= ~DC_AUTOREPLACE;
+
+	if (v->type == VEH_TRAIN) {
+		if (cost.Succeeded() && (flags & DC_EXEC) != 0) {
+			train_placement.LookForPlaceInDepot(Train::From(v), false);
+			if (train_placement.info < PI_WONT_LEAVE) {
+				platform_error = true;
+				if (v->owner == _local_company && v->IsFrontEngine()) {
+					SetDParam(0, v->index);
+					AddVehicleAdviceNewsItem(STR_ADVICE_PLATFORM_TYPE + train_placement.info - PI_ERROR_BEGIN, v->index);
+				}
+			}
+		}
+		train_placement.PlaceTrain(Train::From(v), flags);
+	} else if (IsBigDepotTile(v->tile)) {
+		UpdateExtendedDepotReservation(v, true);
+	}
+
+	/* Restart the vehicle */
+	if (!platform_error && !was_stopped) cost.AddCost(CmdStartStopVehicle(v, false));
+
+	assert(cost.Failed() || !nothing_to_do);
 	return cost;
 }
 

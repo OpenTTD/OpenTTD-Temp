@@ -27,6 +27,7 @@
 #include "core/random_func.hpp"
 #include "linkgraph/linkgraph.h"
 #include "linkgraph/linkgraphschedule.h"
+#include "depot_base.h"
 
 #include "table/strings.h"
 
@@ -239,43 +240,6 @@ void Station::MarkTilesDirty(bool cargo_change) const
 		}
 		tile += TileDiffXY(-w, 1);
 	}
-}
-
-/* virtual */ uint Station::GetPlatformLength(TileIndex tile) const
-{
-	assert(this->TileBelongsToRailStation(tile));
-
-	TileIndexDiff delta = (GetRailStationAxis(tile) == AXIS_X ? TileDiffXY(1, 0) : TileDiffXY(0, 1));
-
-	TileIndex t = tile;
-	uint len = 0;
-	do {
-		t -= delta;
-		len++;
-	} while (IsCompatibleTrainStationTile(t, tile));
-
-	t = tile;
-	do {
-		t += delta;
-		len++;
-	} while (IsCompatibleTrainStationTile(t, tile));
-
-	return len - 1;
-}
-
-/* virtual */ uint Station::GetPlatformLength(TileIndex tile, DiagDirection dir) const
-{
-	TileIndex start_tile = tile;
-	uint length = 0;
-	assert(IsRailStationTile(tile));
-	assert(dir < DIAGDIR_END);
-
-	do {
-		length++;
-		tile += TileOffsByDiagDir(dir);
-	} while (IsCompatibleTrainStationTile(tile, start_tile));
-
-	return length;
 }
 
 /**
@@ -659,6 +623,41 @@ Money AirportMaintenanceCost(Owner owner)
 	}
 	/* 3 bits fraction for the maintenance cost factor. */
 	return total_cost >> 3;
+}
+
+/**
+ * Creates or deletes the depot corresponding to this airport.
+ * @param create if true, create a depot associated to this airport;
+ *               if false, delete the depot corresponding to this airport.
+ */
+void Airport::SetHangar(bool create)
+{
+	if (create) {
+		assert(this->depot_id == INVALID_DEPOT);
+		assert(Depot::CanAllocateItem());
+		assert(this->GetNumHangars() > 0);
+		Station *st = Station::GetByTile(this->GetHangarTile(0));
+		Depot *dep = new Depot(this->GetHangarTile(0));
+		this->depot_id = dep->index;
+		dep->build_date = st->build_date;
+		dep->town = st->town;
+		dep->company = GetTileOwner(dep->xy);
+		dep->veh_type = VEH_AIRCRAFT;
+		dep->ta.tile = st->airport.tile;
+		dep->ta.w = st->airport.w;
+		dep->ta.h = st->airport.h;
+		for (uint i = 0; i < this->GetNumHangars(); i++) {
+			dep->depot_tiles.push_back(this->GetHangarTile(i));
+		}
+	} else {
+		delete Depot::GetIfValid(this->depot_id);
+		this->depot_id = INVALID_DEPOT;
+	}
+}
+
+DepotID GetHangarIndex(TileIndex t) {
+	assert(IsAirportTile(t));
+	return Station::GetByTile(t)->airport.depot_id;
 }
 
 bool StationCompare::operator() (const Station *lhs, const Station *rhs) const

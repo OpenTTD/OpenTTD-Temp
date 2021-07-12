@@ -292,6 +292,10 @@ public:
 			c += count * 3 * YAPF_TILE_LENGTH;
 		}
 
+		if (IsShipDepotTile(n.GetTile())) {
+			if (IsBigDepot(n.GetTile()) && IsDepotFullWithStoppedVehicles(n.GetTile())) c += YAPF_INFINITE_PENALTY;
+		}
+
 		/* Skipped tile cost for aqueducts. */
 		c += YAPF_TILE_LENGTH * tf->m_tiles_skipped;
 

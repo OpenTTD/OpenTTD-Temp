@@ -105,6 +105,7 @@ static void RedrawSmallmap(int32 new_value)
 
 static void StationSpreadChanged(int32 p1)
 {
+	InvalidateWindowClassesData(WC_SELECT_DEPOT, 0);
 	InvalidateWindowData(WC_SELECT_STATION, 0);
 	InvalidateWindowData(WC_BUILD_STATION, 0);
 }
@@ -122,7 +123,7 @@ static void UpdateConsists(int32 new_value)
 		/* Update the consist of all trains so the maximum speed is set correctly. */
 		if (t->IsFrontEngine() || t->IsFreeWagon()) t->ConsistChanged(CCF_TRACK);
 	}
-	InvalidateWindowClassesData(WC_BUILD_VEHICLE, 0);
+	InvalidateWindowClassesData(WC_BUILD_VEHICLE, INVALID_DEPOT - VEH_TRAIN);
 }
 
 /* Check service intervals of vehicles, newvalue is value of % or day based servicing */
@@ -201,7 +202,7 @@ static void TrainAccelerationModelChanged(int32 new_value)
 
 	/* These windows show acceleration values only when realistic acceleration is on. They must be redrawn after a setting change. */
 	SetWindowClassesDirty(WC_ENGINE_PREVIEW);
-	InvalidateWindowClassesData(WC_BUILD_VEHICLE, 0);
+	InvalidateWindowClassesData(WC_BUILD_VEHICLE, INVALID_DEPOT - VEH_TRAIN);
 	SetWindowClassesDirty(WC_VEHICLE_DETAILS);
 }
 
@@ -232,7 +233,7 @@ static void RoadVehAccelerationModelChanged(int32 new_value)
 
 	/* These windows show acceleration values only when realistic acceleration is on. They must be redrawn after a setting change. */
 	SetWindowClassesDirty(WC_ENGINE_PREVIEW);
-	InvalidateWindowClassesData(WC_BUILD_VEHICLE, 0);
+	InvalidateWindowClassesData(WC_BUILD_VEHICLE, INVALID_DEPOT - VEH_ROAD);
 	SetWindowClassesDirty(WC_VEHICLE_DETAILS);
 }
 
@@ -274,6 +275,27 @@ static void SpriteZoomMinChanged(int32 new_value)
 	GfxClearSpriteCache();
 	/* Force all sprites to redraw at the new chosen zoom level */
 	MarkWholeScreenDirty();
+}
+
+static bool CheckDifferentRailRoadTypesReplacements(int32 &new_value)
+{
+	if (_game_mode == GM_NORMAL) {
+		if (new_value == 0) {
+			ShowErrorMessage(STR_CONFIG_SETTING_REPLACEMENTS_DIFF_TYPE, INVALID_STRING_ID, WL_ERROR);
+			return false;
+		}
+	}
+	return true;
+}
+
+static void InvalidateReplacementWindows(int32 new_value)
+{
+	InvalidateWindowClassesData(WC_REPLACE_VEHICLE);
+}
+
+static void DepotSettingsChanged(int32 new_value)
+{
+	CloseWindowByClass(WC_BUILD_TOOLBAR);
 }
 
 /**

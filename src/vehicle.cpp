@@ -176,6 +176,117 @@ void VehicleServiceInDepot(Vehicle *v)
 }
 
 /**
+ * List of vehicles that should check for autoreplace this tick.
+ * Mapping of vehicle -> leave depot immediately after autoreplace.
+ */
+typedef SmallMap<Vehicle *, bool> AutoreplaceMap;
+static AutoreplaceMap _vehicles_to_autoreplace;
+
+void VehicleServiceInBigDepot(Vehicle *v)
+{
+	/* Always work with the front of the vehicle */
+	assert(v == v->First());
+	assert(IsBigDepotTile(v->tile));
+
+	switch (v->type) {
+		case VEH_TRAIN: {
+			SetWindowClassesDirty(WC_TRAINS_LIST);
+			Train *t = Train::From(v);
+			t->ConsistChanged(CCF_ARRANGE);
+			t->UpdateViewport(true, true);
+			break;
+		}
+
+		case VEH_SHIP: {
+			SetWindowClassesDirty(WC_SHIPS_LIST);
+			Ship *ship = Ship::From(v);
+			ship->UpdateCache();
+			ship->UpdateViewport(true, true);
+			break;
+		}
+
+		case VEH_ROAD:
+			SetWindowClassesDirty(WC_ROADVEH_LIST);
+			break;
+
+		case VEH_AIRCRAFT:
+			SetWindowClassesDirty(WC_AIRCRAFT_LIST);
+			break;
+
+		default: NOT_REACHED();
+	}
+
+	DepotID depot_id = GetDepotIndex(v->tile);
+	SetWindowDirty(WC_VEHICLE_DEPOT, depot_id);
+	SetWindowDirty(WC_VEHICLE_VIEW, v->index);
+
+	InvalidateWindowData(WC_VEHICLE_DEPOT, depot_id);
+
+	VehicleServiceInDepot(v);
+
+	/* After a vehicle trigger, the graphics and properties of the vehicle could change. */
+	TriggerVehicle(v, VEHICLE_TRIGGER_DEPOT);
+	v->MarkDirty();
+
+	if (v->current_order.IsType(OT_GOTO_DEPOT)) {
+		SetWindowDirty(WC_VEHICLE_VIEW, v->index);
+
+		const Order *real_order = v->GetOrder(v->cur_real_order_index);
+		Order t = v->current_order;
+		v->current_order.MakeDummy();
+
+		/* Test whether we are heading for this depot. If not, do nothing.
+		 * Note: The target depot for nearest-/manual-depot-orders is only updated on junctions, but we want to accept every depot. */
+		if ((t.GetDepotOrderType() & ODTFB_PART_OF_ORDERS) &&
+				real_order != nullptr && !(real_order->GetDepotActionType() & ODATFB_NEAREST_DEPOT) &&
+				(v->type == VEH_AIRCRAFT ? t.GetDestination() != GetStationIndex(v->tile) : t.GetDestination() != GetDepotIndex(v->tile))) {
+			/* We are heading for another depot, keep driving. */
+			return;
+		}
+
+		if (t.IsRefit()) {
+			Backup<CompanyID> cur_company(_current_company, v->owner, FILE_LINE);
+			CommandCost cost = DoCommand(v->tile, v->index, t.GetRefitCargo() | 0xFF << 8, DC_EXEC, GetCmdRefitVeh(v));
+			cur_company.Restore();
+
+			if (cost.Failed()) {
+				_vehicles_to_autoreplace[v] = false;
+				if (v->owner == _local_company) {
+					/* Notify the user that we stopped the vehicle */
+					SetDParam(0, v->index);
+					AddVehicleAdviceNewsItem(STR_NEWS_ORDER_REFIT_FAILED, v->index);
+				}
+			} else if (cost.GetCost() != 0) {
+				v->profit_this_year -= cost.GetCost() << 8;
+				if (v->owner == _local_company) {
+					ShowCostOrIncomeAnimation(v->x_pos, v->y_pos, v->z_pos, cost.GetCost());
+				}
+			}
+		}
+
+		if (t.GetDepotOrderType() & ODTFB_PART_OF_ORDERS) {
+			/* Part of orders */
+			v->DeleteUnreachedImplicitOrders();
+			UpdateVehicleTimetable(v, true);
+			v->IncrementImplicitOrderIndex();
+		}
+		if (t.GetDepotActionType() & ODATFB_HALT) {
+			/* Vehicles are always stopped on entering depots. Do not restart this one. */
+			_vehicles_to_autoreplace[v] = false;
+			/* Invalidate last_loading_station. As the link from the station
+			 * before the stop to the station after the stop can't be predicted
+			 * we shouldn't construct it when the vehicle visits the next stop. */
+			v->last_loading_station = INVALID_STATION;
+			if (v->owner == _local_company) {
+				SetDParam(0, v->index);
+				AddVehicleAdviceNewsItem(STR_NEWS_TRAIN_IS_WAITING + v->type, v->index);
+			}
+			AI::NewEvent(v->owner, new ScriptEventVehicleWaitingInDepot(v->index));
+		}
+	}
+}
+
+/**
  * Check if the vehicle needs to go to a depot in near future (if a opportunity presents itself) for service or replacement.
  *
  * @see NeedsAutomaticServicing()
@@ -277,7 +388,7 @@ uint Vehicle::Crash(bool flooded)
 	InvalidateWindowClassesData(GetWindowClassForVehicleType(this->type), 0);
 	SetWindowWidgetDirty(WC_VEHICLE_VIEW, this->index, WID_VV_START_STOP);
 	SetWindowDirty(WC_VEHICLE_DETAILS, this->index);
-	SetWindowDirty(WC_VEHICLE_DEPOT, this->tile);
+	if (IsDepotTile(this->tile)) SetWindowDirty(WC_VEHICLE_DEPOT, GetDepotIndex(this->tile));
 
 	delete this->cargo_payment;
 	assert(this->cargo_payment == nullptr); // cleared by ~CargoPayment
@@ -549,6 +660,24 @@ CommandCost EnsureNoVehicleOnGround(TileIndex tile)
 	return CommandCost();
 }
 
+/**
+ * Ensure there is no visible vehicle at the ground at the given position.
+ * @param tile Position to examine.
+ * @return Succeeded command (ground is free) or failed command (a visible vehicle is found).
+ */
+CommandCost EnsureNoVisibleVehicleOnGround(TileIndex tile)
+{
+	int z = GetTileMaxPixelZ(tile);
+
+	/* Value v is not safe in MP games, however, it is used to generate a local
+	 * error message only (which may be different for different machines).
+	 * Such a message does not affect MP synchronisation.
+	 */
+	Vehicle *v = VehicleFromPos(tile, &z, &EnsureNoVehicleProcZ, true);
+	if (v != nullptr && (v->vehstatus & VS_HIDDEN) == 0) return_cmd_error(STR_ERROR_TRAIN_IN_THE_WAY + v->type);
+	return CommandCost();
+}
+
 /** Procedure called for every vehicle found in tunnel/bridge in the hash map */
 static Vehicle *GetVehicleTunnelBridgeProc(Vehicle *v, void *data)
 {
@@ -680,13 +809,6 @@ void ResetVehicleColourMap()
 	for (Vehicle *v : Vehicle::Iterate()) { v->colourmap = PAL_NONE; }
 }
 
-/**
- * List of vehicles that should check for autoreplace this tick.
- * Mapping of vehicle -> leave depot immediately after autoreplace.
- */
-typedef SmallMap<Vehicle *, bool> AutoreplaceMap;
-static AutoreplaceMap _vehicles_to_autoreplace;
-
 void InitializeVehicles()
 {
 	_vehicles_to_autoreplace.clear();
@@ -772,6 +894,22 @@ uint32 Vehicle::GetGRFID() const
  */
 void Vehicle::HandlePathfindingResult(bool path_found)
 {
+	if (this->dest_tile != INVALID_TILE && IsDepotTypeTile(this->dest_tile, (TransportType)this->type) && IsDepotFullWithStoppedVehicles(this->dest_tile)) {
+		/* Vehicle cannot find a free depot. */
+		/* Were we already lost? */
+		if (HasBit(this->vehicle_flags, VF_PATHFINDER_LOST)) return;
+
+		/* It is first time the problem occurred, set the "lost" flag. */
+		SetBit(this->vehicle_flags, VF_PATHFINDER_LOST);
+		/* Notify user about the event. */
+		AI::NewEvent(this->owner, new ScriptEventVehicleLost(this->index));
+		if (_settings_client.gui.lost_vehicle_warn && this->owner == _local_company) {
+			SetDParam(0, this->index);
+			AddVehicleAdviceNewsItem(STR_NEWS_VEHICLE_CANNOT_FIND_FREE_DEPOT, this->index);
+		}
+		return;
+	}
+
 	if (path_found) {
 		/* Route found, is the vehicle marked with "lost" flag? */
 		if (!HasBit(this->vehicle_flags, VF_PATHFINDER_LOST)) return;
@@ -838,8 +976,8 @@ void Vehicle::PreDestructor()
 		}
 	}
 
-	if (this->Previous() == nullptr) {
-		InvalidateWindowData(WC_VEHICLE_DEPOT, this->tile);
+	if (this->Previous() == nullptr && IsDepotTile(this->tile)) {
+		InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(this->tile));
 	}
 
 	if (this->IsPrimaryVehicle()) {
@@ -1032,7 +1170,12 @@ void CallVehicleTicks()
 		/* Start vehicle if we stopped them in VehicleEnteredDepotThisTick()
 		 * We need to stop them between VehicleEnteredDepotThisTick() and here or we risk that
 		 * they are already leaving the depot again before being replaced. */
-		if (it.second) v->vehstatus &= ~VS_STOPPED;
+		if (it.second) {
+			v->vehstatus &= ~VS_STOPPED;
+		} else if (IsBigDepotTile(v->tile)){
+			if (v->type == VEH_TRAIN) FreeTrainTrackReservation(Train::From(v));
+			UpdateExtendedDepotReservation(v, true);
+		}
 
 		/* Store the position of the effect as the vehicle pointer will become invalid later */
 		int x = v->x_pos;
@@ -1479,8 +1622,6 @@ void VehicleEnterDepot(Vehicle *v)
 		case VEH_TRAIN: {
 			Train *t = Train::From(v);
 			SetWindowClassesDirty(WC_TRAINS_LIST);
-			/* Clear path reservation */
-			SetDepotReservation(t->tile, false);
 			if (_settings_client.gui.show_track_reservation) MarkTileDirtyByTile(t->tile);
 
 			UpdateSignalsOnSegment(t->tile, INVALID_DIAGDIR, t->owner);
@@ -1501,7 +1642,7 @@ void VehicleEnterDepot(Vehicle *v)
 			ship->state = TRACK_BIT_DEPOT;
 			ship->UpdateCache();
 			ship->UpdateViewport(true, true);
-			SetWindowDirty(WC_VEHICLE_DEPOT, v->tile);
+			SetWindowDirty(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
 			break;
 		}
 
@@ -1513,12 +1654,13 @@ void VehicleEnterDepot(Vehicle *v)
 	}
 	SetWindowDirty(WC_VEHICLE_VIEW, v->index);
 
+	DepotID depot_id = GetDepotIndex(v->tile);
 	if (v->type != VEH_TRAIN) {
 		/* Trains update the vehicle list when the first unit enters the depot and calls VehicleEnterDepot() when the last unit enters.
 		 * We only increase the number of vehicles when the first one enters, so we will not need to search for more vehicles in the depot */
-		InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
+		InvalidateWindowData(WC_VEHICLE_DEPOT, depot_id);
 	}
-	SetWindowDirty(WC_VEHICLE_DEPOT, v->tile);
+	SetWindowDirty(WC_VEHICLE_DEPOT, depot_id);
 
 	v->vehstatus |= VS_HIDDEN;
 	v->cur_speed = 0;
@@ -1540,7 +1682,7 @@ void VehicleEnterDepot(Vehicle *v)
 		 * Note: The target depot for nearest-/manual-depot-orders is only updated on junctions, but we want to accept every depot. */
 		if ((v->current_order.GetDepotOrderType() & ODTFB_PART_OF_ORDERS) &&
 				real_order != nullptr && !(real_order->GetDepotActionType() & ODATFB_NEAREST_DEPOT) &&
-				(v->type == VEH_AIRCRAFT ? v->current_order.GetDestination() != GetStationIndex(v->tile) : v->dest_tile != v->tile)) {
+				v->current_order.GetDestination() != depot_id) {
 			/* We are heading for another depot, keep driving. */
 			return;
 		}

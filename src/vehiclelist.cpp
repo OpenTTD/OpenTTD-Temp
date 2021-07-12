@@ -11,6 +11,7 @@
 #include "train.h"
 #include "vehiclelist.h"
 #include "group.h"
+#include "depot_map.h"
 
 #include "safeguards.h"
 
@@ -60,13 +61,13 @@ bool VehicleListIdentifier::UnpackIfValid(uint32 data)
 
 /**
  * Generate a list of vehicles inside a depot.
- * @param type    Type of vehicle
- * @param tile    The tile the depot is located on
- * @param engines Pointer to list to add vehicles to
- * @param wagons  Pointer to list to add wagons to (can be nullptr)
+ * @param type     Type of vehicle
+ * @param depot_id The id of the depot
+ * @param engines  Pointer to list to add vehicles to
+ * @param wagons   Pointer to list to add wagons to (can be nullptr)
  * @param individual_wagons If true add every wagon to \a wagons which is not attached to an engine. If false only add the first wagon of every row.
  */
-void BuildDepotVehicleList(VehicleType type, TileIndex tile, VehicleList *engines, VehicleList *wagons, bool individual_wagons)
+void BuildDepotVehicleList(VehicleType type, DepotID depot_id, VehicleList *engines, VehicleList *wagons, bool individual_wagons)
 {
 	engines->clear();
 	if (wagons != nullptr && wagons != engines) wagons->clear();
@@ -74,13 +75,14 @@ void BuildDepotVehicleList(VehicleType type, TileIndex tile, VehicleList *engine
 	for (const Vehicle *v : Vehicle::Iterate()) {
 		/* General tests for all vehicle types */
 		if (v->type != type) continue;
-		if (v->tile != tile) continue;
+		if (!IsDepotTypeTile(v->tile, (TransportType)type)) continue;
+		if (GetDepotIndex(v->tile) != depot_id) continue;
 
 		switch (type) {
 			case VEH_TRAIN: {
 				const Train *t = Train::From(v);
 				if (t->IsArticulatedPart() || t->IsRearDualheaded()) continue;
-				if (t->track != TRACK_BIT_DEPOT) continue;
+				if (!t->IsInDepot()) continue;
 				if (wagons != nullptr && t->First()->IsFreeWagon()) {
 					if (individual_wagons || t->IsFreeWagon()) wagons->push_back(t);
 					continue;

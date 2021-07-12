@@ -151,13 +151,24 @@ public:
 		return false;
 	}
 
+	/** Check for a reserved depot platform. */
+	inline bool IsAnyDepotTileReserved(TileIndex tile, Trackdir trackdir, int skipped)
+	{
+		TileIndexDiff diff = TileOffsByDiagDir(TrackdirToExitdir(ReverseTrackdir(trackdir)));
+		for (; skipped >= 0; skipped--, tile += diff) {
+			if (HasDepotReservation(tile)) return true;
+		}
+		return false;
+	}
+
 	/** The cost for reserved tiles, including skipped ones. */
 	inline int ReservationCost(Node &n, TileIndex tile, Trackdir trackdir, int skipped)
 	{
 		if (n.m_num_signals_passed >= m_sig_look_ahead_costs.size() / 2) return 0;
 		if (!IsPbsSignal(n.m_last_signal_type)) return 0;
 
-		if (IsRailStationTile(tile) && IsAnyStationTileReserved(tile, trackdir, skipped)) {
+		if ((IsRailStationTile(tile) && IsAnyStationTileReserved(tile, trackdir, skipped)) ||
+				(IsBigRailDepotTile(tile) && IsAnyDepotTileReserved(tile, trackdir, skipped))) {
 			return Yapf().PfGetSettings().rail_pbs_station_penalty * (skipped + 1);
 		} else if (TrackOverlapsTracks(GetReservedTrackbits(tile), TrackdirToTrack(trackdir))) {
 			int cost = Yapf().PfGetSettings().rail_pbs_cross_penalty;
@@ -390,13 +401,12 @@ no_entry_cost: // jump here at the beginning if the node has no parent (it is th
 			/* Tests for 'potential target' reasons to close the segment. */
 			if (cur.tile == prev.tile) {
 				/* Penalty for reversing in a depot. */
-				assert(IsRailDepot(cur.tile));
+				assert(IsSmallRailDepot(cur.tile));
 				segment_cost += Yapf().PfGetSettings().rail_depot_reverse_penalty;
 
-			} else if (IsRailDepotTile(cur.tile)) {
+			} else if (IsSmallRailDepotTile(cur.tile)) {
 				/* We will end in this pass (depot is possible target) */
 				end_segment_reason |= ESRB_DEPOT;
-
 			} else if (cur.tile_type == MP_STATION && IsRailWaypoint(cur.tile)) {
 				if (v->current_order.IsType(OT_GOTO_WAYPOINT) &&
 						GetStationIndex(cur.tile) == v->current_order.GetDestination() &&
@@ -441,14 +451,14 @@ no_entry_cost: // jump here at the beginning if the node has no parent (it is th
 				/* Waypoint is also a good reason to finish. */
 				end_segment_reason |= ESRB_WAYPOINT;
 
-			} else if (tf->m_is_station) {
+			} else if (tf->m_is_station || tf->m_is_big_depot) {
 				/* Station penalties. */
 				uint platform_length = tf->m_tiles_skipped + 1;
 				/* We don't know yet if the station is our target or not. Act like
 				 * if it is pass-through station (not our destination). */
 				segment_cost += Yapf().PfGetSettings().rail_station_penalty * platform_length;
 				/* We will end in this pass (station is possible target) */
-				end_segment_reason |= ESRB_STATION;
+				end_segment_reason |= ESRB_PLATFORM;
 
 			} else if (TrackFollower::DoTrackMasking() && cur.tile_type == MP_RAILWAY) {
 				/* Searching for a safe tile? */
@@ -592,13 +602,21 @@ no_entry_cost: // jump here at the beginning if the node has no parent (it is th
 				}
 			}
 
-			/* Station platform-length penalty. */
-			if ((end_segment_reason & ESRB_STATION) != ESRB_NONE) {
-				const BaseStation *st = BaseStation::GetByTile(n.GetLastTile());
-				assert(st != nullptr);
-				uint platform_length = st->GetPlatformLength(n.GetLastTile(), ReverseDiagDir(TrackdirToExitdir(n.GetLastTrackdir())));
-				/* Reduce the extra cost caused by passing-station penalty (each station receives it in the segment cost). */
+			/* Platform-length penalty. */
+			if ((end_segment_reason & ESRB_PLATFORM) != ESRB_NONE) {
+				assert(HasStationTileRail(n.GetLastTile()) || IsBigRailDepotTile(n.GetLastTile()));
+				uint platform_length = GetPlatformLength(n.GetLastTile(), ReverseDiagDir(TrackdirToExitdir(n.GetLastTrackdir())));
+				/* Reduce the extra cost caused by passing-platform penalty (each platform receives it in the segment cost). */
 				extra_cost -= Yapf().PfGetSettings().rail_station_penalty * platform_length;
+				if (tf->m_is_big_depot) {
+					DepotReservation depot_reservation = GetDepotReservation(n.GetLastTile());
+					if (depot_reservation == DEPOT_RESERVATION_FULL_STOPPED_VEH) {
+						extra_cost += NPF_INFINITE_PENALTY;
+					} else {
+						extra_cost += (HasDepotReservation(n.GetLastTile()) ? 2 : 1) * platform_length * Yapf().PfGetSettings().rail_station_penalty;
+					}
+				}
+
 				/* Add penalty for the inappropriate platform length. */
 				extra_cost += PlatformLengthPenalty(platform_length);
 			}

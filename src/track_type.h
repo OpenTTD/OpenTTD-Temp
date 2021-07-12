@@ -14,7 +14,8 @@
 
 /**
  * These are used to specify a single track.
- * Can be translated to a trackbit with TrackToTrackbit
+ * Can be translated to a trackbit with TrackToTrackbit.
+ * TRACK_WORMHOLE and TRACK_DEPOT do not represent single tracks but states; they cannot be translated to trackbits.
  */
 enum Track : byte {
 	TRACK_BEGIN = 0,        ///< Used for iterations
@@ -24,7 +25,9 @@ enum Track : byte {
 	TRACK_LOWER = 3,        ///< Track in the lower corner of the tile (south)
 	TRACK_LEFT  = 4,        ///< Track in the left corner of the tile (west)
 	TRACK_RIGHT = 5,        ///< Track in the right corner of the tile (east)
-	TRACK_END,              ///< Used for iterations
+	TRACK_END   = 6,        ///< Used for iterations
+	TRACK_WORMHOLE = TRACK_END,
+	TRACK_DEPOT = 7,
 	INVALID_TRACK = 0xFF,   ///< Flag for an invalid track
 };
 
@@ -52,8 +55,8 @@ enum TrackBits : byte {
 	TRACK_BIT_3WAY_NW = TRACK_BIT_Y     | TRACK_BIT_UPPER | TRACK_BIT_LEFT, ///< "Arrow" to the north-west
 	TRACK_BIT_ALL     = TRACK_BIT_CROSS | TRACK_BIT_HORZ  | TRACK_BIT_VERT, ///< All possible tracks
 	TRACK_BIT_MASK    = 0x3FU,                                              ///< Bitmask for the first 6 bits
-	TRACK_BIT_WORMHOLE = 0x40U,                                             ///< Bitflag for a wormhole (used for tunnels)
-	TRACK_BIT_DEPOT   = 0x80U,                                              ///< Bitflag for a depot
+	TRACK_BIT_WORMHOLE = 1U << TRACK_WORMHOLE,                              ///< Bitflag for a wormhole (used for tunnels)
+	TRACK_BIT_DEPOT   = 1U << TRACK_DEPOT,                                  ///< Bitflag for a depot
 	INVALID_TRACK_BIT = 0xFF,                                               ///< Flag for an invalid trackbits value
 };
 DECLARE_ENUM_AS_BIT_SET(TrackBits)

@@ -239,6 +239,19 @@ public:
 	static bool BuildRailDepot(TileIndex tile, TileIndex front);
 
 	/**
+	 * Removes rail depots from an area.
+	 * @param start_tile Start tile of the area.
+	 * @param end_tile End tile of the area.
+	 * @pre ScriptMap::IsValidTile(start_tile).
+	 * @pre ScriptMap::IsValidTile(end_tile).
+	 * @game @pre Valid ScriptCompanyMode active in scope.
+	 * @exception ScriptError::ERR_FLAT_LAND_REQUIRED
+	 * @return Whether all depot tiles of the owner in the area have been/can be cleared or not.
+	 * @todo look for all the exceptions.
+	 */
+	static bool RemoveRailDepot(TileIndex start_tile, TileIndex end_tile);
+
+	/**
 	 * Build a rail station.
 	 * @param tile Place to build the station.
 	 * @param direction The direction to build the station.

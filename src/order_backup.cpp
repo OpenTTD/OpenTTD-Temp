@@ -16,6 +16,8 @@
 #include "vehicle_base.h"
 #include "window_func.h"
 #include "station_map.h"
+#include "depot_map.h"
+#include "depot_base.h"
 
 #include "safeguards.h"
 
@@ -42,8 +44,9 @@ OrderBackup::~OrderBackup()
  */
 OrderBackup::OrderBackup(const Vehicle *v, uint32 user)
 {
+	assert(IsDepotTile(v->tile));
 	this->user             = user;
-	this->tile             = v->tile;
+	this->depot_id         = GetDepotIndex(v->tile);
 	this->group            = v->group_id;
 
 	this->CopyConsistPropertiesFrom(v);
@@ -117,8 +120,10 @@ void OrderBackup::DoRestore(Vehicle *v)
  */
 /* static */ void OrderBackup::Restore(Vehicle *v, uint32 user)
 {
+	assert(IsDepotTile(v->tile));
+	DepotID depot_id_veh = GetDepotIndex(v->tile);
 	for (OrderBackup *ob : OrderBackup::Iterate()) {
-		if (v->tile != ob->tile || ob->user != user) continue;
+		if (depot_id_veh != ob->depot_id || ob->user != user) continue;
 
 		ob->DoRestore(v);
 		delete ob;
@@ -127,30 +132,30 @@ void OrderBackup::DoRestore(Vehicle *v)
 
 /**
  * Reset an OrderBackup given a tile and user.
- * @param tile The tile associated with the OrderBackup.
+ * @param depot_id The associated depot with the OrderBackup.
  * @param user The user associated with the OrderBackup.
  * @note Must not be used from the GUI!
  */
-/* static */ void OrderBackup::ResetOfUser(TileIndex tile, uint32 user)
+/* static */ void OrderBackup::ResetOfUser(DepotID depot_id, uint32 user)
 {
 	for (OrderBackup *ob : OrderBackup::Iterate()) {
-		if (ob->user == user && (ob->tile == tile || tile == INVALID_TILE)) delete ob;
+		if (ob->user == user && (ob->depot_id == depot_id || depot_id == INVALID_DEPOT)) delete ob;
 	}
 }
 
 /**
- * Clear an OrderBackup
- * @param tile  Tile related to the to-be-cleared OrderBackup.
+ * Clear an OrderBackup.
+ * @param tile  Unused.
  * @param flags For command.
- * @param p1    Unused.
+ * @param p1    Depot index.
  * @param p2    User that had the OrderBackup.
  * @param text  Unused.
  * @return The cost of this operation or an error.
  */
 CommandCost CmdClearOrderBackup(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const std::string &text)
 {
-	/* No need to check anything. If the tile or user don't exist we just ignore it. */
-	if (flags & DC_EXEC) OrderBackup::ResetOfUser(tile == 0 ? INVALID_TILE : tile, p2);
+	assert(Depot::IsValidID(p1));
+	if (flags & DC_EXEC) OrderBackup::ResetOfUser(p1, p2);
 
 	return CommandCost();
 }
@@ -176,11 +181,11 @@ CommandCost CmdClearOrderBackup(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 
 /**
  * Reset the OrderBackups from GUI/game logic.
- * @param t        The tile of the order backup.
+ * @param depot_id The index of the depot associated to the order backups.
  * @param from_gui Whether the call came from the GUI, i.e. whether
  *                 it must be synced over the network.
  */
-/* static */ void OrderBackup::Reset(TileIndex t, bool from_gui)
+/* static */ void OrderBackup::Reset(DepotID depot_id, bool from_gui)
 {
 	/* The user has CLIENT_ID_SERVER as default when network play is not active,
 	 * but compiled it. A network client has its own variable for the unique
@@ -191,16 +196,16 @@ CommandCost CmdClearOrderBackup(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 	for (OrderBackup *ob : OrderBackup::Iterate()) {
 		/* If it's not a backup of us, ignore it. */
 		if (ob->user != user) continue;
-		/* If it's not for our chosen tile either, ignore it. */
-		if (t != INVALID_TILE && t != ob->tile) continue;
+		/* If it's not for our chosen depot either, ignore it. */
+		if (depot_id != INVALID_DEPOT && depot_id != ob->depot_id) continue;
 
 		if (from_gui) {
 			/* We need to circumvent the "prevention" from this command being executed
 			 * while the game is paused, so use the internal method. Nor do we want
 			 * this command to get its cost estimated when shift is pressed. */
-			DoCommandPInternal(ob->tile, 0, user, CMD_CLEAR_ORDER_BACKUP, nullptr, {}, true, false);
+			DoCommandPInternal(0, ob->depot_id, user, CMD_CLEAR_ORDER_BACKUP, nullptr, {}, true, false);
 		} else {
-			/* The command came from the game logic, i.e. the clearing of a tile.
+			/* The command came from the game logic, i.e. the clearing of a depot.
 			 * In that case we have no need to actually sync this, just do it. */
 			delete ob;
 		}
@@ -242,18 +247,14 @@ CommandCost CmdClearOrderBackup(TileIndex tile, DoCommandFlag flags, uint32 p1, 
  * Removes an order from all vehicles. Triggers when, say, a station is removed.
  * @param type The type of the order (OT_GOTO_[STATION|DEPOT|WAYPOINT]).
  * @param destination The destination. Can be a StationID, DepotID or WaypointID.
- * @param hangar Only used for airports in the destination.
- *               When false, remove airport and hangar orders.
- *               When true, remove either airport or hangar order.
  */
-/* static */ void OrderBackup::RemoveOrder(OrderType type, DestinationID destination, bool hangar)
+/* static */ void OrderBackup::RemoveOrder(OrderType type, DestinationID destination)
 {
 	for (OrderBackup *ob : OrderBackup::Iterate()) {
 		for (Order *order = ob->orders; order != nullptr; order = order->next) {
 			OrderType ot = order->GetType();
 			if (ot == OT_GOTO_DEPOT && (order->GetDepotActionType() & ODATFB_NEAREST_DEPOT) != 0) continue;
-			if (ot == OT_GOTO_DEPOT && hangar && !IsHangarTile(ob->tile)) continue; // Not an aircraft? Can't have a hangar order.
-			if (ot == OT_IMPLICIT || (IsHangarTile(ob->tile) && ot == OT_GOTO_DEPOT && !hangar)) ot = OT_GOTO_STATION;
+			if (ot == OT_IMPLICIT) ot = OT_GOTO_STATION;
 			if (ot == type && order->GetDestination() == destination) {
 				/* Remove the order backup! If a station/depot gets removed, we can't/shouldn't restore those broken orders. */
 				delete ob;

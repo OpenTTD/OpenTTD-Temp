@@ -21,6 +21,9 @@
 
 struct Train;
 
+static const byte _vehicle_initial_x_fract[4] = {10, 8, 4,  8};
+static const byte _vehicle_initial_y_fract[4] = { 8, 4, 8, 10};
+
 /** Rail vehicle flags. */
 enum VehicleRailFlags {
 	VRF_REVERSING                     = 0,
@@ -96,9 +99,6 @@ struct Train FINAL : public GroundVehicle<Train, VEH_TRAIN> {
 	RailType railtype;
 	RailTypes compatible_railtypes;
 
-	/** Ticks waiting in front of a signal, ticks being stuck or a counter for forced proceeding through signals. */
-	uint16 wait_counter;
-
 	/** We don't want GCC to zero our struct! It already is zeroed and has an index! */
 	Train() : GroundVehicleBase() {}
 	/** We want to 'destruct' the right class. */
@@ -116,7 +116,7 @@ struct Train FINAL : public GroundVehicle<Train, VEH_TRAIN> {
 	int GetDisplayMaxSpeed() const { return this->vcache.cached_max_speed; }
 	Money GetRunningCost() const;
 	int GetDisplayImageWidth(Point *offset = nullptr) const;
-	bool IsInDepot() const { return this->track == TRACK_BIT_DEPOT; }
+	bool IsInDepot() const { return HasBit((byte)this->track, TRACK_DEPOT); }
 	bool Tick();
 	void OnNewDay();
 	uint Crash(bool flooded = false);
@@ -332,5 +332,9 @@ protected: // These functions should not be called outside acceleration code.
 		return false;
 	}
 };
+
+bool HasCompatibleDepotTile(TileIndex tile, const Train *t);
+bool HandleTrainEnterDepot(Train *v);
+bool CheckReverseTrain(const Train *v);
 
 #endif /* TRAIN_H */

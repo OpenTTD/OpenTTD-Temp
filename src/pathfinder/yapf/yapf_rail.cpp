@@ -16,6 +16,7 @@
 #include "yapf_destrail.hpp"
 #include "../../viewport_func.h"
 #include "../../newgrf_station.h"
+#include "../../platform_func.h"
 
 #include "../../safeguards.h"
 
@@ -85,11 +86,34 @@ private:
 		return true;
 	}
 
+	/** Reserve a railway platform. Tile contains the failed tile on abort. */
+	bool ReserveRailDepotPlatform(TileIndex &tile, DiagDirection dir)
+	{
+		assert(IsBigRailDepotTile(tile));
+		TileIndex     start = tile;
+		TileIndexDiff diff = TileOffsByDiagDir(dir);
+
+		do {
+			if (HasDepotReservation(tile)) return false;
+			SetDepotReservation(tile, true);
+			MarkTileDirtyByTile(tile);
+			tile = TILE_ADD(tile, diff);
+		} while (IsCompatibleTrainDepotTile(tile, start) && tile != m_origin_tile);
+
+		return true;
+	}
+
 	/** Try to reserve a single track/platform. */
 	bool ReserveSingleTrack(TileIndex tile, Trackdir td)
 	{
 		if (IsRailStationTile(tile)) {
 			if (!ReserveRailStationPlatform(tile, TrackdirToExitdir(ReverseTrackdir(td)))) {
+				/* Platform could not be reserved, undo. */
+				m_res_fail_tile = tile;
+				m_res_fail_td = td;
+			}
+		} else if (IsBigRailDepotTile(tile)) {
+			if (!ReserveRailDepotPlatform(tile, TrackdirToExitdir(ReverseTrackdir(td)))) {
 				/* Platform could not be reserved, undo. */
 				m_res_fail_tile = tile;
 				m_res_fail_td = td;
@@ -114,6 +138,13 @@ private:
 			TileIndexDiff diff = TileOffsByDiagDir(TrackdirToExitdir(ReverseTrackdir(td)));
 			while ((tile != m_res_fail_tile || td != m_res_fail_td) && IsCompatibleTrainStationTile(tile, start)) {
 				SetRailStationReservation(tile, false);
+				tile = TILE_ADD(tile, diff);
+			}
+		} else if (IsBigRailDepotTile(tile)) {
+			TileIndex     start = tile;
+			TileIndexDiff diff = TileOffsByDiagDir(TrackdirToExitdir(ReverseTrackdir(td)));
+			while ((tile != m_res_fail_tile || td != m_res_fail_td) && IsCompatibleTrainDepotTile(tile, start)) {
+				SetDepotReservation(tile, false);
 				tile = TILE_ADD(tile, diff);
 			}
 		} else if (tile != m_res_fail_tile || td != m_res_fail_td) {
@@ -637,7 +668,9 @@ bool YapfTrainFindNearestSafeTile(const Train *v, TileIndex tile, Trackdir td, b
 /** if any track changes, this counter is incremented - that will invalidate segment cost cache */
 int CSegmentCostCacheBase::s_rail_change_counter = 0;
 
+extern void FixBigRailDepotSprites(TileIndex tile);
 void YapfNotifyTrackLayoutChange(TileIndex tile, Track track)
 {
+	FixBigRailDepotSprites(tile);
 	CSegmentCostCacheBase::NotifyTrackLayoutChange(tile, track);
 }

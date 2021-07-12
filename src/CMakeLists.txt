@@ -299,6 +299,9 @@ add_files(
     osk_gui.cpp
     pbs.cpp
     pbs.h
+    platform_func.h
+    platform_type.h
+    platform.cpp
     progress.cpp
     progress.h
     querystring_gui.h
@@ -438,6 +441,8 @@ add_files(
     track_type.h
     train.h
     train_cmd.cpp
+    train_placement.cpp
+    train_placement.h
     train_gui.cpp
     transparency.h
     transparency_gui.cpp

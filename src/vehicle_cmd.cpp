@@ -32,6 +32,9 @@
 #include "core/random_func.hpp"
 #include <sstream>
 #include <iomanip>
+#include "depot_base.h"
+#include "train_placement.h"
+#include "strings_func.h"
 
 #include "table/strings.h"
 
@@ -161,7 +164,7 @@ CommandCost CmdBuildVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 		}
 
 		if (flags & DC_EXEC) {
-			InvalidateWindowData(WC_VEHICLE_DEPOT, v->tile);
+			InvalidateWindowData(WC_VEHICLE_DEPOT, GetDepotIndex(tile));
 			InvalidateWindowClassesData(GetWindowClassForVehicleType(type), 0);
 			SetWindowDirty(WC_COMPANY, _current_company);
 			if (IsLocalCompany()) {
@@ -236,6 +239,9 @@ CommandCost CmdSellVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint3
 		ret = CommandCost(EXPENSES_NEW_VEHICLES, -front->value);
 
 		if (flags & DC_EXEC) {
+			if (front->type == VEH_ROAD && IsBigDepot(v->tile) && (flags & DC_AUTOREPLACE) == 0) {
+				UpdateExtendedDepotReservation(v, false);
+			}
 			if (front->IsPrimaryVehicle() && p1 & MAKE_ORDER_BACKUP_FLAG) OrderBackup::Backup(front, p2);
 			delete front;
 		}
@@ -507,6 +513,11 @@ CommandCost CmdRefitVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 	bool only_this = HasBit(p2, 25) || front->type == VEH_SHIP || front->type == VEH_AIRCRAFT;
 	uint8 num_vehicles = GB(p2, 16, 8);
 
+	/* If it is a train, lift it. New length of the vehicle won't be checked. */
+	Train *train = v->type == VEH_TRAIN ? Train::From(front) : nullptr;
+	TrainPlacement train_placement;
+	train_placement.LiftTrain(train, flags);
+
 	CommandCost cost = RefitVehicle(v, only_this, num_vehicles, new_cid, new_subtype, flags, auto_refit);
 
 	if (flags & DC_EXEC) {
@@ -538,11 +549,14 @@ CommandCost CmdRefitVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, uint
 			InvalidateWindowData(WC_VEHICLE_DETAILS, front->index);
 			InvalidateWindowClassesData(GetWindowClassForVehicleType(v->type), 0);
 		}
-		SetWindowDirty(WC_VEHICLE_DEPOT, front->tile);
+		SetWindowDirty(WC_VEHICLE_DEPOT, GetDepotIndex(front->tile));
 	} else {
 		/* Always invalidate the cache; querycost might have filled it. */
 		v->InvalidateNewGRFCacheOfChain();
 	}
+
+	/* If it is a train on a big depot, try placing it. */
+	train_placement.PlaceTrain(train, flags);
 
 	return cost;
 }
@@ -570,12 +584,32 @@ CommandCost CmdStartStopVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 	if (v->vehstatus & VS_CRASHED) return_cmd_error(STR_ERROR_VEHICLE_IS_DESTROYED);
 
 	switch (v->type) {
-		case VEH_TRAIN:
-			if ((v->vehstatus & VS_STOPPED) && Train::From(v)->gcache.cached_power == 0) return_cmd_error(STR_ERROR_TRAIN_START_NO_POWER);
+		case VEH_TRAIN: {
+			Train *t = Train::From(v);
+			if ((v->vehstatus & VS_STOPPED) && t->gcache.cached_power == 0) return_cmd_error(STR_ERROR_TRAIN_START_NO_POWER);
+
+			/* Train cannot leave until changing the depot. Stop the train and send a message. */
+			if (!(flags & DC_AUTOREPLACE) && v->IsStoppedInDepot() && CheckIfTrainNeedsPlacement(t)) {
+				TrainPlacement train_placement;
+				if (!train_placement.CanFindAppropriatePlatform(t, (flags & DC_EXEC) != 0)) {
+					SetDParam(0, v->index);
+					return_cmd_error(STR_ERROR_CANT_START_PLATFORM_TYPE + train_placement.info - PI_FAILED_PLATFORM_TYPE);
+				}
+			}
 			break;
+		}
 
 		case VEH_SHIP:
+			break;
 		case VEH_ROAD:
+			if ((v->vehstatus & VS_STOPPED) && !(flags & DC_AUTOREPLACE) && v->IsStoppedInDepot()) {
+				Depot *dep = Depot:: GetByTile(v->tile);
+
+				/* Check that the vehicle can drive on some tile of the depot */
+				RoadType rt = Engine::Get(v->engine_type)->u.road.roadtype;
+				const RoadTypeInfo *rti = GetRoadTypeInfo(rt);
+				if ((dep->r_types.road_types & rti->powered_roadtypes) == 0) return_cmd_error(STR_ERROR_ROAD_VEHICLE_START_NO_POWER);
+			}
 			break;
 
 		case VEH_AIRCRAFT: {
@@ -620,9 +654,14 @@ CommandCost CmdStartStopVehicle(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 
 		v->vehstatus ^= VS_STOPPED;
 		if (v->type != VEH_TRAIN) v->cur_speed = 0; // trains can stop 'slowly'
+		if (v->type == VEH_TRAIN && v->IsInDepot() && IsBigDepotTile(v->tile)) {
+			if ((v->vehstatus & VS_STOPPED) != 0) FreeTrainTrackReservation(Train::From(v));
+			UpdateExtendedDepotReservation(v, true);
+		}
+
 		v->MarkDirty();
 		SetWindowWidgetDirty(WC_VEHICLE_VIEW, v->index, WID_VV_START_STOP);
-		SetWindowDirty(WC_VEHICLE_DEPOT, v->tile);
+		if (IsDepotTile(v->tile)) SetWindowDirty(WC_VEHICLE_DEPOT, GetDepotIndex(v->tile));
 		SetWindowClassesDirty(GetWindowClassForVehicleType(v->type));
 		InvalidateWindowData(WC_VEHICLE_VIEW, v->index);
 	}
@@ -654,7 +693,7 @@ CommandCost CmdMassStartStopVehicle(TileIndex tile, DoCommandFlag flags, uint32 
 		if (!GenerateVehicleSortList(&list, vli)) return CMD_ERROR;
 	} else {
 		/* Get the list of vehicles in the depot */
-		BuildDepotVehicleList(vli.vtype, tile, &list, nullptr);
+		BuildDepotVehicleList(vli.vtype, GetDepotIndex(tile), &list, nullptr);
 	}
 
 	for (uint i = 0; i < list.size(); i++) {
@@ -665,7 +704,17 @@ CommandCost CmdMassStartStopVehicle(TileIndex tile, DoCommandFlag flags, uint32 
 		if (!vehicle_list_window && !v->IsChainInDepot()) continue;
 
 		/* Just try and don't care if some vehicle's can't be stopped. */
-		DoCommand(tile, v->index, 0, flags, CMD_START_STOP_VEHICLE);
+		CommandCost ret = DoCommand(tile, v->index, 0, flags, CMD_START_STOP_VEHICLE);
+		if (ret.Failed()) {
+			switch (ret.GetErrorMessage()) {
+				case STR_ERROR_CANT_START_PLATFORM_TYPE:
+				case STR_ERROR_CANT_START_PLATFORM_LONG:
+					SetDParam(0, v->index);
+					return ret;
+				default:
+					break;
+			}
+		}
 	}
 
 	return CommandCost();
@@ -682,8 +731,9 @@ CommandCost CmdMassStartStopVehicle(TileIndex tile, DoCommandFlag flags, uint32 
  */
 CommandCost CmdDepotSellAllVehicles(TileIndex tile, DoCommandFlag flags, uint32 p1, uint32 p2, const std::string &text)
 {
-	VehicleList list;
+	assert(IsDepotTile(tile));
 
+	VehicleList list;
 	CommandCost cost(EXPENSES_NEW_VEHICLES);
 	VehicleType vehicle_type = Extract<VehicleType, 0, 3>(p1);
 
@@ -692,7 +742,7 @@ CommandCost CmdDepotSellAllVehicles(TileIndex tile, DoCommandFlag flags, uint32 
 	uint sell_command = GetCmdSellVeh(vehicle_type);
 
 	/* Get the list of vehicles in the depot */
-	BuildDepotVehicleList(vehicle_type, tile, &list, &list);
+	BuildDepotVehicleList(vehicle_type, GetDepotIndex(tile), &list, &list);
 
 	CommandCost last_error = CMD_ERROR;
 	bool had_success = false;
@@ -728,7 +778,7 @@ CommandCost CmdDepotMassAutoReplace(TileIndex tile, DoCommandFlag flags, uint32 
 	if (!IsDepotTile(tile) || !IsTileOwner(tile, _current_company)) return CMD_ERROR;
 
 	/* Get the list of vehicles in the depot */
-	BuildDepotVehicleList(vehicle_type, tile, &list, &list, true);
+	BuildDepotVehicleList(vehicle_type, GetDepotIndex(tile), &list, &list, true);
 
 	for (uint i = 0; i < list.size(); i++) {
 		const Vehicle *v = list[i];
@@ -1138,4 +1188,63 @@ CommandCost CmdChangeServiceInt(TileIndex tile, DoCommandFlag flags, uint32 p1, 
 	}
 
 	return CommandCost();
+}
+
+/**
+ * A vehicle that entered a big depot, starts servicing.
+ */
+void Vehicle::StartService()
+{
+	assert(IsDepotTile(this->tile));
+
+	switch (this->type) {
+		case VEH_AIRCRAFT:
+		case VEH_ROAD:
+		case VEH_SHIP: {
+			this->wait_counter = 1 << 7;
+			break;
+		}
+
+		case VEH_TRAIN: {
+			this->wait_counter = 1 << 8;
+			break;
+		}
+
+		default: NOT_REACHED();
+	}
+
+	this->cur_speed = 0;
+	this->subspeed = 0;
+
+	SetBit(this->vehicle_flags, VF_IS_SERVICING);
+	SetWindowWidgetDirty(WC_VEHICLE_VIEW, this->index, WID_VV_START_STOP);
+	assert(this->fill_percent_te_id == INVALID_TE_ID);
+	this->fill_percent_te_id = ShowFillingPercent(this->x_pos, this->y_pos, this->z_pos + 20, 0, STR_SERVICING_INDICATOR);
+}
+
+/**
+ * Check if vehicle is servicing.
+ * If it is servicing, decrease time till finishing the servicing.
+ * It services the vehicle when servicing time ends.
+ * @return true if the vehicle is still servicing, false if it is not servicing.
+ */
+bool Vehicle::ContinueServicing()
+{
+	if (!HasBit(this->vehicle_flags, VF_IS_SERVICING)) return false;
+
+	if (this->wait_counter--) return true;
+
+	VehicleServiceInBigDepot(this);
+	this->StopServicing();
+	return true;
+}
+
+void Vehicle::StopServicing()
+{
+	this->wait_counter = 0;
+
+	/* End servicing. */
+	ClrBit(this->vehicle_flags, VF_IS_SERVICING);
+	HideFillingPercent(&this->fill_percent_te_id);
+	InvalidateWindowData(WC_VEHICLE_VIEW, this->index);
 }

@@ -60,6 +60,7 @@ struct TileHighlightData {
 	Point selstart;      ///< The location where the dragging started.
 	Point selend;        ///< The location where the drag currently ends.
 	byte sizelimit;      ///< Whether the selection is limited in length, and what the maximum length is.
+	byte fixed_size;     ///< The fixed length for one of the sides.
 
 	HighLightStyle drawstyle;      ///< Lower bits 0-3 are reserved for detailed highlight information.
 	HighLightStyle next_drawstyle; ///< Queued, but not yet drawn style.

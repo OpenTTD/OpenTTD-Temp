@@ -27,6 +27,7 @@ enum DepotWidgets {
 	WID_D_LOCATION,        ///< Location button.
 	WID_D_SHOW_RENAME,     ///< Show rename panel.
 	WID_D_RENAME,          ///< Rename button.
+	WID_D_HIGHLIGHT,       ///< Highlight button.
 	WID_D_VEHICLE_LIST,    ///< List of vehicles.
 	WID_D_STOP_ALL,        ///< Stop all button.
 	WID_D_START_ALL,       ///< Start all button.
