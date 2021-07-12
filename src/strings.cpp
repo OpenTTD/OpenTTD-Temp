@@ -34,7 +34,6 @@
 #include "debug.h"
 #include "game/game_text.hpp"
 #include "network/network_content_gui.h"
-#include <stack>
 
 #include "table/strings.h"
 #include "table/control_codes.h"
@@ -818,15 +817,9 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 	WChar b = '\0';
 	uint next_substr_case_index = 0;
 	char *buf_start = buff;
-	std::stack<const char *, std::vector<const char *>> str_stack;
-	str_stack.push(str_arg);
-
-	for (;;) {
-		while (!str_stack.empty() && (b = Utf8Consume(&str_stack.top())) == '\0') {
-			str_stack.pop();
-		}
-		if (str_stack.empty()) break;
-		const char *&str = str_stack.top();
+	const char *current_str_arg = str_arg;
+	while ((b = Utf8Consume(&current_str_arg)) != '\0') {
+		const char *&str = current_str_arg;
 
 		if (SCC_NEWGRF_FIRST <= b && b <= SCC_NEWGRF_LAST) {
 			/* We need to pass some stuff as it might be modified. */
@@ -933,14 +926,14 @@ static char *FormatString(char *buff, const char *str_arg, StringParameters *arg
 
 			case SCC_NEWGRF_STRINL: {
 				StringID substr = Utf8Consume(&str);
-				str_stack.push(GetStringPtr(substr));
+				buff = FormatString(buff, GetStringPtr(substr), args, last, next_substr_case_index, game_script, dry_run);
+				next_substr_case_index = 0;
 				break;
 			}
 
 			case SCC_NEWGRF_PRINT_WORD_STRING_ID: {
 				StringID substr = args->GetInt32(SCC_NEWGRF_PRINT_WORD_STRING_ID);
-				str_stack.push(GetStringPtr(substr));
-				case_index = next_substr_case_index;
+				buff = FormatString(buff, GetStringPtr(substr), args, last, next_substr_case_index, game_script, dry_run);
 				next_substr_case_index = 0;
 				break;
 			}
