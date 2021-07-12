@@ -17,6 +17,8 @@
 #include <map>
 #include <string>
 #include <stack>
+#include <string_view>
+#include <type_traits>
 #include <vector>
 
 #ifdef WITH_ICU_LX
@@ -155,14 +157,25 @@ class Layouter : public std::vector<std::unique_ptr<const ParagraphLayouter::Lin
 	struct LineCacheKey {
 		FontState state_before;  ///< Font state at the beginning of the line.
 		std::string str;         ///< Source string of the line (including colour and font size codes).
+	};
 
-		/** Comparison operator for std::map */
-		bool operator<(const LineCacheKey &other) const
+	struct LineCacheQuery {
+		FontState state_before;  ///< Font state at the beginning of the line.
+		std::string_view str;    ///< Source string of the line (including colour and font size codes).
+	};
+
+	/** Comparator for std::map */
+	struct LineCacheCompare {
+		using is_transparent = void; ///< Enable map queries with various key types
+
+		/** Comparison operator for LineCacheKey and LineCacheQuery */
+		template<typename Key1, typename Key2>
+		bool operator()(const Key1 &lhs, const Key2 &rhs) const
 		{
-			if (this->state_before.fontsize != other.state_before.fontsize) return this->state_before.fontsize < other.state_before.fontsize;
-			if (this->state_before.cur_colour != other.state_before.cur_colour) return this->state_before.cur_colour < other.state_before.cur_colour;
-			if (this->state_before.colour_stack != other.state_before.colour_stack) return this->state_before.colour_stack < other.state_before.colour_stack;
-			return this->str < other.str;
+			if (lhs.state_before.fontsize != rhs.state_before.fontsize) return lhs.state_before.fontsize < rhs.state_before.fontsize;
+			if (lhs.state_before.cur_colour != rhs.state_before.cur_colour) return lhs.state_before.cur_colour < rhs.state_before.cur_colour;
+			if (lhs.state_before.colour_stack != rhs.state_before.colour_stack) return lhs.state_before.colour_stack < rhs.state_before.colour_stack;
+			return lhs.str < rhs.str;
 		}
 	};
 public:
@@ -179,7 +192,7 @@ public:
 		~LineCacheItem() { delete layout; free(buffer); }
 	};
 private:
-	typedef std::map<LineCacheKey, LineCacheItem> LineCache;
+	typedef std::map<LineCacheKey, LineCacheItem, LineCacheCompare> LineCache;
 	static LineCache *linecache;
 
 	static LineCacheItem &GetCachedParagraphLayout(const char *str, size_t len, const FontState &state);

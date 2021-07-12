@@ -888,6 +888,12 @@ Layouter::LineCacheItem &Layouter::GetCachedParagraphLayout(const char *str, siz
 		linecache = new LineCache();
 	}
 
+	if (auto match = linecache->find(LineCacheQuery{state, std::string_view{str, len}});
+		match != linecache->end()) {
+		return match->second;
+	}
+
+	/* Create missing entry */
 	LineCacheKey key;
 	key.state_before = state;
 	key.str.assign(str, len);
