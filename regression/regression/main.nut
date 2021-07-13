@@ -1702,9 +1702,9 @@ function Regression::Vehicle()
 	print("  GetWagonAge():        " + AIVehicle.GetWagonAge(17, 0));
 	print("  GetWagonEngineType(): " + AIVehicle.GetWagonEngineType(17, 1));
 	print("  GetWagonAge():        " + AIVehicle.GetWagonAge(17, 1));
-	print("  GetWagonEngineType(): " + AIVehicle.GetWagonEngineType(17 2));
+	print("  GetWagonEngineType(): " + AIVehicle.GetWagonEngineType(17, 2));
 	print("  GetWagonAge():        " + AIVehicle.GetWagonAge(17, 2));
-	print("  GetWagonEngineType(): " + AIVehicle.GetWagonEngineType(17 3));
+	print("  GetWagonEngineType(): " + AIVehicle.GetWagonEngineType(17, 3));
 	print("  GetWagonAge():        " + AIVehicle.GetWagonAge(17, 3));
 
 	print("  --Refit--");

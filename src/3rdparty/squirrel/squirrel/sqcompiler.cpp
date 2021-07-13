@@ -784,6 +784,7 @@ public:
 				 Lex();
 				 if(_token == ')') Error("expression expected, found ')'");
 			 }
+			 else if(_token != ')') Error("')' or ',' expected, found expression");
 		 }
 		 Lex();
 		 for(SQInteger i = 0; i < (nargs - 1); i++) _fs->PopTarget();
