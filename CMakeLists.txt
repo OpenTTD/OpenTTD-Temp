@@ -158,7 +158,14 @@ if(MSVC)
 endif()
 
 find_package(SSE)
-find_package(Xaudio2)
+
+if(WIN32)
+    find_package(Xaudio2)
+    find_package(D3D11)
+    if(D3D11_FOUND)
+        add_definitions(-DWITH_D3D11)
+    endif()
+endif()
 
 find_package(Grfcodec)
 

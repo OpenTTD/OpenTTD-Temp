@@ -69,6 +69,8 @@ protected:
 	virtual void ReleaseVideoPointer() {}
 	/** Palette of the window has changed. */
 	virtual void PaletteChanged(HWND hWnd) = 0;
+	/** Minimising and restoring fullscreen windows is done with ToggleFullscreen method. */
+	virtual bool MinimiseRestoreWithToggleFullscreen() { return false; }
 
 private:
 	friend LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -108,7 +110,7 @@ public:
 /** The factory for Windows' video driver. */
 class FVideoDriver_Win32GDI : public DriverFactoryBase {
 public:
-	FVideoDriver_Win32GDI() : DriverFactoryBase(Driver::DT_VIDEO, 9, "win32", "Win32 GDI Video Driver") {}
+	FVideoDriver_Win32GDI() : DriverFactoryBase(Driver::DT_VIDEO, 8, "win32", "Win32 GDI Video Driver") {}
 	Driver *CreateInstance() const override { return new VideoDriver_Win32GDI(); }
 };
 
@@ -137,6 +139,7 @@ public:
 
 	bool HasAnimBuffer() override { return true; }
 	uint8 *GetAnimBuffer() override { return this->anim_buffer; }
+	int GetAnimBufferPitch() override { return _screen.pitch; }
 
 	void ToggleVsync(bool vsync) override;
 
@@ -163,7 +166,7 @@ protected:
 /** The factory for Windows' OpenGL video driver. */
 class FVideoDriver_Win32OpenGL : public DriverFactoryBase {
 public:
-	FVideoDriver_Win32OpenGL() : DriverFactoryBase(Driver::DT_VIDEO, 10, "win32-opengl", "Win32 OpenGL Video Driver") {}
+	FVideoDriver_Win32OpenGL() : DriverFactoryBase(Driver::DT_VIDEO, 9, "win32-opengl", "Win32 OpenGL Video Driver") {}
 	/* virtual */ Driver *CreateInstance() const override { return new VideoDriver_Win32OpenGL(); }
 
 protected:
@@ -171,5 +174,72 @@ protected:
 };
 
 #endif /* WITH_OPENGL */
+
+#ifdef WITH_D3D11
+
+#include "d3d11.h"
+#include <dxgi1_5.h>
+
+/** The D3D11 video driver for windows. */
+class VideoDriver_Win32D3D11 : public VideoDriver_Win32Base {
+public:
+	VideoDriver_Win32D3D11() {}
+
+	const char* Start(const StringList& param) override;
+
+	void Stop() override;
+
+	bool ChangeResolution(int w, int h) override;
+
+	bool ToggleFullscreen(bool fullscreen) override;
+
+	bool AfterBlitterChange() override;
+
+	bool HasEfficient8Bpp() const override { return true; }
+
+	bool UseSystemCursor() override { return false; }
+
+	bool HasAnimBuffer() override { return true; }
+	uint8* GetAnimBuffer() override { return this->anim_buffer; }
+	int GetAnimBufferPitch() override { return this->anim_pitch; }
+
+	const char* GetName() const override { return "win32-d3d11"; }
+
+protected:
+	ComPtr<IDXGISwapChain> swap_chain;
+	ComPtr<ID3D11RenderTargetView> rendertarget;
+
+	bool dxgi_force_resize_buffer = false;
+	bool dxgi_fullscreen;
+	UINT dxgi_flags;
+
+	uint8* anim_buffer = nullptr; ///< Animation buffer from D3D11 back-end.
+	int    anim_pitch = 0;
+
+	bool MinimiseRestoreWithToggleFullscreen() override { return true; }
+	uint8 GetFullscreenBpp() override { return 32; } // D3D11 is always 32 bpp.
+
+	void Paint() override;
+
+	bool AllocateBackingStore(int w, int h, bool force = false) override;
+	void* GetVideoPointer() override;
+	void ReleaseVideoPointer() override;
+	void PaletteChanged(HWND hWnd) override {}
+
+	const char* CreateSwapchain();
+	void DestroySwapchain();
+};
+
+/** The factory for Windows' D3D11 video driver. */
+class FVideoDriver_Win32D3D11 : public DriverFactoryBase {
+public:
+	FVideoDriver_Win32D3D11() : DriverFactoryBase(Driver::DT_VIDEO, 10, "win32-d3d11", "Win32 D3D11 Video Driver") {}
+	/* virtual */ Driver* CreateInstance() const override { return new VideoDriver_Win32D3D11(); }
+
+protected:
+	bool UsesHardwareAcceleration() const override { return true; }
+};
+
+#endif /* WITH_D3D11 */
 
 #endif /* VIDEO_WIN32_H */

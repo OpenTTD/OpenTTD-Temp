@@ -147,6 +147,11 @@ public:
 		return nullptr;
 	}
 
+	virtual int GetAnimBufferPitch()
+	{
+		NOT_REACHED();
+	}
+
 	/**
 	 * An edit box lost the input focus. Abort character compositing if necessary.
 	 */

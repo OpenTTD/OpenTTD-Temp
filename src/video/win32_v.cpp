@@ -706,17 +706,29 @@ LRESULT CALLBACK WndProcGdi(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			bool active = (LOWORD(wParam) != WA_INACTIVE);
 			bool minimized = (HIWORD(wParam) != 0);
 			if (video_driver->fullscreen) {
+				VideoDriver_Win32Base* win32_driver = static_cast<VideoDriver_Win32Base*>(video_driver);
 				if (active && minimized) {
 					/* Restore the game window */
 					Dimension d = _bck_resolution; // Save current non-fullscreen window size as it will be overwritten by ShowWindow.
 					ShowWindow(hwnd, SW_RESTORE);
 					_bck_resolution = d;
-					video_driver->MakeWindow(true);
+
+					if (win32_driver->MinimiseRestoreWithToggleFullscreen()) {
+						video_driver->ToggleFullscreen(true);
+					}
+					else {
+						video_driver->MakeWindow(true);
+					}
 				} else if (!active && !minimized) {
 					/* Minimise the window and restore desktop */
+					if (win32_driver->MinimiseRestoreWithToggleFullscreen()) {
+						video_driver->ToggleFullscreen(false);
+						video_driver->fullscreen = true;
+					}
 					ShowWindow(hwnd, SW_MINIMIZE);
-					ChangeDisplaySettings(nullptr, 0);
+					if (!win32_driver->MinimiseRestoreWithToggleFullscreen()) ChangeDisplaySettings(nullptr, 0);
 				}
+
 			}
 			break;
 		}
@@ -800,7 +812,7 @@ void VideoDriver_Win32Base::Stop()
 {
 	DestroyWindow(this->main_wnd);
 
-	if (this->fullscreen) ChangeDisplaySettings(nullptr, 0);
+	if (this->fullscreen && !MinimiseRestoreWithToggleFullscreen()) ChangeDisplaySettings(nullptr, 0);
 	MyShowCursor(true);
 }
 void VideoDriver_Win32Base::MakeDirty(int left, int top, int width, int height)
@@ -1485,3 +1497,270 @@ void VideoDriver_Win32OpenGL::Paint()
 }
 
 #endif /* WITH_OPENGL */
+
+#ifdef WITH_D3D11
+
+static FVideoDriver_Win32D3D11 iFVideoDriver_Win32D3D11;
+
+const char* VideoDriver_Win32D3D11::Start(const StringList& param)
+{
+	if (BlitterFactory::GetCurrentBlitter()->GetScreenDepth() == 0) return "Only real blitters supported";
+
+	const char* err = D3D11Backend::Create();
+	if (err != nullptr) return err;
+
+	this->Initialize();
+
+	/* Don't use legacy MakeWindow fullscreen handling, handle this later in ToggleFullscreen.
+	 * Set dxgi_fullscreen there as a hint to CreateSwapchain to allow it to select optimal DXGI swap effect. */
+	bool fs = this->dxgi_fullscreen = _fullscreen;
+	this->MakeWindow(false);
+
+	this->ClientSizeChanged(this->width, this->height, true);
+
+	if (_screen.dst_ptr == nullptr) return "D3D11 setup failed";
+
+	if (fs) this->ToggleFullscreen(true);
+
+	/* Main loop expects to start with the buffer unmapped. */
+	this->ReleaseVideoPointer();
+
+	MarkWholeScreenDirty();
+
+	this->is_game_threaded = !GetDriverParamBool(param, "no_threads") && !GetDriverParamBool(param, "no_thread");
+
+	return nullptr;
+}
+
+void VideoDriver_Win32D3D11::Stop()
+{
+	this->DestroySwapchain();
+	if (D3D11Backend::Get() != nullptr) D3D11Backend::Destroy();
+	this->VideoDriver_Win32Base::Stop();
+}
+
+const char* VideoDriver_Win32D3D11::CreateSwapchain()
+{
+	ComPtr<ID3D11Device> device = D3D11Backend::Get()->GetDevice();
+
+	ComPtr<IDXGIDevice> dxgi_device;
+	HRESULT result = device.As(&dxgi_device);
+	if (FAILED(result)) return "Failed to get DXGI device";
+
+	ComPtr<IDXGIAdapter> dxgi_adapter;
+	result = dxgi_device->GetAdapter(&dxgi_adapter);
+	if (FAILED(result)) return "Failed to get DXGI adapter";
+
+	ComPtr<IDXGIFactory> dxgi_factory;
+	result = dxgi_adapter->GetParent(IID_PPV_ARGS(&dxgi_factory));
+	if (FAILED(result)) return "Failed to get DXGI factory";
+
+	ComPtr<IDXGIFactory2> dxgi_factory2;
+	dxgi_factory.As(&dxgi_factory2);
+
+	ComPtr<IDXGIFactory4> dxgi_factory4;
+	dxgi_factory.As(&dxgi_factory4);
+
+	ComPtr<IDXGIFactory5> dxgi_factory5;
+	dxgi_factory.As(&dxgi_factory5);
+
+	BOOL allow_tearing = FALSE;
+	if (dxgi_factory5) {
+		dxgi_factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &allow_tearing, sizeof(allow_tearing));
+	}
+
+	DXGI_SWAP_EFFECT swap_effect;
+
+	if (dxgi_factory4) {
+		/* DXGI_SWAP_EFFECT_FLIP_DISCARD supported since Windows 10/DXGI 1.4 */
+		swap_effect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	}
+	else if (dxgi_factory2) {
+		/* DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL supported since Windows 8/DXGI 1.2 */
+		swap_effect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
+	}
+	else {
+		swap_effect = DXGI_SWAP_EFFECT_DISCARD;
+		allow_tearing = FALSE;
+	}
+
+	if (!allow_tearing && !this->dxgi_fullscreen && !_video_vsync) {
+		/* If non-fullscreen window without vsync is requested and DXGI_FEATURE_PRESENT_ALLOW_TEARING is not present
+		 * always use bitblt model, otherwise window might be always vsynced.  */
+		swap_effect = DXGI_SWAP_EFFECT_DISCARD;
+	}
+
+	/* Add DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH here to allow changing fullscreen resolution. */
+	this->dxgi_flags = (allow_tearing ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0);
+
+	this->dxgi_fullscreen = false;
+
+	DXGI_SWAP_CHAIN_DESC swap_desc;
+	memset(&swap_desc, 0, sizeof(swap_desc));
+
+	swap_desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	swap_desc.SampleDesc.Count = 1;
+	swap_desc.SampleDesc.Quality = 0;
+	swap_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swap_desc.BufferCount = 2;
+	swap_desc.OutputWindow = this->main_wnd;
+	swap_desc.Windowed = TRUE; /* Documentation recommends to always create windowed swapchain and only set it to fullscreen later. */
+	swap_desc.SwapEffect = swap_effect;
+	swap_desc.Flags = this->dxgi_flags;
+	swap_desc.SwapEffect = swap_effect;
+
+	result = dxgi_factory->CreateSwapChain(device.Get(), &swap_desc, &this->swap_chain);
+	if (FAILED(result)) return "Failed to create swap chain";
+
+	/* We don't want DXGI to intercept Alt-enter and switch to fullscreen mode by itself. */
+	result = dxgi_factory->MakeWindowAssociation(this->main_wnd, DXGI_MWA_NO_ALT_ENTER);
+	if (FAILED(result)) return "Failed to set DXGI window settings";
+
+	return nullptr;
+}
+
+void VideoDriver_Win32D3D11::DestroySwapchain()
+{
+	this->rendertarget.Reset();
+	if (this->swap_chain && this->dxgi_fullscreen) this->swap_chain->SetFullscreenState(false, nullptr);
+	this->swap_chain.Reset();
+}
+
+bool VideoDriver_Win32D3D11::ChangeResolution(int w, int h)
+{
+	if (_window_maximize) ShowWindow(this->main_wnd, SW_SHOWNORMAL);
+
+	DXGI_MODE_DESC mode;
+	memset(&mode, 0, sizeof(mode));
+	mode.Width = w;
+	mode.Height = h;
+	mode.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+	HRESULT result = this->swap_chain->ResizeTarget(&mode);
+
+	return SUCCEEDED(result);
+}
+
+bool VideoDriver_Win32D3D11::ToggleFullscreen(bool full_screen)
+{
+	HRESULT result = this->swap_chain->SetFullscreenState(full_screen, nullptr);
+	if (FAILED(result))
+		return false;
+
+	_fullscreen = full_screen;
+	this->fullscreen = full_screen;
+	this->dxgi_fullscreen = full_screen;
+	this->dxgi_force_resize_buffer = true;
+	InvalidateWindowClassesData(WC_GAME_OPTIONS, 3);
+
+	return true;
+}
+
+bool VideoDriver_Win32D3D11::AfterBlitterChange()
+{
+	assert(BlitterFactory::GetCurrentBlitter()->GetScreenDepth() != 0);
+	this->ClientSizeChanged(this->width, this->height, true);
+	return true;
+}
+
+bool VideoDriver_Win32D3D11::AllocateBackingStore(int w, int h, bool force)
+{
+	if (!force && w == _screen.width && h == _screen.height) return false;
+
+	this->width = w = std::max(w, 64);
+	this->height = h = std::max(h, 64);
+
+	if (_screen.dst_ptr != nullptr) this->ReleaseVideoPointer();
+
+	this->dirty_rect = {};
+	const char *err = D3D11Backend::Get()->Resize(w, h);
+	if (err != nullptr) {
+		DEBUG(driver, 0, err);
+		return false;
+	}
+
+	this->rendertarget.Reset();
+
+	if (!this->swap_chain) {
+		err = this->CreateSwapchain();
+		if (err != nullptr) {
+			DEBUG(driver, 0, err);
+			return false;
+		}
+	}
+	else {
+		HRESULT result = this->swap_chain->ResizeBuffers(2, w, h, DXGI_FORMAT_B8G8R8A8_UNORM, this->dxgi_flags);
+		if (FAILED(result)) {
+			DEBUG(driver, 0, "Failed to resize buffers");
+			return false;
+		}
+	}
+
+	this->dxgi_force_resize_buffer = false;
+
+	ComPtr<ID3D11Texture2D> framebuffer;
+	HRESULT result = this->swap_chain->GetBuffer(0, IID_PPV_ARGS(&framebuffer));
+	if (FAILED(result)) {
+		DEBUG(driver, 0, "Failed to get framebuffer");
+		return false;
+	}
+
+	result = D3D11Backend::Get()->GetDevice()->CreateRenderTargetView(framebuffer.Get(), nullptr, &this->rendertarget);
+	if (FAILED(result)) {
+		DEBUG(driver, 0, "Failed to create render target view");
+		return false;
+	}
+
+	_screen.dst_ptr = this->GetVideoPointer();
+
+	return true;
+}
+
+void* VideoDriver_Win32D3D11::GetVideoPointer()
+{
+	if (BlitterFactory::GetCurrentBlitter()->NeedsAnimationBuffer()) {
+		std::pair<uint8*, int> buffer = D3D11Backend::Get()->GetAnimBuffer();
+		this->anim_buffer = buffer.first;
+		this->anim_pitch = buffer.second;
+	}
+	return D3D11Backend::Get()->GetVideoBuffer();
+}
+
+void VideoDriver_Win32D3D11::ReleaseVideoPointer()
+{
+	if (this->anim_buffer != nullptr) D3D11Backend::Get()->ReleaseAnimBuffer(this->dirty_rect);
+	D3D11Backend::Get()->ReleaseVideoBuffer(this->dirty_rect);
+	this->dirty_rect = {};
+	_screen.dst_ptr = nullptr;
+	this->anim_buffer = nullptr;
+	this->anim_pitch = 0;
+}
+
+void VideoDriver_Win32D3D11::Paint()
+{
+	PerformanceMeasurer framerate(PFE_VIDEO);
+
+	if (this->dxgi_force_resize_buffer) {
+		this->AllocateBackingStore(this->width, this->height, true);
+		MarkWholeScreenDirty();
+	}
+
+	if (_cur_palette.count_dirty != 0) {
+		Blitter* blitter = BlitterFactory::GetCurrentBlitter();
+
+		/* Always push a changed palette to D3D11. */
+		D3D11Backend::Get()->UpdatePalette(_local_palette.palette, _local_palette.first_dirty, _local_palette.count_dirty);
+		if (blitter->UsePaletteAnimation() == Blitter::PALETTE_ANIMATION_BLITTER) {
+			blitter->PaletteAnimate(_local_palette);
+		}
+
+		_cur_palette.count_dirty = 0;
+	}
+
+	D3D11Backend::Get()->Paint(rendertarget);
+
+	UINT swap_flags = (!_video_vsync && !this->dxgi_fullscreen && (this->dxgi_flags & DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING)) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+	this->swap_chain->Present(_video_vsync ? 1 : 0, swap_flags);
+}
+
+#endif /* WITH_D3D11 */

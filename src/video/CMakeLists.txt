@@ -14,6 +14,12 @@ if(NOT OPTION_DEDICATED)
     )
 
     add_files(
+        d3d11.cpp
+        d3d11.h
+        CONDITION D3D11_FOUND
+    )
+
+    add_files(
         sdl_v.cpp
         sdl_v.h
         CONDITION SDL_FOUND

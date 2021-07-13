@@ -44,3 +44,8 @@ add_files(
     opengl_shader.h
     CONDITION OPENGL_FOUND
 )
+
+add_files(
+    hlsl_shader.h
+    CONDITION D3D11_FOUND
+)
